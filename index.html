@@ -1289,54 +1289,6 @@ body{
 
 <div id="toast"></div>
 
-<!-- 演示引导浮层 -->
-<div id="guide" style="position:fixed;inset:0;background:rgba(16,24,40,.55);backdrop-filter:blur(3px);z-index:1300;display:flex;align-items:center;justify-content:center;padding:24px">
-  <div style="background:#fff;border-radius:20px;padding:30px 32px;max-width:520px;width:100%;box-shadow:0 24px 60px rgba(16,24,40,.3)">
-    <div style="display:flex;align-items:center;gap:11px;margin-bottom:6px">
-      <div class="logo-mark" style="width:38px;height:38px;border-radius:11px;font-size:17px">爆</div>
-      <div>
-        <div style="font-size:18px;font-weight:800;letter-spacing:-.4px">爆款引擎</div>
-        <div style="font-size:11.5px;color:var(--text-3)">我的短视频 AI 运营台</div>
-      </div>
-    </div>
-    <p style="font-size:13px;color:var(--text-2);line-height:1.75;margin:14px 0 18px">
-      这是我自己的短视频运营台，数据为演示用模拟数据。建议按下面顺序过一遍完整闭环：
-    </p>
-    <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:20px">
-      <div style="display:flex;gap:10px;align-items:center;font-size:12.5px">
-        <span style="width:21px;height:21px;border-radius:50%;background:var(--brand-soft);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">1</span>
-        <span>去「<b>同行爆款库</b>」采集爆款，看<b>结构拆解</b>（只给结构，不给原文）</span>
-      </div>
-      <div style="display:flex;gap:10px;align-items:center;font-size:12.5px">
-        <span style="width:21px;height:21px;border-radius:50%;background:var(--brand-soft);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">2</span>
-        <span>去「<b>分镜拆解</b>」拆自己的爆款，看<b>哪个镜头留住了人</b></span>
-      </div>
-      <div style="display:flex;gap:10px;align-items:center;font-size:12.5px">
-        <span style="width:21px;height:21px;border-radius:50%;background:var(--brand-soft);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">3</span>
-        <span>去「<b>AI 爆款生成</b>」选种子，生成<b>全新原创脚本</b></span>
-      </div>
-      <div style="display:flex;gap:10px;align-items:center;font-size:12.5px">
-        <span style="width:21px;height:21px;border-radius:50%;background:var(--brand-soft);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">4</span>
-        <span>去「<b>我的视频</b>」看数据台账，点任意一行看详情</span>
-      </div>
-      <div style="display:flex;gap:10px;align-items:center;font-size:12.5px">
-        <span style="width:21px;height:21px;border-radius:50%;background:var(--brand-soft);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">5</span>
-        <span>去「<b>整体复盘</b>」生成 AI 报告，看全链路归因</span>
-      </div>
-    </div>
-    <div style="display:flex;gap:9px;align-items:center">
-      <button class="btn" id="guideClose" style="flex:1;justify-content:center">先自己逛逛</button>
-      <button class="btn btn-primary" id="guideStart" style="flex:1.4;justify-content:center">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        按顺序过一遍
-      </button>
-    </div>
-    <div style="text-align:center;font-size:10.5px;color:var(--text-3);margin-top:13px">
-      提示：按 <kbd style="background:var(--panel-2);border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:10px">1</kbd>~<kbd style="background:var(--panel-2);border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:10px">9</kbd> 或 <kbd style="background:var(--panel-2);border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:10px">0</kbd> 可快速切换页面
-    </div>
-  </div>
-</div>
-
 <script>
 /* =========================================================
    爆款引擎 · 演示原型
@@ -4077,45 +4029,15 @@ document.addEventListener('click', e=>{
   if(e.target.id==='exportReport'){ toast('报告导出功能需接入后端'); }
 });
 
-/* 演示引导 */
-const guide = $('#guide');
-let demoSeqTimer = null;          // 引导层「自动演示」定时器，必须可取消
-$('#guideClose').addEventListener('click', ()=>{
-  guide.style.display='none';
-  if(demoSeqTimer){ clearInterval(demoSeqTimer); demoSeqTimer = null; }  // 关闭时取消演示，避免后期劫持页面
-});
-$('#guideStart').addEventListener('click', ()=>{
-  guide.style.display='none';
-  const seq = ['copyrival','storyboard','generator','myvideo','review'];
-  const tips = [
-    '同行爆款库——采集爆款，看结构拆解',
-    '分镜拆解——拆自己的爆款，看哪个镜头留住了人',
-    'AI生成——用带进来的结构骨架生成新脚本',
-    '我的视频——记录每条视频的完播与出单',
-    '整体复盘——文案/素材/投放全链路归因'
-  ];
-  let i = 0;
-  toast(`第 1/${seq.length} 步：${tips[0]}`);
-  switchView(seq[0]);
-  const t = setInterval(()=>{
-    i++;
-    if(i >= seq.length){ clearInterval(t); return; }
-    toast(`第 ${i+1}/${seq.length} 步：${tips[i]}`);
-    switchView(seq[i]);
-  }, 4500);
-  demoSeqTimer = t;
-});
-
 /* 键盘快捷键 1-9 切换页面，0 = 第 10 个，- = 第 11 个 */
 const VIEW_ORDER = ['dashboard','myvideo','copyrival','copymine','storyboard','generator','studio','review','insight','datasource','compliance'];
 document.addEventListener('keydown', e=>{
   if(e.target.matches('input,textarea,select')) return;
   const n = e.key === '0' ? 10 : (e.key === '-' ? 11 : parseInt(e.key));
   if(n >= 1 && n <= VIEW_ORDER.length){
-    if(guide.style.display !== 'none') guide.style.display = 'none';
     switchView(VIEW_ORDER[n-1]);
   }
-  if(e.key === 'Escape'){ closeDrawer(); if(guide.style.display!=='none') guide.style.display='none'; }
+  if(e.key === 'Escape'){ closeDrawer(); }
 });
 
 /* 初始化 */
