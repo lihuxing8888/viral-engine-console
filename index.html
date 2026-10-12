@@ -618,10 +618,6 @@ body{
         数据接入
         <span class="nav-badge nav-badge-warn" id="dsBadge">3/5</span>
       </div>
-      <div class="nav-item" data-view="compliance">
-        <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
-        内容与数据
-      </div>
     </nav>
     <div class="side-foot">
       <div class="avatar">我</div>
@@ -879,7 +875,6 @@ body{
             <div id="sbArchiveBody"></div>
           </div>
         </div>
-
 
         <div class="card" id="sbStage" style="margin-bottom:14px;display:none">
           <div class="card-head"><h3>3. 拆解中</h3><span class="desc">镜头切分 → 结构识别</span></div>
@@ -1143,129 +1138,6 @@ body{
 
         <!-- 当前步骤主体 -->
         <div id="dsBody"></div>
-      </section>
-
-      <!-- ---------- 合规中心 ---------- -->
-      <section class="view" id="view-compliance">
-        <div class="card" style="margin-bottom:14px;border-color:#c9f0e2">
-          <div class="card-body" style="display:flex;gap:14px;align-items:center">
-            <div style="width:44px;height:44px;border-radius:12px;flex-shrink:0;background:var(--ok-soft);
-              display:flex;align-items:center;justify-content:center">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
-            </div>
-            <div style="flex:1">
-              <div style="font-size:14.5px;font-weight:700;margin-bottom:3px">我的内容使用与数据说明</div>
-              <div style="font-size:12.5px;color:var(--text-2);line-height:1.7">
-                这是我自用的运营台。它只做<b>"结构学习"</b>，不做<b>"原文搬运"</b>，也不做<b>"画面搬运"</b>。采集的同行内容仅用于我自己分析，
-                拿到的是<b>抽象后的爆款结构</b>、<b>分镜结构单</b>与<b>全新生成的原创脚本</b>——始终是可执行的"方法"，而非可复制的"成品"。
-              </div>
-            </div>
-            <span class="tag tag-ok" style="font-size:11px">本地运行</span>
-          </div>
-        </div>
-
-        <div class="grid g3" style="margin-bottom:14px">
-          <div class="card">
-            <div class="card-head"><h3 style="color:var(--ok)">✅ 我会用它做什么</h3></div>
-            <div class="card-body">
-              <ul style="margin-left:16px;font-size:12.5px;line-height:2;color:var(--text-2)">
-                <li>解析公开内容的<b>结构特征</b>（钩子/节奏/CTA）</li>
-                <li>拆解上传的视频，产出<b>分镜结构单</b>（文字描述）</li>
-                <li>为<b>我自己的作品</b>对齐留存数据、定位流失镜头</li>
-                <li>生成<b>全新原创</b>的脚本供我拍摄使用</li>
-                <li>对生成结果做<b>原创性检测</b></li>
-                <li>对同行账号名做<b>脱敏处理</b></li>
-                <li>沉淀我自己的原创文案资产</li>
-              </ul>
-            </div>
-          </div>
-          <div class="card" style="border-color:#ffd9e2">
-            <div class="card-head"><h3 style="color:var(--brand)">⛔ 它不会做的</h3></div>
-            <div class="card-body">
-              <ul style="margin-left:16px;font-size:12.5px;line-height:2;color:var(--text-2)">
-                <li>不提供第三方内容的<b>全文复制</b></li>
-                <li>不提供<b>批量导出</b>同行原文</li>
-                <li>不生成、不提供任何<b>可下载的视频片段</b></li>
-                <li>不提供原始音轨、背景音乐、逐帧画面</li>
-                <li>不把解析到的原片<b>对外提供或再分发</b>（仅本机存档自用）</li>
-                <li>不展示第三方账号的真实昵称</li>
-                <li>不对外分享、不上传、不转售任何数据</li>
-              </ul>
-            </div>
-          </div>
-          <div class="card" style="border-color:#ffe6c7">
-            <div class="card-head"><h3 style="color:var(--warn)">⚠️ 我自己要守住的红线</h3></div>
-            <div class="card-body">
-              <ul style="margin-left:16px;font-size:12.5px;line-height:2;color:var(--text-2)">
-                <li>不把同行原文直接用于商业发布</li>
-                <li>发布前自行确认内容原创性</li>
-                <li>不利用本台侵犯他人著作权</li>
-                <li>不批量抓取他人内容或转售数据</li>
-                <li>参考同行结构时，<b>人、货、场景全部换成自己的</b></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <div class="grid g2" style="margin-bottom:14px">
-          <div class="card">
-            <div class="card-head"><h3>原创性保障机制</h3><span class="desc">五道闸门</span></div>
-            <div class="card-body">
-              <div class="timeline">
-                <div class="tl-item ok"><div class="tl-t">第一道 · 采集层</div>
-                  <div class="tl-h">只取结构，不留原文</div>
-                  <div class="tl-d">第三方内容进入系统后，仅保留钩子类型、情绪曲线、论证方式、CTA 模型等抽象特征，原文不开放查看。</div></div>
-                <div class="tl-item ai"><div class="tl-t">第二道 · 生成层</div>
-                  <div class="tl-h">结构迁移，而非文本改写</div>
-                  <div class="tl-d">AI 学习的是"怎么写能爆"的规律，输出的是结合我商品信息的全新表达，与原文无实质性相似。</div></div>
-                <div class="tl-item ok"><div class="tl-t">第三道 · 输出层</div>
-                  <div class="tl-h">相似度检测闸门</div>
-                  <div class="tl-d">生成结果自动与种子内容比对，相似度超过 25% 即拦截并重新生成，通过后才允许保存和使用。</div></div>
-                <div class="tl-item ok"><div class="tl-t">第四道 · 视频层</div>
-                  <div class="tl-h">只出结构单，不出片段</div>
-                  <div class="tl-d">视频仅用于镜头切分与结构分析，产物是纯文字的分镜结构单；不生成可下载片段，不保留原始音轨。解析/上传的原片只在<b>本机存档自用</b>，不出本机、不对外提供。<b>链接解析仅限自用档位</b>，对外形态强制关闭。</div></div>
-                <div class="tl-item ok"><div class="tl-t">第五道 · 权属层</div>
-                  <div class="tl-h">自有优先，第三方需授权</div>
-                  <div class="tl-d">拆解「我自己的作品」是默认推荐路径，素材权属清晰、结果可放心用于复盘；拆同行视频需声明已获授权，且结果仅作方法参考。</div></div>
-              </div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-head"><h3>我的数据存在哪</h3></div>
-            <div class="card-body">
-              <div class="kv"><span class="k">运行方式</span><span class="v">自用部署 · 单账号</span></div>
-              <div class="kv"><span class="k">采集范围</span><span class="v">仅公开可见内容</span></div>
-              <div class="kv"><span class="k">数据存储</span><span class="v">加密存储 · 仅用于我的分析</span></div>
-              <div class="kv"><span class="k">账号昵称</span><span class="v">脱敏为代号</span></div>
-              <div class="kv"><span class="k">对外提供</span><span class="v">不提供、无分享入口</span></div>
-              <div class="kv"><span class="k">数据归属</span><span class="v">全归我自己</span></div>
-              <div class="kv"><span class="k">数据导出 / 删除</span><span class="v">随时可导出、可清空</span></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-head"><h3>我的使用准则（自用备忘）</h3><span class="desc">放在这里，提醒自己</span></div>
-          <div class="card-body" style="font-size:12.5px;line-height:1.9;color:var(--text-2)">
-            <p style="margin-bottom:12px"><b style="color:var(--text)">一、用途</b><br>
-            这是我个人用于短视频创作的辅助工具，提供内容结构分析、数据分析与 AI 脚本生成能力。它不提供任何第三方作品的原文复制或传播功能。</p>
-
-            <p style="margin-bottom:12px"><b style="color:var(--text)">二、内容来源与使用</b><br>
-            所分析的内容均来自公开渠道，仅用于结构特征提取与我自己参考。生成的内容是基于结构模型的全新产出。我理解并同意，不将任何第三方原文直接用于商业发布或其他用途。</p>
-
-            <p style="margin-bottom:12px"><b style="color:var(--text)">三、知识产权</b><br>
-            我录入的原创文案，知识产权归我所有。基于结构生成的脚本内容，我享有使用权。分析模型与算法部分不在此列。</p>
-
-            <p style="margin-bottom:12px"><b style="color:var(--text)">四、我的责任</b><br>
-            我对发布的内容承担全部责任。因使用本台内容产生的任何纠纷、损失或法律责任，由我自己承担。</p>
-
-            <p style="margin-bottom:12px"><b style="color:var(--text)">五、免责说明</b><br>
-            本台已尽合理努力保障输出内容的原创性，但不构成对内容不侵权的绝对保证。使用生成内容前，我会自行做必要的合规审查。</p>
-
-            <p><b style="color:var(--text)">六、参考同行时的自律</b><br>
-            拆解同行结构仅用于学习方法（怎么钩住人、怎么排节奏、怎么收尾），落地拍摄时人、货、场景、运镜全部换成我自己的，不复刻原片画面与背景音乐。</p>
-          </div>
-        </div>
       </section>
 
     </div>
@@ -3461,7 +3333,6 @@ const TITLES = {
   review:['整体复盘','文案 · 素材 · 投放 全链路归因'],
   insight:['竞品情报','监控同行爆款动态 · 账号已脱敏'],
   datasource:['数据接入','通过官方开放平台授权接入 · 不使用爬虫'],
-  compliance:['内容与数据说明','我的内容使用原则 · 原创性保障 · 数据存放']
 };
 
 function switchView(v){
@@ -3503,7 +3374,6 @@ function renderTopActions(){
     insight:`<span class="tag tag-ok">账号已脱敏</span>`,
     datasource:`<span class="tag tag-ok">官方接口 · 非爬虫</span>
       <button class="btn btn-sm" id="dsRestartTop">重新配置</button>`,
-    compliance:`<span class="tag tag-ok">五道原创性闸门</span>`
   };
   $('#topActions').innerHTML = map[v]||'';
 }
@@ -4030,7 +3900,7 @@ document.addEventListener('click', e=>{
 });
 
 /* 键盘快捷键 1-9 切换页面，0 = 第 10 个，- = 第 11 个 */
-const VIEW_ORDER = ['dashboard','myvideo','copyrival','copymine','storyboard','generator','studio','review','insight','datasource','compliance'];
+const VIEW_ORDER = ['dashboard','myvideo','copyrival','copymine','storyboard','generator','studio','review','insight','datasource'];
 document.addEventListener('keydown', e=>{
   if(e.target.matches('input,textarea,select')) return;
   const n = e.key === '0' ? 10 : (e.key === '-' ? 11 : parseInt(e.key));
