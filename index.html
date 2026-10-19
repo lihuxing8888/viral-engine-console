@@ -207,6 +207,49 @@ body{
 .st-dl-btn{width:100%;border:0;border-top:1px solid var(--line);background:transparent;color:var(--text-3);
   font-size:10px;padding:5px 0;cursor:pointer;font-family:inherit}
 .st-dl-btn:hover{background:var(--panel);color:var(--text)}
+.st-photo-strip{display:flex;gap:6px;flex-wrap:wrap;flex:1;min-height:52px;align-items:center}
+.st-photo-strip .st-pic{position:relative;width:52px;height:52px;border-radius:8px;overflow:hidden;
+  border:1px solid var(--line);background:var(--panel-2);flex-shrink:0}
+.st-photo-strip .st-pic img{width:100%;height:100%;object-fit:cover;display:block}
+.st-photo-strip .st-pic i{position:absolute;top:0;left:0;font-style:normal;font-size:8.5px;font-weight:800;
+  background:rgba(12,16,24,.72);color:#fff;padding:1px 4px;border-bottom-right-radius:5px}
+.st-photo-strip .st-pic u{position:absolute;top:1px;right:1px;width:13px;height:13px;border-radius:50%;
+  background:rgba(12,16,24,.66);color:#fff;font-size:9px;line-height:13px;text-align:center;
+  text-decoration:none;cursor:pointer;opacity:0;transition:opacity .12s}
+.st-photo-strip .st-pic:hover u{opacity:1}
+.st-photo-strip .st-pic:hover u:hover{background:#e4393c}
+.st-photo-none{font-size:10px;color:var(--text-3);line-height:1.5}
+.lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:12px}
+.lib-card{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;position:relative;
+  transition:box-shadow .15s,border-color .15s}
+.lib-card:hover{border-color:var(--accent);box-shadow:0 4px 16px rgba(20,30,60,.10)}
+.lib-thumb{aspect-ratio:1/1;background:var(--panel-2);overflow:hidden;cursor:zoom-in}
+.lib-thumb.wide{aspect-ratio:3/2}
+.lib-thumb img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.lib-code{position:absolute;top:6px;left:6px;font-size:9.5px;font-weight:800;letter-spacing:.4px;
+  background:rgba(12,16,24,.72);color:#fff;padding:2px 6px;border-radius:5px}
+.lib-meta{padding:7px 9px 8px;border-top:1px solid var(--line)}
+.lib-meta b{display:block;font-size:11px;font-weight:650;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lib-meta span{display:block;font-size:9.5px;color:var(--text-3);margin-top:2px}
+.lib-shopbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.lib-chip{display:flex;align-items:center;gap:6px;padding:6px 11px;border-radius:20px;cursor:pointer;
+  border:1px solid var(--line);background:var(--panel-2);font-size:11.5px;color:var(--text-2);transition:all .12s}
+.lib-chip:hover{border-color:var(--accent);color:var(--text)}
+.lib-chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.lib-chip b{font-weight:800}
+.lib-chip.on b{color:#fff}
+.lib-empty{text-align:center;padding:56px 20px}
+.lib-empty-t{font-size:14px;font-weight:700;color:var(--text-2);margin-bottom:6px}
+.lib-empty-d{font-size:12px;color:var(--text-3);margin-bottom:16px}
+.st-dw-seg{display:flex;gap:8px;margin:0 0 11px;flex-wrap:wrap}
+.st-dw{display:flex;flex-direction:column;gap:1px;align-items:flex-start;padding:6px 12px;cursor:pointer;
+  font-family:inherit;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;
+  color:var(--text-3);transition:all .12s;line-height:1.3}
+.st-dw b{font-size:11px;font-weight:700;color:var(--text-2)}
+.st-dw span{font-size:9.5px}
+.st-dw:hover{border-color:var(--accent);color:var(--text)}
+.st-dw.on{background:var(--accent-soft,#eef3ff);border-color:var(--accent);color:var(--accent)}
+.st-dw.on b{color:var(--accent)}
 .st-dseg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:12px}
 .st-dseg{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel-2)}
 .st-dseg canvas{width:100%;height:auto;display:block}
@@ -660,6 +703,11 @@ body{
         素材工坊
         <span class="nav-badge nav-badge-ai">新</span>
       </div>
+      <div class="nav-item" data-view="lib">
+        <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M6 4h12"/><circle cx="9" cy="13" r="1.6"/><path d="M21 17l-4.2-4.2L10 20"/></svg>
+        素材库
+        <span class="nav-badge" id="libBadge">0</span>
+      </div>
       <div class="nav-group">分析</div>
       <div class="nav-item" data-view="review">
         <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19V5a1 1 0 011-1h9l6 6v9a1 1 0 01-1 1H5a1 1 0 01-1-1z"/><path d="M8 13l2.5 2.5L16 10"/></svg>
@@ -1077,14 +1125,14 @@ body{
               <div class="st-photo" id="stPhotoBar">
                 <div class="st-photo-hd"><b>商品实拍图</b><span id="stPhotoMeta">示意图</span></div>
                 <div class="st-photo-row">
-                  <div class="st-photo-thumb" id="stPhotoThumb"><span>未上传<br>用示意图</span></div>
+                  <div class="st-photo-strip" id="stPhotoThumb"><span class="st-photo-none">未上传<br>用示意图</span></div>
                   <div class="st-photo-act">
                     <label class="btn btn-sm" for="stPhotoFile">上传实拍图</label>
-                    <input type="file" id="stPhotoFile" accept="image/*" hidden>
-                    <button class="btn btn-sm" id="stPhotoClear" disabled>清除</button>
+                    <input type="file" id="stPhotoFile" accept="image/*" multiple hidden>
+                    <button class="btn btn-sm" id="stPhotoClear" disabled>清除全部</button>
                   </div>
                 </div>
-                <div class="st-photo-tip">上传后 5 张主图与 7 段详情全部用真图；不传则用矢量示意图。建议传白底图，天猫 / 京东首图硬要求纯白底</div>
+                <div class="st-photo-tip" id="stPhotoTip">可一次选多张（最多 5 张）：<b>第 1 张作首图</b>，其余按顺序分给卖点图 / 细节图 / 场景图 / 规格图；只有 1 张时靠缩放取景区分。建议传白底图，天猫 / 京东首图硬要求纯白底</div>
               </div>
             </div>
 
@@ -1168,6 +1216,48 @@ body{
         <div class="st-light-dl" id="stLightDl">下载这张 PNG</div>
         <div class="st-light-tip">点击任意处或按 Esc 关闭</div>
       </div>
+
+      <!-- ---------- 素材库（按店铺归档与检索） ---------- -->
+      <section class="view" id="view-lib">
+        <div class="card" style="margin-bottom:14px;border-color:#dcd3ff">
+          <div class="card-body" style="display:flex;gap:14px;align-items:flex-start">
+            <div style="width:40px;height:40px;border-radius:11px;flex-shrink:0;background:linear-gradient(135deg,#7b5cff,#4aa8ff);
+              display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px">库</div>
+            <div style="flex:1">
+              <div style="font-size:14.5px;font-weight:700;margin-bottom:4px">素材库 —— 按店铺归档，按需检索</div>
+              <div style="font-size:12.5px;color:var(--text-2);line-height:1.75">
+                素材工坊每生成一次，产物按<b>店铺 × 商品 × 图位</b>自动归档。同一位置重新生成会覆盖旧记录，库不会越滚越大。
+                <span style="color:var(--brand-2);font-weight:600">库内只存缩略图索引，高清原图在工坊里按配置重出。</span>
+              </div>
+            </div>
+            <span class="tag tag-ai" style="font-size:11px;white-space:nowrap">店铺维度 · 归属清晰</span>
+          </div>
+        </div>
+
+        <div class="grid g4" id="libKpi" style="margin-bottom:14px"></div>
+
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <select class="select" id="libShop" style="max-width:210px"></select>
+            <div class="tabs" id="libKind">
+              <div class="tab active" data-lk="all">全部</div>
+              <div class="tab" data-lk="main">主图</div>
+              <div class="tab" data-lk="detail">详情页</div>
+            </div>
+            <input class="input" id="libQ" placeholder="搜商品名 / 货号" style="max-width:210px">
+            <button class="btn btn-sm" id="libCsv" style="margin-left:auto">导出上传清单 CSV</button>
+            <button class="btn btn-sm" id="libClear">清空素材库</button>
+          </div>
+        </div>
+
+        <div class="lib-shopbar" id="libShopBar"></div>
+        <div id="libGrid" class="lib-grid"></div>
+        <div id="libEmpty" class="lib-empty" style="display:none">
+          <div class="lib-empty-t">素材库还没有内容</div>
+          <div class="lib-empty-d">去「素材工坊」选一个商品并生成，产物会自动按店铺归档到这里</div>
+          <button class="btn btn-ai" onclick="document.querySelector('.nav-item[data-view=studio]').click()">去素材工坊生成</button>
+        </div>
+      </section>
 
       <!-- ---------- 整体复盘 ---------- -->
       <section class="view" id="view-review">
@@ -2276,12 +2366,26 @@ const ST_KINDS = [
 /* 平台规格（主图 / 详情页） */
 /* 每个平台 = 一个店铺账号；店铺名与编码用于素材归档与文件命名 */
 const ST_PLATFORMS = [
-  { k:'tmall',  n:'天猫',   shop:'壳厂老周旗舰店', code:'TM',  main:'800×800',  detail:'750 宽',  on:true  },
-  { k:'jd',     n:'京东',   shop:'老周数码专营店', code:'JD',  main:'800×800',  detail:'750 宽',  on:true  },
-  { k:'pdd',    n:'拼多多', shop:'老周壳铺',       code:'PDD', main:'750×750',  detail:'480 宽',  on:false },
-  { k:'xhs',    n:'小红书', shop:'老周的壳',       code:'XHS', main:'1080×1440', detail:'1242 宽', on:true  },
-  { k:'douyin', n:'抖店',   shop:'老周手机壳',     code:'DY',  main:'800×800',  detail:'750 宽',  on:true  }
+  { k:'tmall',  n:'天猫',   shop:'壳厂老周旗舰店', code:'TM',  main:'800×800',  detail:'750 宽',  dw:750,  on:true  },
+  { k:'jd',     n:'京东',   shop:'老周数码专营店', code:'JD',  main:'800×800',  detail:'750 宽',  dw:750,  on:true  },
+  { k:'pdd',    n:'拼多多', shop:'老周壳铺',       code:'PDD', main:'750×750',  detail:'480 宽',  dw:480,  on:false },
+  { k:'xhs',    n:'小红书', shop:'老周的壳',       code:'XHS', main:'1080×1440', detail:'1242 宽', dw:1242, on:true  },
+  { k:'douyin', n:'抖店',   shop:'老周手机壳',     code:'DY',  main:'800×800',  detail:'750 宽',  dw:750,  on:true  }
 ];
+
+/* 详情页三档宽度：各平台详情图物理宽度不同，等比缩放才能保住版式 */
+const ST_DW_OPTS = [
+  { w:480,  n:'480 宽', note:'拼多多' },
+  { w:750,  n:'750 宽', note:'天猫 / 京东 / 抖店' },
+  { w:1242, n:'1242 宽', note:'小红书' }
+];
+const ST_DETAIL_BASE_H = [520, 460, 460, 460, 560, 460, 460];
+
+/* 按当前详情宽度换算某一段的画布高度，保持 750 宽度下的宽高比 */
+function stDetailH(i){
+  const base = ST_DETAIL_BASE_H[i] != null ? ST_DETAIL_BASE_H[i] : 460;
+  return Math.round(base * (ST.dw || 750) / 750);
+}
 
 const ST_STYLES = {
   clean: '清爽简约',
@@ -2289,7 +2393,7 @@ const ST_STYLES = {
   hard:  '高对比促销'
 };
 
-const ST = { goods:null, kinds:new Set(['copy','main','detail']), plats:new Set(['tmall','jd','xhs','douyin']), style:'clean', timer:null };
+const ST = { goods:null, kinds:new Set(['copy','main','detail']), plats:new Set(['tmall','jd','xhs','douyin']), style:'clean', dw:750, timer:null };
 
 /* 渲染商品列表 */
 function stRenderGoods(){
@@ -2345,6 +2449,207 @@ function stRenderShopTable(){
   tb.innerHTML = `<thead><tr><th>店铺</th><th class="r">编码</th><th class="r">主图</th><th class="r">详情</th></tr></thead><tbody>${rows}</tbody>`;
   const per = (mainOn ? 5 : 0) + (detOn ? 7 : 0);
   $('#stShopSum').textContent = picked.length + ' 家 · 共 ' + (picked.length * per) + ' 张';
+}
+
+/* =========================================================
+   素材库：按店铺归档 + 检索 + 上传清单
+   ========================================================= */
+const LIB_KEY = 'stLibV1';
+const LIB_MAX = 400;
+const ST_LIB = { items: [], shop: 'all', kind: 'all', q: '' };
+
+function stLibLoad(){
+  try{
+    const raw = localStorage.getItem(LIB_KEY);
+    ST_LIB.items = raw ? (JSON.parse(raw) || []) : [];
+    if(!Array.isArray(ST_LIB.items)) ST_LIB.items = [];
+  }catch(e){ ST_LIB.items = []; }
+}
+function stLibSave(){
+  try{
+    if(ST_LIB.items.length > LIB_MAX) ST_LIB.items = ST_LIB.items.slice(-LIB_MAX);
+    localStorage.setItem(LIB_KEY, JSON.stringify(ST_LIB.items));
+  }catch(e){ /* 配额满则只保留内存副本，不影响使用 */ }
+}
+
+/* 缩略图：宽 240 的 JPEG，约 6-10KB */
+function stLibThumb(cv){
+  const w = 240, h = Math.round(cv.height * w / cv.width);
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const x = c.getContext('2d');
+  x.fillStyle = '#fff'; x.fillRect(0, 0, w, h);
+  x.drawImage(cv, 0, 0, w, h);
+  return c.toDataURL('image/jpeg', 0.62);
+}
+
+/* 归档本次生成的全部产物：同键覆盖 */
+function stLibArchive(g, plats){
+  const now = Date.now();
+  const style = ST.style;
+  const push = (o)=>{
+    const key = [o.gk, o.shop, o.kind, o.idx, o.w, o.h, o.style].join('|');
+    const old = ST_LIB.items.find(x=>x.key === key);
+    const item = { key, ...o, ts: now };
+    if(old) Object.assign(old, item);
+    else ST_LIB.items.push(item);
+  };
+
+  document.querySelectorAll('#stMainBlock canvas[data-seg]').forEach(cv=>{
+    const pl = ST_PLATFORMS.find(p=>p.n === cv.dataset.plat);
+    push({ gk:g.k, gname:g.n, sku:g.sku, shop:pl ? pl.shop : '未归属',
+           code:pl ? pl.code : '--', kind:'main', idx:+cv.dataset.seg + 1,
+           w:cv.width, h:cv.height, style, thumb:stLibThumb(cv) });
+  });
+  document.querySelectorAll('#stDetailBlock canvas[data-dseg]').forEach(cv=>{
+    const same = ST_PLATFORMS.filter(p=>p.dw === cv.width && ST.plats.has(p.k));
+    /* 同一宽度被多家店共用时如实标注，避免把 750 宽详情错算成天猫独占 */
+    const shop = same.length > 1 ? '多店共用' : (same.length ? same[0].shop : '未归属');
+    const code = same.length > 1 ? 'MULTI' : (same.length ? same[0].code : '--');
+    push({ gk:g.k, gname:g.n, sku:g.sku, shop, code, kind:'detail', idx:+cv.dataset.dseg + 1,
+           w:cv.width, h:cv.height, style, thumb:stLibThumb(cv) });
+  });
+
+  stLibSave();
+  stLibCount();
+}
+
+function stLibCount(){
+  const el = $('#libBadge');
+  if(el) el.textContent = String(ST_LIB.items.length);
+}
+
+function stLibFiltered(){
+  const q = ST_LIB.q.trim().toLowerCase();
+  return ST_LIB.items.filter(x=>{
+    if(ST_LIB.shop !== 'all' && x.shop !== ST_LIB.shop) return false;
+    if(ST_LIB.kind !== 'all' && x.kind !== ST_LIB.kind) return false;
+    if(q && !(x.gname + ' ' + x.sku + ' ' + x.code).toLowerCase().includes(q)) return false;
+    return true;
+  }).sort((a, b)=> b.ts - a.ts);
+}
+
+function stLibRender(){
+  const grid = $('#libGrid');
+  if(!grid) return;
+  stLibCount();
+
+  /* 店铺下拉 */
+  const shops = [...new Set(ST_LIB.items.map(x=>x.shop))];
+  const sel = $('#libShop');
+  if(sel){
+    const cur = ST_LIB.shop;
+    sel.innerHTML = '<option value="all">全部店铺（'+ST_LIB.items.length+' 张）</option>' +
+      shops.map(sh=>{
+        const n = ST_LIB.items.filter(x=>x.shop === sh).length;
+        return `<option value="${sh}">${sh}（${n}）</option>`;
+      }).join('');
+    sel.value = shops.includes(cur) ? cur : 'all';
+    if(sel.value !== cur) ST_LIB.shop = sel.value;
+  }
+
+  /* KPI */
+  const kpi = $('#libKpi');
+  if(kpi){
+    const now = Date.now();
+    const fresh = ST_LIB.items.filter(x=> now - x.ts < 86400000).length;
+    const goodsN = new Set(ST_LIB.items.map(x=>x.gk)).size;
+    const last = ST_LIB.items.length ? new Date(Math.max(...ST_LIB.items.map(x=>x.ts))) : null;
+    const fmt = last ? (last.getMonth()+1)+'/'+last.getDate()+' '+String(last.getHours()).padStart(2,'0')+':'+String(last.getMinutes()).padStart(2,'0') : '—';
+    kpi.innerHTML = [
+      ['已归档素材', ST_LIB.items.length + ' 张', 'thumbnail'],
+      ['覆盖店铺', shops.filter(x=>x !== '多店共用').length + ' 家', 'shop'],
+      ['覆盖商品', goodsN + ' 件', 'goods'],
+      ['最近生成', fmt, 'time']
+    ].map(([t,v])=>`
+      <div class="card"><div class="card-body" style="padding:13px 15px">
+        <div style="font-size:11.5px;color:var(--text-3);margin-bottom:5px">${t}</div>
+        <div style="font-size:19px;font-weight:800;letter-spacing:-.3px">${v}</div>
+      </div></div>`).join('');
+  }
+
+  /* 店铺汇总条 */
+  const bar = $('#libShopBar');
+  if(bar){
+    const cnt = {};
+    ST_LIB.items.forEach(x=>{ cnt[x.shop] = (cnt[x.shop]||0)+1; });
+    bar.innerHTML = Object.keys(cnt).length ? Object.entries(cnt)
+      .sort((a,b)=> b[1]-a[1])
+      .map(([sh,n])=>`<div class="lib-chip${ST_LIB.shop===sh?' on':''}" data-libshop="${sh}">
+          ${sh} <b>${n}</b></div>`).join('') : '';
+  }
+
+  /* 网格 */
+  const list = stLibFiltered();
+  const empty = $('#libEmpty');
+  if(!list.length){
+    grid.innerHTML = '';
+    if(empty) empty.style.display = ST_LIB.items.length ? 'none' : '';
+    if(empty && ST_LIB.items.length){
+      grid.innerHTML = '<div class="lib-empty"><div class="lib-empty-t">没有匹配的素材</div>'
+        + '<div class="lib-empty-d">换个店铺或关键词试试</div></div>';
+    }
+    return;
+  }
+  if(empty) empty.style.display = 'none';
+  grid.innerHTML = list.map(x=>`
+    <div class="lib-card" data-libid="${x.key}">
+      <div class="lib-thumb${x.kind==='main'?'':' wide'}"><img src="${x.thumb}" alt="${x.gname}" loading="lazy"></div>
+      <div class="lib-code">${x.code}</div>
+      <div class="lib-meta"><b>${x.gname}</b><span>${x.kind==='main'?'主图':'详情'} ${x.idx} · ${x.w}×${x.h} · ${x.sku}</span></div>
+    </div>`).join('');
+}
+
+/* 导出上传清单 CSV */
+function stLibCSV(){
+  const list = stLibFiltered();
+  if(!list.length){ toast('当前筛选下没有可导出的素材'); return; }
+  const head = ['店铺','店铺编码','商品','货号','类型','图位','尺寸','文件名'];
+  const rows = list.map(x=>{
+    const kindCn = x.kind === 'main' ? '主图' : '详情';
+    const fname = x.sku + '_' + x.code + '_' + (x.kind === 'main' ? String(x.idx).padStart(2,'0') : 'detail_'+x.w+'_'+String(x.idx).padStart(2,'0')) + '.png';
+    return [x.shop, x.code, x.gname, x.sku, kindCn, x.idx, x.w + 'x' + x.h, fname];
+  });
+  const csv = '\uFEFF' + [head, ...rows].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  const blob = new Blob([csv], { type:'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '素材上传清单_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  setTimeout(()=> URL.revokeObjectURL(a.href), 1500);
+  toast('已导出 ' + rows.length + ' 条上传清单');
+}
+
+/* 详情页块：可切换 480 / 750 / 1242 三档宽度，切换后只重建本块 */
+function stRenderDetail(){
+  const box = $('#stDetailBlock');
+  if(!box) return;
+  const g = ST_GOODS.find(x=>x.k === ST.goods);
+  if(!g || !ST.kinds.has('detail')){ box.innerHTML = ''; return; }
+  const plats = ST_PLATFORMS.filter(p=>ST.plats.has(p.k));
+  const cur = ST.dw || 750;
+  const curPlats = plats.filter(p=>p.dw === cur).map(p=>p.n);
+
+  box.innerHTML = `
+    <div class="st-block">
+      <div class="st-block-h"><span class="st-block-n">3</span>详情页长图
+        <span class="st-block-tag">${ST_DETAIL_SEGS.length} 段 · ${cur} 宽</span>
+        <button class="btn btn-sm btn-ai" id="stExportLong" style="margin-left:auto">拼成一张长图</button></div>
+      <div class="st-dw-seg" id="stDwSeg">
+        ${ST_DW_OPTS.map(o=>`<button class="st-dw${o.w===cur?' on':''}" data-dw="${o.w}" title="${o.note}">
+            <b>${o.n}</b><span>${o.note}</span></button>`).join('')}
+      </div>
+      <div class="st-dseg-grid">
+        ${ST_DETAIL_SEGS.map((s,i)=>`
+          <div class="st-dseg">
+            <canvas data-dseg="${i}" data-goods="${g.k}"
+                    data-name="${g.sku}_detail_${cur}_${String(i+1).padStart(2,'0')}"
+                    width="${cur}" height="${stDetailH(i)}"></canvas>
+            <div class="st-dseg-cap">${i+1}. ${s}</div>
+          </div>`).join('')}
+      </div>
+      <div class="st-note">当前按 <b>${cur} 宽</b> 出图${curPlats.length?'（'+curPlats.join(' / ')+'）':''}；
+        切换宽度会等比缩放高度与字号，版式不变。适配机型一段建议按实际库存 SKU 增补。</div>
+    </div>`;
 }
 
 function stRenderAll(){ stRenderGoods(); stRenderKinds(); stRenderPlats(); stRenderShopTable(); stRenderPhoto(); }
@@ -2506,13 +2811,14 @@ function stDrawCase(ctx,cx,cy,w,h,L,mode){
 }
 
 /* 价格标（圆角块 + 白字） */
-function stPriceTag(ctx,x,y,price,L){
-  const fs = 30;
+function stPriceTag(ctx,x,y,price,L,scale){
+  const sc = scale || 1;
+  const fs = 30*sc;
   ctx.font = '800 '+fs+'px '+L.font;
   const tw = ctx.measureText(price).width;
-  const padX = 20, w = tw+padX*2, h = fs+22;
-  ctx.fillStyle = L.price; stRR(ctx,x-w,y,w,h,L.r*0.6); ctx.fill();
-  stTxt(ctx,price,x-w+padX,y+11,fs,'#fff',800,'left');
+  const padX = 20*sc, w = tw+padX*2, h = fs+22*sc;
+  ctx.fillStyle = L.price; stRR(ctx,x-w,y,w,h,L.r*0.6*sc); ctx.fill();
+  stTxt(ctx,price,x-w+padX,y+11*sc,fs,'#fff',800,'left');
   return w;
 }
 
@@ -2534,7 +2840,7 @@ function stFacts(g){
 /* 主图绘制：idx = 0..4 对应五种版式 */
 function stPaintMain(cv, idx, g, platName){
   const L = ST_LOCK[ST.style], f = stFacts(g);
-  const W = cv.width, H = cv.height, P = L.pad;
+  const W = cv.width, H = cv.height, P = L.pad * (W/800);
   const ctx = cv.getContext('2d');
 
   /* 背景 */
@@ -2553,8 +2859,8 @@ function stPaintMain(cv, idx, g, platName){
     stTxt(ctx, f.model, P, P, W*0.036, L.sub, 600);
     stTxtWrap(ctx, f.points[0], P, P+W*0.062, W*0.074, L.ink, 800, 'left', W-P*2-W*0.05, 2);
     stTxt(ctx, f.points[1], P, P+W*0.235, W*0.040, L.sub, 500, 'left', W-P*2);
-    stPaintProduct(ctx, W*0.52, H*0.635, W*0.50, W*0.50, L, g);
-    stPriceTag(ctx, W-P, H-P-52, f.price, L);
+    stPaintProduct(ctx, W*0.52, H*0.635, W*0.50, W*0.50, L, g, undefined, 0);
+    stPriceTag(ctx, W-P, H-P-52*(W/800), f.price, L, W/800);
     stTxt(ctx, platName, W-P, P, W*0.032, L.sub, 600, 'right');
 
   } else if(idx === 1){
@@ -2567,12 +2873,12 @@ function stPaintMain(cv, idx, g, platName){
       stTxt(ctx, String(i+1), P+W*0.025, y+W*0.010, W*0.031, '#fff', 800, 'center');
       stTxtWrap(ctx, p, P+W*0.072, y+2, W*0.037, L.ink, 600, 'left', W*0.50, 2);
     });
-    stPaintProduct(ctx, W*0.735, H*0.615, W*0.415, W*0.415, L, g);
+    stPaintProduct(ctx, W*0.735, H*0.615, W*0.415, W*0.415, L, g, undefined, 1);
 
   } else if(idx === 2){
     /* ③ 细节图：局部放大 + 引线 */
     stTxt(ctx, '看得见的细节', P, P, W*0.062, L.ink, 800);
-    stPaintProduct(ctx, W*0.50, H*0.455, W*0.46, W*0.46, L, g, 'zoom');
+    stPaintProduct(ctx, W*0.50, H*0.455, W*0.46, W*0.46, L, g, 'zoom', 2);
     const notes = [f.points[0], f.points[1], f.points[2] || '全包边工艺'];
     notes.forEach((n,i)=>{
       const y = H*0.735 + i*H*0.082;
@@ -2600,8 +2906,8 @@ function stPaintMain(cv, idx, g, platName){
       stTxt(ctx, t, capX+pw/2, H*0.198+W*0.013, W*0.026, 'rgba(255,255,255,.88)', 600, 'center');
       capX += pw + W*0.016;
     });
-    stPaintProduct(ctx, W*0.50, H*0.615, W*0.48, W*0.48, L, g);
-    stPriceTag(ctx, W-P, H-P-52, f.price, L);
+    stPaintProduct(ctx, W*0.50, H*0.615, W*0.48, W*0.48, L, g, undefined, 3);
+    stPriceTag(ctx, W-P, H-P-52*(W/800), f.price, L, W/800);
 
   } else {
     /* ⑤ 规格图：参数表 */
@@ -2615,14 +2921,14 @@ function stPaintMain(cv, idx, g, platName){
       stTxt(ctx, k, P, y, W*0.036, L.sub, 500);
       stTxt(ctx, v, W-P, y, W*0.036, L.ink, 700, 'right', W*0.58);
     });
-    stPaintProduct(ctx, W*0.80, H-P-W*0.13, W*0.26, W*0.26, L, g);
+    stPaintProduct(ctx, W*0.80, H-P-W*0.13, W*0.26, W*0.26, L, g, undefined, 4);
   }
 }
 
 /* 详情页单段绘制：seg = 0..6 */
 function stPaintDetail(cv, seg, g){
   const L = ST_LOCK[ST.style], f = stFacts(g);
-  const W = cv.width, H = cv.height, P = L.pad;
+  const W = cv.width, H = cv.height, P = L.pad * (W/750);
   const ctx = cv.getContext('2d');
 
   ctx.fillStyle = (seg===0 || seg===4) ? L.ink : L.bg;
@@ -2636,7 +2942,7 @@ function stPaintDetail(cv, seg, g){
     stTxt(ctx, f.model + ' · 专用', W/2, H*0.115, W*0.040, sub, 600, 'center');
     stTxtWrap(ctx, f.points[0], W/2, H*0.215, W*0.070, ink, 800, 'center', W-P*2, 2);
     stTxt(ctx, f.points[1], W/2, H*0.455, W*0.042, sub, 500, 'center', W-P*2);
-    stPriceTag(ctx, W/2+62, H*0.545, f.price, L);
+    stPriceTag(ctx, W/2 + 62*(W/750), H*0.545, f.price, L, W/750);
     /* 底部三格关键数据，填掉首屏下半部空白 */
     const stats = [[f.thickness,'厚度'],[f.weight,'整壳重量'],['双中轴','结构']];
     const sw = (W-P*2-40)/3, sy = H*0.705, sh = H*0.175;
@@ -2651,9 +2957,9 @@ function stPaintDetail(cv, seg, g){
 
   } else if(seg === 1){
     /* 核心卖点 */
-    stTxt(ctx, '三个理由，选它', P, H*0.072, W*0.058, ink, 800);
+    stTxt(ctx, '三个理由，选它', P, H*0.112, W*0.058, ink, 800);
     f.points.forEach((p,i)=>{
-      const y = H*0.215 + i*H*0.215, ch = H*0.175;
+      const y = H*0.245 + i*H*0.215, ch = H*0.175;
       ctx.fillStyle = L.bg2; stRR(ctx, P, y, W-P*2, ch, L.r); ctx.fill();
       ctx.fillStyle = L.accent; stRR(ctx, P+W*0.030, y+(ch-W*0.075)/2, W*0.075, W*0.075, W*0.03); ctx.fill();
       stTxt(ctx, String(i+1), P+W*0.0675, y+(ch-W*0.075)/2+W*0.018, W*0.042, '#fff', 800, 'center');
@@ -2662,13 +2968,14 @@ function stPaintDetail(cv, seg, g){
 
   } else if(seg === 2){
     /* 细节特写 */
-    stTxt(ctx, '细节，是它贵的理由', P, H*0.075, W*0.056, ink, 800);
-    stPaintProduct(ctx, W/2, H*0.495, W*0.385, W*0.385, L, g, 'zoom');
-    stTxt(ctx, f.points[2] || '全包边工艺', W/2, H*0.855, W*0.038, sub, 600, 'center', W-P*2);
+    stTxt(ctx, '细节，是它贵的理由', P, H*0.112, W*0.056, ink, 800);
+    const casW = W*0.34, casCY = H*0.525;
+    stPaintProduct(ctx, W/2, casCY, casW, casW, L, g, 'zoom', 2);
+    stTxt(ctx, f.points[2] || '全包边工艺', W/2, casCY + casW/2 + W*0.046, W*0.038, sub, 600, 'center', W-P*2);
 
   } else if(seg === 3){
     /* 使用场景 · 三格 */
-    stTxt(ctx, '三个场景，天天在用', P, H*0.09, W*0.062, ink, 800);
+    stTxt(ctx, '三个场景，天天在用', P, H*0.112, W*0.062, ink, 800);
     const scenes = f.scene.split('/').map(s=>s.trim()).slice(0,3);
     const cw = (W-P*2-P*2)/3, ch = H*0.48;
     scenes.forEach((s,i)=>{
@@ -2683,19 +2990,19 @@ function stPaintDetail(cv, seg, g){
 
   } else if(seg === 4){
     /* 适配机型（手机壳特有，同行 7-9 段里的关键一段） */
-    stTxt(ctx, '先确认你的机型', W/2, H*0.14, W*0.062, ink, 800, 'center');
+    stTxt(ctx, '先确认你的机型', W/2, H*0.135, W*0.062, ink, 800, 'center');
+    stTxt(ctx, '下单前请核对机型，拍错型号不支持换货', W/2, H*0.135 + W*0.075, W*0.030, sub, 500, 'center', W-P*2);
     const models = ['iPhone Duo','Mate X6 / X7','Mate XT 三折','Z Fold7 / Z Flip7','MIX Fold4 / Flip','Find N5 / N3 Flip'];
     models.forEach((m,i)=>{
       const col = i % 2, row = Math.floor(i/2);
-      const x = P + col*(W/2-P*0.5), y = H*0.30 + row*H*0.155;
+      const x = P + col*(W/2-P*0.5), y = H*0.305 + row*H*0.155;
       ctx.fillStyle = 'rgba(255,255,255,.13)'; stRR(ctx, x, y, W/2-P*1.1, H*0.115, 8); ctx.fill();
       stTxt(ctx, m, x+18, y+H*0.036, W*0.038, '#fff', 600);
     });
-    stTxt(ctx, '下单前请核对机型，拍错型号不支持换货', W/2, H*0.90, W*0.030, sub, 500, 'center');
 
   } else if(seg === 5){
     /* 规格参数表 */
-    stTxt(ctx, '规格参数', P, H*0.085, W*0.058, ink, 800);
+    stTxt(ctx, '规格参数', P, H*0.112, W*0.058, ink, 800);
     const rows = [['适配机型', f.model],['厚度', f.thickness],['整壳重量', f.weight],
                   ['材质 / 工艺', f.points[2] || '—'],['包装清单', '手机壳 ×1 · 防尘袋 ×1'],['货号', f.sku]];
     rows.forEach(([k,v],i)=>{
@@ -2720,7 +3027,7 @@ function stPaintDetail(cv, seg, g){
 
   /* 统一页脚：段序号 */
   if(seg > 0){
-    stTxt(ctx, String(seg+1).padStart(2,'0') + ' / 07', W-P, H-P*0.62, W*0.027,
+    stTxt(ctx, String(seg+1).padStart(2,'0') + ' / 07', W-P, H-P*0.34, W*0.027,
       onDark ? 'rgba(255,255,255,.5)' : L.sub, 600, 'right');
   }
 }
@@ -2747,8 +3054,16 @@ function stDownload(cv){
 }
 
 /* ---------- 商品实拍图：上传后主图 / 详情页直接用真图 ---------- */
-const ST_PHOTO = {};   /* gk -> dataURL */
-const ST_IMG   = {};   /* gk -> HTMLImageElement */
+const ST_PHOTO = {};   /* gk -> [dataURL, ...] 最多 5 张 */
+const ST_IMG   = {};   /* gk -> [HTMLImageElement, ...] */
+const ST_PHOTO_MAX = 5;
+
+/* 取某商品的实拍图数组（兼容旧单张数据） */
+function stPhotoOf(gk){
+  const v = ST_PHOTO[gk];
+  if(!v) return [];
+  return Array.isArray(v) ? v : [v];
+}
 
 function stRenderPhoto(){
   const bar = $('#stPhotoBar');
@@ -2757,34 +3072,60 @@ function stRenderPhoto(){
   const gk = ST.goods;
   if(!gk){
     bar.classList.add('is-off');
-    th.classList.remove('has');
-    th.innerHTML = '<span>未选商品</span>';
+    th.innerHTML = '<span class="st-photo-none">未选商品</span>';
     meta.textContent = '—';
     clr.disabled = true;
     return;
   }
   bar.classList.remove('is-off');
-  const url = ST_PHOTO[gk];
-  if(url){
-    const img = ST_IMG[gk];
-    th.classList.add('has');
-    th.innerHTML = '<img src="' + url + '" alt="商品实拍图">';
-    meta.textContent = img ? (img.naturalWidth + ' × ' + img.naturalHeight + ' · 已启用') : '载入中…';
+  const urls = stPhotoOf(gk);
+  const imgs = ST_IMG[gk] || [];
+  if(urls.length){
+    th.innerHTML = urls.map((u, i)=>{
+      const im = imgs[i];
+      const size = im && im.naturalWidth ? im.naturalWidth + '×' + im.naturalHeight : '载入中';
+      return `<div class="st-pic"><img src="${u}" alt="实拍图 ${i+1}" title="${size}">
+        <i>${i+1}</i><u data-stphoto-del="${i}" title="删掉这张">×</u></div>`;
+    }).join('');
+    const ready = imgs.filter(x=>x && x.naturalWidth).length;
+    meta.textContent = ready + ' 张 · ' + (urls.length >= 2 ? '每张主图各用一个角度' : '单图靠取景区分');
     clr.disabled = false;
+    const tip = $('#stPhotoTip');
+    if(tip) tip.style.display = urls.length >= ST_PHOTO_MAX ? 'none' : '';
   } else {
-    th.classList.remove('has');
-    th.innerHTML = '<span>未上传<br>用示意图</span>';
+    th.innerHTML = '<span class="st-photo-none">未上传<br>用示意图</span>';
     meta.textContent = '示意图';
     clr.disabled = true;
+    const tip = $('#stPhotoTip');
+    if(tip) tip.style.display = '';
   }
 }
 
-function stSetPhoto(gk, url){
-  ST_PHOTO[gk] = url;
-  const img = new Image();
-  img.onload = ()=>{ ST_IMG[gk] = img; stRenderPhoto(); stPaintAll(); };
-  img.onerror = ()=>{ toast('图片载入失败，请换一张'); };
-  img.src = url;
+function stSetPhoto(gk, urls){
+  const list = (Array.isArray(urls) ? urls : [urls]).slice(0, ST_PHOTO_MAX);
+  ST_PHOTO[gk] = list;
+  ST_IMG[gk] = [];
+  let pending = list.length;
+  list.forEach((url, i)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      ST_IMG[gk][i] = img;
+      if(--pending <= 0){ stRenderPhoto(); stPaintAll(); }
+    };
+    img.onerror = ()=>{
+      if(--pending <= 0){ stRenderPhoto(); stPaintAll(); }
+      toast('第 ' + (i+1) + ' 张载入失败，已跳过');
+    };
+    img.src = url;
+  });
+  if(!list.length){ stRenderPhoto(); stPaintAll(); }
+}
+
+function stDelPhoto(gk, idx){
+  const list = stPhotoOf(gk);
+  list.splice(idx, 1);
+  if(!list.length){ stClearPhoto(gk); return; }
+  stSetPhoto(gk, list);
 }
 
 function stClearPhoto(gk){
@@ -2794,11 +3135,14 @@ function stClearPhoto(gk){
 
 /* 有实拍图就画真图（cover 裁切 + 圆角 + 投影），没有则回退矢量壳 */
 function stPaintProduct(ctx, cx, cy, w, h, L, g, mode, view){
-  const img = g ? ST_IMG[g.k] : null;
-  if(!img || !img.complete || !img.naturalWidth){
+  const imgs = g ? (ST_IMG[g.k] || []).filter(x=>x && x.complete && x.naturalWidth) : [];
+  if(!imgs.length){
     if(g) stDrawCase(ctx, cx, cy, w, h, L, mode);
     return 'vector';
   }
+  /* 多张实拍图时按序号取不同角度；只有一张时退回缩放取景 */
+  const multi = imgs.length > 1;
+  const img = imgs[(view || 0) % imgs.length];
   const x = cx - w/2, y = cy - h/2, r = Math.min(w, h) * 0.085;
   ctx.save();
   ctx.shadowColor = 'rgba(16,24,40,.20)'; ctx.shadowBlur = w*0.05; ctx.shadowOffsetY = h*0.03;
@@ -2806,10 +3150,11 @@ function stPaintProduct(ctx, cx, cy, w, h, L, g, mode, view){
   ctx.restore();
   ctx.save();
   stRR(ctx, x, y, w, h, r); ctx.clip();
-  /* view 0/1/2 用不同的缩放与取景位置，同一张图在三格里不重复 */
-  const zoomT = view === 1 ? 1.35 : (view === 2 ? 1.75 : 1);
-  const fx = view === 1 ? 0.30 : (view === 2 ? 0.72 : 0.5);
-  const fy = view === 1 ? 0.26 : (view === 2 ? 0.68 : 0.5);
+  /* 多图：各用各的角度，只做轻微缩放避免构图雷同；单图：靠缩放与取景区分 */
+  const zoomT = multi ? (view === 3 ? 1.06 : 1)
+    : (view === 1 ? 1.35 : (view === 2 ? 1.75 : (view === 3 ? 1.30 : (view === 4 ? 1.60 : 1))));
+  const fx = multi ? 0.5 : (view === 1 ? 0.30 : (view === 2 ? 0.72 : (view === 3 ? 0.62 : (view === 4 ? 0.38 : 0.5))));
+  const fy = multi ? (view === 3 ? 0.38 : 0.5) : (view === 1 ? 0.26 : (view === 2 ? 0.68 : (view === 3 ? 0.38 : (view === 4 ? 0.62 : 0.5))));
   const sc = Math.max(w / img.naturalWidth, h / img.naturalHeight) * zoomT;
   const dw = img.naturalWidth * sc, dh = img.naturalHeight * sc;
   ctx.drawImage(img, x - (dw-w)*fx, y - (dh-h)*fy, dw, dh);
@@ -2858,21 +3203,52 @@ function stExportLong(){
   const url = out.toDataURL('image/png');
   const sku = (ST_GOODS.find(x=>x.k === cvs[0].dataset.goods) || {}).sku || 'detail';
   window.ST_LAST_LONG = { w:W, h:H, segments:cvs.length };
-  stOpenLight(url, '详情页长图 · ' + W + ' × ' + H + ' · ' + cvs.length + ' 段拼接', W, H, sku + '_detail_long');
+  stOpenLight(url, '详情页长图 · ' + W + ' × ' + H + ' · ' + cvs.length + ' 段拼接', W, H, sku + '_detail_' + W + '_long');
 }
 
-/* 上传 / 清除实拍图 */
+/* 素材库关键词：输入即筛选 */
+document.addEventListener('input', function(e){
+  if(e.target.id !== 'libQ') return;
+  ST_LIB.q = e.target.value || '';
+  stLibRender();
+});
+
+/* 上传实拍图：支持一次多选，追加到已有列表，最多 5 张 */
 document.addEventListener('change', function(e){
   if(e.target.id !== 'stPhotoFile') return;
-  const f = e.target.files && e.target.files[0];
-  if(!f) return;
+  const files = Array.prototype.slice.call(e.target.files || []);
+  if(!files.length) return;
   if(!ST.goods){ toast('请先选择商品'); e.target.value = ''; return; }
-  if(f.size > 8 * 1024 * 1024){ toast('图片超过 8MB，请压缩后再传'); e.target.value = ''; return; }
   const gk = ST.goods;
-  const fr = new FileReader();
-  fr.onload = ()=> stSetPhoto(gk, fr.result);
-  fr.readAsDataURL(f);
+  const exist = stPhotoOf(gk);
+  const room = ST_PHOTO_MAX - exist.length;
+  if(room <= 0){ toast('每个商品最多 5 张实拍图，请先删掉几张'); e.target.value = ''; return; }
+  const take = files.slice(0, room);
+  if(files.length > room) toast('最多 5 张，只取前 ' + room + ' 张');
+  const big = take.find(f=>f.size > 8 * 1024 * 1024);
+  if(big){ toast('有图片超过 8MB，请压缩后再传'); e.target.value = ''; return; }
+
+  let pending = take.length;
+  const urls = [];
+  take.forEach((f, i)=>{
+    const fr = new FileReader();
+    fr.onload = ()=>{
+      urls[i] = fr.result;
+      if(--pending === 0) stSetPhoto(gk, exist.concat(urls.filter(Boolean)));
+    };
+    fr.readAsDataURL(f);
+  });
   e.target.value = '';
+});
+
+/* 删掉单张实拍图 */
+document.addEventListener('click', function(e){
+  const del = e.target.closest('[data-stphoto-del]');
+  if(!del) return;
+  e.stopPropagation();
+  if(!ST.goods) return;
+  stDelPhoto(ST.goods, +del.dataset.stphotoDel);
+  toast('已删除这张实拍图');
 });
 
 /* ③ 合规扫描：广告法高风险词（手机壳类目高频违规点） */
@@ -2930,7 +3306,8 @@ function stRun(){
       setTimeout(()=>{
         stg.style.display='none';
         stRenderResult(g, kinds, plats);
-        toast('素材生成完成');
+        stLibArchive(g, plats);
+        toast('素材生成完成，已按店铺归档到素材库');
       }, 260);
       return;
     }
@@ -2996,22 +3373,8 @@ function stRenderResult(g, kinds, plats){
       <div class="st-note">主图按平台规格以真实像素渲染（天猫/京东/抖店 800×800，拼多多 750×750，小红书 1080×1440），点「下载 PNG」可直接取用。</div>
     </div>` : '';
 
-  /* --- 详情页：7 段 Canvas 长图 --- */
-  $('#stDetailBlock').innerHTML = has('detail') ? `
-    <div class="st-block">
-      <div class="st-block-h"><span class="st-block-n">3</span>详情页长图
-        <span class="st-block-tag">${ST_DETAIL_SEGS.length} 段 · 750 宽</span>
-        <button class="btn btn-sm btn-ai" id="stExportLong" style="margin-left:auto">拼成一张长图</button></div>
-      <div class="st-dseg-grid">
-        ${ST_DETAIL_SEGS.map((s,i)=>`
-          <div class="st-dseg">
-            <canvas data-dseg="${i}" data-goods="${g.k}" data-name="${g.sku}_detail_${String(i+1).padStart(2,'0')}"
-                    width="750" height="${i===0?520:(i===4?560:460)}"></canvas>
-            <div class="st-dseg-cap">${i+1}. ${s}</div>
-          </div>`).join('')}
-      </div>
-      <div class="st-note">详情页按 ${plats.map(p=>p.n+' '+p.detail).join(' / ')||'所选平台'} 规格导出；适配机型一段建议按实际库存 SKU 增补。</div>
-    </div>` : '';
+  /* --- 详情页：7 段 Canvas 长图（宽度按平台切换） --- */
+  stRenderDetail();
 
   /* 画完所有 canvas */
   stPaintAll();
@@ -3035,6 +3398,11 @@ function stCopyAll(){
   if(!g) return '';
   const c = ST_COPY_TPL[g.k] || { title:g.n, points:g.selling, desc:g.scene };
   return `【商品】${g.n}（${g.sku} · ${g.price}）\n\n【标题】\n${c.title}\n\n【卖点】\n${c.points.map((p,i)=>(i+1)+'. '+p).join('\n')}\n\n【短描述】\n${c.desc}`;
+}
+
+function renderLib(){
+  stLibLoad();
+  stLibRender();
 }
 
 function renderStudio(){
@@ -3949,6 +4317,7 @@ const TITLES = {
   copymine:['我的文案库','沉淀自己的爆款资产'],
   generator:['AI 爆款生成','用爆款结构生成全新原创脚本'],
   studio:['素材工坊','主图 · 详情页 · 卖点文案 一次生成 · 多平台尺寸适配'],
+  lib:['素材库','按店铺归档 · 按图位检索 · 一键导出上传清单'],
   review:['整体复盘','文案 · 素材 · 投放 全链路归因'],
   insight:['竞品情报','监控同行爆款动态 · 账号已脱敏'],
   datasource:['数据接入','通过官方开放平台授权接入 · 不使用爬虫'],
@@ -3970,6 +4339,7 @@ function switchView(v){
     if(v==='copymine'){renderMineTags();renderMine();}
     if(v==='generator'){ renderHandoff(); renderSeeds(); }
     if(v==='studio') renderStudio();
+    if(v==='lib') renderLib();
     if(v==='review') renderReviewSelect();
     if(v==='insight') renderInsight();
     if(v==='datasource') dsRender();
@@ -3983,6 +4353,8 @@ function renderTopActions(){
     dashboard:`<button class="btn btn-sm" id="refreshData">刷新数据</button>
       <button class="btn btn-sm btn-ai" data-goto="generator">AI 生成脚本</button>`,
     myvideo:`<button class="btn btn-sm" data-goto="review">去复盘</button>`,
+    lib:`<button class="btn btn-sm" data-goto="studio">去生成素材</button>
+      <button class="btn btn-sm btn-ai" id="libCsvTop">导出上传清单</button>`,
     copyrival:`<span class="tag tag-ok">结构库 · 不含原文</span>
       <button class="btn btn-sm btn-ai" data-goto="generator">用结构生成</button>`,
     storyboard:`<span class="tag tag-ok">不生成视频片段</span>
@@ -4474,6 +4846,50 @@ document.addEventListener('click', e=>{
     return;
   }
   if(e.target.id==='stSaveAll'){ toast('已全部存入素材库（演示）'); return; }
+  /* 素材库：店铺下拉 / 类型 tab / 关键词 / 导出 / 清空 / 卡片放大 / 店铺胶囊 */
+  if(e.target.id === 'libShop'){ ST_LIB.shop = e.target.value; stLibRender(); return; }
+  const libKindBtn = e.target.closest('[data-lk]');
+  if(libKindBtn){
+    ST_LIB.kind = libKindBtn.dataset.lk;
+    document.querySelectorAll('#libKind .tab').forEach(t=>t.classList.toggle('active', t === libKindBtn));
+    stLibRender(); return;
+  }
+  const chip = e.target.closest('[data-libshop]');
+  if(chip){
+    ST_LIB.shop = ST_LIB.shop === chip.dataset.libshop ? 'all' : chip.dataset.libshop;
+    const sel2 = $('#libShop');
+    if(sel2) sel2.value = ST_LIB.shop;
+    stLibRender(); return;
+  }
+  if(e.target.id === 'libCsv' || e.target.id === 'libCsvTop'){ stLibCSV(); return; }
+  if(e.target.id === 'libClear'){
+    if(!ST_LIB.items.length){ toast('素材库已经是空的'); return; }
+    const n = ST_LIB.items.length;
+    ST_LIB.items = []; stLibSave(); stLibRender();
+    toast('已清空 ' + n + ' 张素材索引'); return;
+  }
+  const libCard = e.target.closest('[data-libid]');
+  if(libCard){
+    const it = ST_LIB.items.find(x=>x.key === libCard.dataset.libid);
+    if(it){
+      stOpenLight(it.thumb,
+        it.shop + ' · ' + (it.kind==='main'?'主图':'详情') + ' ' + it.idx
+          + ' · ' + it.w + '×' + it.h + ' · 缩略索引（高清请回工坊重出）',
+        240, Math.round(240 * it.h / it.w), it.sku + '_' + it.code + '_' + it.idx);
+    }
+    return;
+  }
+  const dwBtn = e.target.closest('[data-dw]');
+  if(dwBtn){
+    const w = +dwBtn.dataset.dw;
+    if(w && w !== ST.dw){
+      ST.dw = w;
+      stRenderDetail();
+      stPaintAll();
+      toast('详情页宽度已切换为 ' + w + ' 宽（' + stDetailH(0) + ' / ' + stDetailH(1) + ' 像素段高）');
+    }
+    return;
+  }
   if(e.target.id==='stExportLong'){ stExportLong(); return; }
   if(e.target.id==='stLightDl'){ stDownloadLight(); return; }
   if(e.target.id==='stPhotoClear'){
@@ -4494,6 +4910,7 @@ document.addEventListener('click', e=>{
       cvHit.width, cvHit.height, cvHit.dataset.name);
     return;
   }
+  if(e.target.id === 'libQ') return;
   if(e.target.closest('#stLight') && !e.target.closest('#stLightImg') && !e.target.closest('#stLightDl')){
     $('#stLight').classList.remove('on');
     return;
@@ -4553,7 +4970,7 @@ document.addEventListener('click', e=>{
 });
 
 /* 键盘快捷键 1-9 切换页面，0 = 第 10 个，- = 第 11 个 */
-const VIEW_ORDER = ['dashboard','myvideo','copyrival','copymine','storyboard','generator','studio','review','insight','datasource'];
+const VIEW_ORDER = ['dashboard','myvideo','copyrival','copymine','storyboard','generator','studio','lib','review','insight','datasource'];
 document.addEventListener('keydown', e=>{
   if(e.target.matches('input,textarea,select')) return;
   const n = e.key === '0' ? 10 : (e.key === '-' ? 11 : parseInt(e.key));
