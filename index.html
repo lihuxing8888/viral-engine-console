@@ -1160,6 +1160,14 @@ body{
                   <div class="tab" data-ststyle="warm" style="flex:1;text-align:center">暖调生活</div>
                   <div class="tab" data-ststyle="hard" style="flex:1;text-align:center">高对比促销</div>
                 </div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                  <span style="font-size:11.5px;color:var(--text-3);white-space:nowrap">主图角标</span>
+                  <div class="tabs" id="stBadgePick" style="flex:1">
+                    <div class="tab active" data-stbadge="both" style="flex:1;text-align:center;padding:5px 4px">角标+贴纸</div>
+                    <div class="tab" data-stbadge="badge" style="flex:1;text-align:center;padding:5px 4px">只角标</div>
+                    <div class="tab" data-stbadge="off" style="flex:1;text-align:center;padding:5px 4px">不加</div>
+                  </div>
+                </div>
                 <textarea id="stPrompt" rows="3" placeholder="补充卖点或要求，如：突出加厚不透光、适合小个子、含运费险"
                   style="width:100%;box-sizing:border-box;padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;
                   font-size:12px;background:var(--panel);color:var(--text);outline:none;font-family:inherit;resize:vertical;line-height:1.65"></textarea>
@@ -1228,6 +1236,7 @@ body{
               <div style="font-size:12.5px;color:var(--text-2);line-height:1.75">
                 素材工坊每生成一次，产物按<b>店铺 × 商品 × 图位</b>自动归档。同一位置重新生成会覆盖旧记录，库不会越滚越大。
                 <span style="color:var(--brand-2);font-weight:600">库内只存缩略图索引，高清原图在工坊里按配置重出。</span>
+                索引存在本机浏览器里，换设备用右上角<b>导出快照 / 导入快照</b>搬过去。
               </div>
             </div>
             <span class="tag tag-ai" style="font-size:11px;white-space:nowrap">店铺维度 · 归属清晰</span>
@@ -1246,6 +1255,9 @@ body{
             </div>
             <input class="input" id="libQ" placeholder="搜商品名 / 货号" style="max-width:210px">
             <button class="btn btn-sm" id="libCsv" style="margin-left:auto">导出上传清单 CSV</button>
+            <button class="btn btn-sm" id="libSnapOut" title="把整个素材库导出成一个 JSON 文件，换电脑时导入即恢复">导出快照</button>
+            <button class="btn btn-sm" id="libSnapIn" title="导入之前导出的快照，同位置记录会被覆盖">导入快照</button>
+            <input type="file" id="libSnapFile" accept=".json,application/json" style="display:none">
             <button class="btn btn-sm" id="libClear">清空素材库</button>
           </div>
         </div>
@@ -2599,6 +2611,93 @@ function stLibRender(){
     </div>`).join('');
 }
 
+/* =========================================================
+   素材库快照：导出 / 导入
+   单文件应用没有后端，素材索引天然存在本机浏览器里。
+   与其接一个后端把应用拆成多文件，不如给一份可搬运的快照：
+   换电脑、换浏览器、给同事接手，一个 JSON 就够。
+   ========================================================= */
+function stLibSnapshot(){
+  if(!ST_LIB.items.length){ toast('素材库是空的，没有可导出的内容'); return; }
+  const payload = {
+    app: 'viral-engine-console',
+    type: 'studio-lib',
+    v: 1,
+    exportedAt: new Date().toISOString(),
+    count: ST_LIB.items.length,
+    items: ST_LIB.items
+  };
+  const blob = new Blob([JSON.stringify(payload)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '素材库快照_' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  setTimeout(()=> URL.revokeObjectURL(a.href), 3000);
+  toast('已导出 ' + ST_LIB.items.length + ' 条索引 · ' + Math.round(blob.size / 1024) + ' KB');
+}
+
+/* 白名单重建：只接受已知字段，缩略图必须是内联图片，
+   避免导入别人给的 JSON 时把外链 URL 或奇怪字段带进渲染流程 */
+function stLibNormalize(o){
+  if(!o || typeof o !== 'object') return null;
+  const thumb = String(o.thumb || '');
+  if(thumb.slice(0, 11) !== 'data:image/') return null;
+  const key = String(o.key || '');
+  if(!key) return null;
+  return {
+    key,
+    gk:    String(o.gk || ''),
+    gname: String(o.gname || '未知商品'),
+    sku:   String(o.sku || ''),
+    shop:  String(o.shop || '未归属'),
+    code:  String(o.code || '--'),
+    kind:  o.kind === 'detail' ? 'detail' : 'main',
+    idx:   Number(o.idx) || 1,
+    w:     Number(o.w) || 0,
+    h:     Number(o.h) || 0,
+    style: String(o.style || 'clean'),
+    thumb,
+    ts:    Number(o.ts) || Date.now()
+  };
+}
+
+function stLibImport(file){
+  if(!file) return;
+  if(file.size > 12 * 1024 * 1024){ toast('快照超过 12MB，先精简再导入'); return; }
+  const rd = new FileReader();
+  rd.onerror = ()=> toast('文件读取失败');
+  rd.onload = ()=>{
+    let items;
+    try{
+      const d = JSON.parse(rd.result);
+      items = Array.isArray(d) ? d : (d && d.items);
+    }catch(e){
+      toast('不是有效的快照文件（JSON 解析失败）');
+      return;
+    }
+    if(!Array.isArray(items) || !items.length){ toast('快照里没有素材记录'); return; }
+
+    let add = 0, upd = 0, skip = 0, overflow = 0;
+    items.forEach(raw=>{
+      const x = stLibNormalize(raw);
+      if(!x){ skip++; return; }
+      const old = ST_LIB.items.find(y=>y.key === x.key);
+      if(old){ Object.assign(old, x); upd++; }
+      else{
+        if(ST_LIB.items.length >= LIB_MAX){ overflow++; return; }
+        ST_LIB.items.push(x); add++;
+      }
+    });
+
+    stLibSave(); stLibRender();
+    let msg = '导入完成：新增 ' + add + '，更新 ' + upd;
+    if(skip)     msg += '，跳过无效 ' + skip;
+    if(overflow) msg += '，超出上限未导 ' + overflow;
+    toast(msg);
+  };
+  rd.readAsText(file);
+}
+
 /* 导出上传清单 CSV */
 function stLibCSV(){
   const list = stLibFiltered();
@@ -2822,6 +2921,53 @@ function stPriceTag(ctx,x,y,price,L,scale){
   return w;
 }
 
+/* ---------- ③ 角标图层：卖点角标 + 促销贴纸 ----------
+   为什么单做一层而不是塞进版式：
+   版式管的是「这块地方放什么」，角标管的是「这版要不要挂促销」。
+   同一个版式，大促挂贴纸、日常不挂，靠的是开关而不是重排版式。
+   位置一律贴右上角、纵向堆叠，因为五套版式的右上角都是空白区；
+   参数表那版右上角被表格占满，所以不挂。 */
+const ST_BADGE = { mode: 'both' };   /* both | badge | off */
+const ST_BADGE_SALE = '立减 50';
+
+function stPaintBadge(ctx, W, H, L, g, topY, pad, onDark){
+  if(ST_BADGE.mode === 'off') return 0;
+  const right = W - pad;
+  /* 落在深色区（高对比风格的撞色底、场景图的顶部色块）时，
+     角标必须反过来用白底深字 —— 否则 accent 蓝压深灰、白底配白字都看不清 */
+  const lightBg = (ST.style === 'hard') || !!onDark;
+  const badgeBg  = lightBg ? '#ffffff' : L.accent;
+  const badgeInk = lightBg ? '#171a20' : '#ffffff';
+  let y = topY, n = 0;
+
+  /* 卖点角标：商品自带 tag（主推 / 新品）优先，没有就写现货 —— 不编造卖点 */
+  const txt = g.tag || '现货';
+  let fs = W * 0.028;
+  ctx.font = '800 ' + fs + 'px ' + L.font;
+  let bh = W * 0.056, bw = ctx.measureText(txt).width + bh * 0.72;
+  ctx.fillStyle = badgeBg;
+  stRR(ctx, right - bw, y, bw, bh, bh * 0.30); ctx.fill();
+  stTxt(ctx, txt, right - bw / 2, y + (bh - fs) / 2, fs, badgeInk, 800, 'center');
+  y += bh + W * 0.018;
+  n++;
+
+  /* 促销贴纸：轻微倾斜更像贴上去的，但角度控制在 3° 内，不然显廉价 */
+  if(ST_BADGE.mode === 'both'){
+    fs = W * 0.030;
+    ctx.font = '800 ' + fs + 'px ' + L.font;
+    bh = W * 0.062; bw = ctx.measureText(ST_BADGE_SALE).width + bh * 0.66;
+    ctx.save();
+    ctx.translate(right - bw / 2, y + bh / 2);
+    ctx.rotate(-0.052);
+    ctx.fillStyle = L.price;
+    stRR(ctx, -bw / 2, -bh / 2, bw, bh, bh * 0.18); ctx.fill();
+    stTxt(ctx, ST_BADGE_SALE, 0, -fs * 0.52, fs, '#ffffff', 800, 'center');
+    ctx.restore();
+    n++;
+  }
+  return n;
+}
+
 /* ---------- ② 商品事实：只从商品档案取，风格不改事实 ---------- */
 function stFacts(g){
   return {
@@ -2862,6 +3008,9 @@ function stPaintMain(cv, idx, g, platName){
     stPaintProduct(ctx, W*0.52, H*0.635, W*0.50, W*0.50, L, g, undefined, 0);
     stPriceTag(ctx, W-P, H-P-52*(W/800), f.price, L, W/800);
     stTxt(ctx, platName, W-P, P, W*0.032, L.sub, 600, 'right');
+    /* 首图的大字卖点会折到两行、右端顶到 0.88W，所以角标不下挂在顶部，
+       改贴商品图右上角 —— 那一列 0.79~0.95W 是整张图唯一的空档 */
+    stPaintBadge(ctx, W, H, L, g, H*0.402, P);
 
   } else if(idx === 1){
     /* ② 卖点图：左文右图 */
@@ -2874,6 +3023,7 @@ function stPaintMain(cv, idx, g, platName){
       stTxtWrap(ctx, p, P+W*0.072, y+2, W*0.037, L.ink, 600, 'left', W*0.50, 2);
     });
     stPaintProduct(ctx, W*0.735, H*0.615, W*0.415, W*0.415, L, g, undefined, 1);
+    stPaintBadge(ctx, W, H, L, g, P + W*0.052, P);
 
   } else if(idx === 2){
     /* ③ 细节图：局部放大 + 引线 */
@@ -2886,6 +3036,7 @@ function stPaintMain(cv, idx, g, platName){
       ctx.beginPath(); ctx.arc(P+W*0.012, y+W*0.020, W*0.011, 0, Math.PI*2); ctx.fill();
       stTxt(ctx, n, P+W*0.038, y, W*0.035, L.sub, 600, 'left', W-P*2-W*0.05);
     });
+    stPaintBadge(ctx, W, H, L, g, P + W*0.052, P);
 
   } else if(idx === 3){
     /* ④ 场景图：上下分屏 */
@@ -2908,6 +3059,8 @@ function stPaintMain(cv, idx, g, platName){
     });
     stPaintProduct(ctx, W*0.50, H*0.615, W*0.48, W*0.48, L, g, undefined, 3);
     stPriceTag(ctx, W-P, H-P-52*(W/800), f.price, L, W/800);
+    /* 场景词胶囊在左侧，色块内右侧是空的，角标挪进色块 */
+    stPaintBadge(ctx, W, H, L, g, H*0.112, P, true);
 
   } else {
     /* ⑤ 规格图：参数表 */
@@ -3051,6 +3204,176 @@ function stDownload(cv){
   a.href = url;
   a.download = (cv.dataset.name || 'design') + '.png';
   a.click();
+}
+
+/* =========================================================
+   纯前端 ZIP 打包（store 模式，不压缩）
+   PNG 本身已是压缩格式，deflate 一遍通常只省 1-2%，
+   换来的是几秒 CPU 和额外依赖。这里只做容器。
+   ========================================================= */
+const ST_CRC_TBL = (()=>{
+  const t = new Uint32Array(256);
+  for(let n=0;n<256;n++){
+    let c = n;
+    for(let k=0;k<8;k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+
+function stCrc32(u8){
+  let c = 0xFFFFFFFF;
+  for(let i=0;i<u8.length;i++) c = ST_CRC_TBL[(c ^ u8[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+
+/* dataURL → Uint8Array，比 fetch(dataURL) 稳，不依赖 Promise */
+function stDataURL2U8(durl){
+  const bin = atob(durl.slice(durl.indexOf(',') + 1));
+  const u8 = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) u8[i] = bin.charCodeAt(i);
+  return u8;
+}
+
+/* files: [{name, u8}] → Blob(application/zip) */
+function stMakeZip(files){
+  const enc = new TextEncoder();
+  const now = new Date();
+  const dosTime = ((now.getHours() & 31) << 11) | ((now.getMinutes() & 63) << 5) | ((now.getSeconds() >> 1) & 31);
+  const dosDate = (((now.getFullYear() - 1980) & 127) << 9) | (((now.getMonth() + 1) & 15) << 5) | (now.getDate() & 31);
+
+  const body = [], central = [];
+  let offset = 0;
+
+  files.forEach(f=>{
+    const nb = enc.encode(f.name);
+    const crc = stCrc32(f.u8);
+    const size = f.u8.length;
+
+    const lh = new Uint8Array(30 + nb.length);
+    const lv = new DataView(lh.buffer);
+    lv.setUint32(0, 0x04034b50, true);
+    lv.setUint16(4, 20, true);        /* version needed */
+    lv.setUint16(6, 0x0800, true);    /* UTF-8 文件名标志 */
+    lv.setUint16(8, 0, true);         /* 0 = store */
+    lv.setUint16(10, dosTime, true);
+    lv.setUint16(12, dosDate, true);
+    lv.setUint32(14, crc, true);
+    lv.setUint32(18, size, true);
+    lv.setUint32(22, size, true);
+    lv.setUint16(26, nb.length, true);
+    lv.setUint16(28, 0, true);
+    lh.set(nb, 30);
+
+    body.push(lh, f.u8);
+
+    const cd = new Uint8Array(46 + nb.length);
+    const cv = new DataView(cd.buffer);
+    cv.setUint32(0, 0x02014b50, true);
+    cv.setUint16(4, 20, true);        /* version made by */
+    cv.setUint16(6, 20, true);        /* version needed */
+    cv.setUint16(8, 0x0800, true);
+    cv.setUint16(10, 0, true);
+    cv.setUint16(12, dosTime, true);
+    cv.setUint16(14, dosDate, true);
+    cv.setUint32(16, crc, true);
+    cv.setUint32(20, size, true);
+    cv.setUint32(24, size, true);
+    cv.setUint16(28, nb.length, true);
+    cv.setUint32(42, offset, true);
+    cd.set(nb, 46);
+    central.push(cd);
+
+    offset += lh.length + size;
+  });
+
+  const cdSize = central.reduce((a,b)=> a + b.length, 0);
+  const eocd = new Uint8Array(22);
+  const ev = new DataView(eocd.buffer);
+  ev.setUint32(0, 0x06054b50, true);
+  ev.setUint16(8, files.length, true);
+  ev.setUint16(10, files.length, true);
+  ev.setUint32(12, cdSize, true);
+  ev.setUint32(16, offset, true);
+
+  return new Blob([...body, ...central, eocd], { type:'application/zip' });
+}
+
+/* 按店铺打包：主图进各自店铺目录，详情页按宽度进共用目录 */
+function stZipByShop(){
+  const g = ST_GOODS.find(x=>x.k === ST.goods);
+  if(!g){ toast('先选一个商品'); return; }
+
+  const mains = [...document.querySelectorAll('#stMainBlock canvas[data-seg]')];
+  const dets  = [...document.querySelectorAll('#stDetailBlock canvas[data-dseg]')];
+  if(!mains.length && !dets.length){ toast('还没有可打包的图，先生成一次'); return; }
+
+  const files = [];
+  const csv = [['店铺', '店铺编码', '商品', '货号', '类型', '尺寸', '压缩包内路径']];
+  const dirCount = {};
+
+  const add = (dir, cv, row)=>{
+    const name = (cv.dataset.name || 'img') + '.png';
+    const path = dir + '/' + name;
+    files.push({ name: path, u8: stDataURL2U8(cv.toDataURL('image/png')) });
+    dirCount[dir] = (dirCount[dir] || 0) + 1;
+    csv.push([row.shop, row.code, g.n, g.sku, row.kind, cv.width + 'x' + cv.height, path]);
+  };
+
+  mains.forEach(cv=>{
+    const pl = ST_PLATFORMS.find(p=>p.n === cv.dataset.plat);
+    if(!pl) return;
+    add(pl.shop + '_' + pl.code, cv, { shop:pl.shop, code:pl.code, kind:'主图' });
+  });
+
+  /* 详情页：750 同时服务天猫/京东/抖店，只打一份到共用目录 ——
+     否则同一张图在三个店铺目录里各存一份，包体积直接 ×3 */
+  [...new Set(dets.map(cv=>cv.width))].forEach(w=>{
+    const list  = dets.filter(cv=>cv.width === w);
+    const shops = ST_PLATFORMS.filter(p=>p.dw === w && ST.plats.has(p.k));
+    let dir;
+    if(shops.length > 1)      dir = '共用详情页_' + w;
+    else if(shops.length === 1) dir = shops[0].shop + '_' + shops[0].code + '_详情';
+    else                      dir = '详情页_' + w;
+    list.forEach(cv=>{
+      add(dir, cv, {
+        shop: shops.map(p=>p.shop).join(' / ') || '未归属',
+        code: shops.map(p=>p.code).join('/') || '--',
+        kind: '详情'
+      });
+    });
+  });
+
+  /* 说明文件：解压后先看这个，不用回头问「750 该传哪家」 */
+  const note = [
+    '抖音爆款引擎 · 素材打包说明',
+    '商品：' + g.n + '（' + g.sku + '）',
+    '风格：' + (ST_STYLES[ST.style] || ST.style),
+    '打包时间：' + new Date().toLocaleString('zh-CN'),
+    '',
+    '目录结构',
+    ...Object.keys(dirCount).map(d=>'  ' + d + '/  ' + dirCount[d] + ' 张'),
+    '',
+    '上传规则',
+    '1. 店铺目录（如 壳厂老周旗舰店_TM）里的主图，只传对应店铺后台。',
+    '2. 「共用详情页_750」是同一天猫/京东/抖店通用宽度，三家店传同一批文件，不要各存一份。',
+    '3. 文件名末尾两位是图位序号，主图上架顺序按序号排。',
+    '4. 上传清单.csv 可用 Excel 打开，按「店铺编码」分组即得上架顺序。'
+  ].join('\r\n');
+  files.push({ name: '说明.txt', u8: new TextEncoder().encode(note) });
+
+  const csvText = '\uFEFF' + csv.map(r=>r.map(v=>'"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\r\n');
+  files.push({ name: '上传清单.csv', u8: new TextEncoder().encode(csvText) });
+
+  const blob = stMakeZip(files);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = g.sku + '_' + new Date().toISOString().slice(0, 10) + '_按店铺打包.zip';
+  a.click();
+  setTimeout(()=> URL.revokeObjectURL(a.href), 4000);
+
+  const kb = Math.round(blob.size / 1024);
+  toast('已打包 ' + (files.length - 2) + ' 张图 · ' + Object.keys(dirCount).length + ' 个目录 · ' + kb + ' KB');
 }
 
 /* ---------- 商品实拍图：上传后主图 / 详情页直接用真图 ---------- */
@@ -3320,6 +3643,16 @@ function stRun(){
   ST.timer = setInterval(tick, 520);
 }
 
+/* 样式令牌展示条：切换风格时整条换掉，文字才不会和画面对不上 */
+function stLockHTML(style){
+  return `<div class="st-lock">
+        <b>样式令牌已锁定</b>：${ST_STYLES[style]} ·
+        主色 <span class="st-sw" style="background:${ST_LOCK[style].accent}"></span> ·
+        圆角 ${ST_LOCK[style].r}px ·
+        5 张主图与 ${ST_DETAIL_SEGS.length} 段详情页共用同一份令牌，整套视觉统一
+      </div>`;
+}
+
 /* 渲染生成结果 */
 function stRenderResult(g, kinds, plats){
   const style = ST.style;
@@ -3346,13 +3679,9 @@ function stRenderResult(g, kinds, plats){
   $('#stMainBlock').innerHTML = has('main') ? `
     <div class="st-block">
       <div class="st-block-h"><span class="st-block-n">2</span>商品主图
-        <span class="st-block-tag">5 张一套 · ${plats.length} 个平台规格</span></div>
-      <div class="st-lock">
-        <b>样式令牌已锁定</b>：${ST_STYLES[style]} ·
-        主色 <span class="st-sw" style="background:${ST_LOCK[style].accent}"></span> ·
-        圆角 ${ST_LOCK[style].r}px ·
-        5 张主图与 ${ST_DETAIL_SEGS.length} 段详情页共用同一份令牌，整套视觉统一
-      </div>
+        <span class="st-block-tag">5 张一套 · ${plats.length} 个平台规格</span>
+        <button class="btn btn-sm btn-ai" id="stZip" style="margin-left:auto" title="按店铺分目录打包高清 PNG，并附上传清单">按店铺打包 ZIP</button></div>
+      ${stLockHTML(style)}
       <div class="st-main-grid">
         ${plats.map(p=>{
           const scenes = ST_MAIN_SCENES[style] || ST_MAIN_SCENES.clean;
@@ -3370,7 +3699,7 @@ function stRenderResult(g, kinds, plats){
             </div>`).join('');
         }).join('')}
       </div>
-      <div class="st-note">主图按平台规格以真实像素渲染（天猫/京东/抖店 800×800，拼多多 750×750，小红书 1080×1440），点「下载 PNG」可直接取用。</div>
+      <div class="st-note">主图按平台规格以真实像素渲染（天猫/京东/抖店 800×800，拼多多 750×750，小红书 1080×1440），点「下载 PNG」可直接取用。右上角角标取商品标签，参数表那版不挂角标以免压住表格；「按店铺打包 ZIP」会把高清图按店铺分目录打包。</div>
     </div>` : '';
 
   /* --- 详情页：7 段 Canvas 长图（宽度按平台切换） --- */
@@ -4830,10 +5159,31 @@ document.addEventListener('click', e=>{
     stRenderPlats(); stRenderShopTable();
     return;
   }
+  const sbd = e.target.closest('[data-stbadge]');
+  if(sbd){
+    ST_BADGE.mode = sbd.dataset.stbadge;
+    document.querySelectorAll('#stBadgePick .tab').forEach(t=>t.classList.toggle('active', t === sbd));
+    /* 只重绘画布，不重建 DOM —— 否则下游的懒加载和选中态都会丢 */
+    if(document.querySelectorAll('#stMainBlock canvas').length) stPaintAll();
+    return;
+  }
   const ss = e.target.closest('[data-ststyle]');
   if(ss){
     ST.style = ss.dataset.ststyle;
     $$('#stStyles .tab').forEach(el=>el.classList.toggle('active', el.dataset.ststyle===ST.style));
+    /* 风格只改视觉令牌、不动商品事实，所以完全没必要重跑一遍生成流程。
+       但也不能什么都不做 —— 点一下没有任何反馈，用户会以为坏了。 */
+    if(document.querySelectorAll('#stMainBlock canvas').length){
+      stPaintAll();
+      const lock = document.querySelector('#stMainBlock .st-lock');
+      if(lock) lock.outerHTML = stLockHTML(ST.style);
+      const meta = document.querySelector('#stCopyBlock .st-meta');
+      if(meta){
+        const plats = ST_PLATFORMS.filter(p=>ST.plats.has(p.k)).map(p=>p.n).join(' / ') || '全平台';
+        meta.textContent = '风格：' + ST_STYLES[ST.style] + ' · 适用于 ' + plats;
+      }
+      toast('已切换到「' + ST_STYLES[ST.style] + '」，主图与详情页按新令牌重绘');
+    }
     return;
   }
   if(e.target.id==='stRun'){ stRun(); return; }
@@ -4847,6 +5197,12 @@ document.addEventListener('click', e=>{
   }
   if(e.target.id==='stSaveAll'){ toast('已全部存入素材库（演示）'); return; }
   /* 素材库：店铺下拉 / 类型 tab / 关键词 / 导出 / 清空 / 卡片放大 / 店铺胶囊 */
+  if(e.target.id === 'libSnapFile'){
+    const f = e.target.files && e.target.files[0];
+    stLibImport(f);
+    e.target.value = '';   /* 重置后同一个文件才能再选一次 */
+    return;
+  }
   if(e.target.id === 'libShop'){ ST_LIB.shop = e.target.value; stLibRender(); return; }
   const libKindBtn = e.target.closest('[data-lk]');
   if(libKindBtn){
@@ -4862,6 +5218,8 @@ document.addEventListener('click', e=>{
     stLibRender(); return;
   }
   if(e.target.id === 'libCsv' || e.target.id === 'libCsvTop'){ stLibCSV(); return; }
+  if(e.target.id === 'libSnapOut'){ stLibSnapshot(); return; }
+  if(e.target.id === 'libSnapIn'){ $('#libSnapFile').click(); return; }
   if(e.target.id === 'libClear'){
     if(!ST_LIB.items.length){ toast('素材库已经是空的'); return; }
     const n = ST_LIB.items.length;
@@ -4890,6 +5248,7 @@ document.addEventListener('click', e=>{
     }
     return;
   }
+  if(e.target.id==='stZip'){ stZipByShop(); return; }
   if(e.target.id==='stExportLong'){ stExportLong(); return; }
   if(e.target.id==='stLightDl'){ stDownloadLight(); return; }
   if(e.target.id==='stPhotoClear'){
