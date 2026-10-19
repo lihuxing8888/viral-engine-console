@@ -128,6 +128,34 @@ body{
 .st-check.on .st-box{background:var(--brand-2);border-color:var(--brand-2)}
 .st-block{border-top:1px solid var(--line);padding:14px 0}
 .st-block:first-child{border-top:none;padding-top:0}
+.st-shop-hd{font-size:10.5px;color:var(--text-3);margin:12px 0 6px;padding-top:11px;border-top:1px dashed var(--line);
+  display:flex;align-items:center;justify-content:space-between}
+.st-shop-tb{width:100%;border-collapse:collapse;font-size:10.5px}
+.st-shop-tb th{font-size:9.5px;font-weight:600;color:var(--text-3);text-align:left;padding:0 0 5px;
+  border-bottom:1px solid var(--line);white-space:nowrap}
+.st-shop-tb td{padding:6px 0;border-bottom:1px solid var(--line);color:var(--text-2);vertical-align:middle}
+.st-shop-tb tr:last-child td{border-bottom:0}
+.st-shop-tb b{font-size:11px;color:var(--text);font-weight:600}
+.st-shop-tb .r{text-align:right;white-space:nowrap}
+.st-shop-plat{display:inline-block;margin-left:5px;font-size:9px;color:var(--text-3);
+  border:1px solid var(--line);border-radius:4px;padding:0 4px;vertical-align:1px}
+.st-shop-code{font-family:var(--ff-mono,monospace);font-size:9.5px;color:var(--text-3);
+  background:var(--panel-2);border-radius:4px;padding:1px 5px}
+.st-photo{border-top:1px solid var(--line);padding:11px 14px 12px}
+.st-photo.is-off{opacity:.55}
+.st-photo-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.st-photo-hd b{font-size:12px;color:var(--text-2)}
+.st-photo-hd span{font-size:10.5px;color:var(--text-3)}
+.st-photo-row{display:flex;gap:10px;align-items:center}
+.st-photo-thumb{width:62px;height:62px;border-radius:10px;border:1.5px dashed var(--line);display:flex;
+  align-items:center;justify-content:center;text-align:center;font-size:9px;color:var(--text-3);
+  line-height:1.4;overflow:hidden;flex-shrink:0;background:var(--panel);letter-spacing:.2px}
+.st-photo-thumb.has{border-style:solid;border-color:var(--brand-2);background:#fff}
+.st-photo-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.st-photo-act{display:flex;flex-direction:column;gap:6px;flex:1;min-width:0}
+.st-photo-act .btn{width:100%;cursor:pointer;text-align:center;display:block;box-sizing:border-box}
+.st-photo-act .btn[disabled]{opacity:.4;pointer-events:none}
+.st-photo-tip{font-size:10px;color:var(--text-3);margin-top:8px;line-height:1.55}
 .st-block-h{font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;margin-bottom:11px}
 .st-block-n{width:19px;height:19px;border-radius:6px;background:linear-gradient(135deg,#7b5cff,#4aa8ff);color:#fff;
   font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -193,6 +221,9 @@ body{
 .st-light img{max-width:min(88vw,760px);max-height:76vh;border-radius:8px;box-shadow:0 24px 70px rgba(0,0,0,.55);background:#fff}
 .st-light-cap{color:rgba(255,255,255,.8);font-size:12px}
 .st-light-tip{color:rgba(255,255,255,.5);font-size:11px}
+.st-light-dl{margin-top:4px;padding:8px 20px;border-radius:20px;border:1px solid rgba(255,255,255,.3);
+  color:#fff;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,.1);transition:.15s}
+.st-light-dl:hover{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.55)}
 
 /* 拆解模式选择器 */
 .sb-mode{display:grid;grid-template-columns:1fr 1fr;gap:11px}
@@ -1043,6 +1074,18 @@ body{
               <div class="card-body" style="padding:12px 14px;max-height:250px;overflow-y:auto">
                 <div id="stGoodsList"></div>
               </div>
+              <div class="st-photo" id="stPhotoBar">
+                <div class="st-photo-hd"><b>商品实拍图</b><span id="stPhotoMeta">示意图</span></div>
+                <div class="st-photo-row">
+                  <div class="st-photo-thumb" id="stPhotoThumb"><span>未上传<br>用示意图</span></div>
+                  <div class="st-photo-act">
+                    <label class="btn btn-sm" for="stPhotoFile">上传实拍图</label>
+                    <input type="file" id="stPhotoFile" accept="image/*" hidden>
+                    <button class="btn btn-sm" id="stPhotoClear" disabled>清除</button>
+                  </div>
+                </div>
+                <div class="st-photo-tip">上传后 5 张主图与 7 段详情全部用真图；不传则用矢量示意图。建议传白底图，天猫 / 京东首图硬要求纯白底</div>
+              </div>
             </div>
 
             <div class="card">
@@ -1056,6 +1099,8 @@ body{
               <div class="card-head"><h3>③ 平台尺寸适配</h3><span class="desc">按店铺规格输出</span></div>
               <div class="card-body" style="padding:12px 14px">
                 <div id="stPlatforms"></div>
+                <div class="st-shop-hd"><span>本次产出店铺</span><span id="stShopSum">—</span></div>
+                <table class="st-shop-tb" id="stShopTable"></table>
               </div>
             </div>
 
@@ -1120,6 +1165,7 @@ body{
       <div class="st-light" id="stLight">
         <img id="stLightImg" alt="">
         <div class="st-light-cap" id="stLightCap"></div>
+        <div class="st-light-dl" id="stLightDl">下载这张 PNG</div>
         <div class="st-light-tip">点击任意处或按 Esc 关闭</div>
       </div>
 
@@ -2228,12 +2274,13 @@ const ST_KINDS = [
 ];
 
 /* 平台规格（主图 / 详情页） */
+/* 每个平台 = 一个店铺账号；店铺名与编码用于素材归档与文件命名 */
 const ST_PLATFORMS = [
-  { k:'tmall',  n:'天猫',     main:'800×800',  detail:'750 宽', on:true  },
-  { k:'jd',     n:'京东',     main:'800×800',  detail:'750 宽', on:true  },
-  { k:'pdd',    n:'拼多多',   main:'750×750',  detail:'480 宽', on:false },
-  { k:'xhs',    n:'小红书',   main:'1080×1440', detail:'1242 宽', on:true  },
-  { k:'douyin', n:'抖店',     main:'800×800',  detail:'750 宽', on:true  }
+  { k:'tmall',  n:'天猫',   shop:'壳厂老周旗舰店', code:'TM',  main:'800×800',  detail:'750 宽',  on:true  },
+  { k:'jd',     n:'京东',   shop:'老周数码专营店', code:'JD',  main:'800×800',  detail:'750 宽',  on:true  },
+  { k:'pdd',    n:'拼多多', shop:'老周壳铺',       code:'PDD', main:'750×750',  detail:'480 宽',  on:false },
+  { k:'xhs',    n:'小红书', shop:'老周的壳',       code:'XHS', main:'1080×1440', detail:'1242 宽', on:true  },
+  { k:'douyin', n:'抖店',   shop:'老周手机壳',     code:'DY',  main:'800×800',  detail:'750 宽',  on:true  }
 ];
 
 const ST_STYLES = {
@@ -2273,12 +2320,34 @@ function stRenderPlats(){
     const on = ST.plats.has(p.k);
     return `<label class="st-check ${on?'on':''}" data-stplat="${p.k}">
       <span class="st-box">${on?'✓':''}</span>
-      <span style="flex:1"><b>${p.n}</b><br><span class="st-check-d">主图 ${p.main} · 详情 ${p.detail}</span></span>
+      <span style="flex:1"><b>${p.n} · ${p.shop}</b><br><span class="st-check-d">主图 ${p.main} · 详情 ${p.detail}</span></span>
     </label>`;
   }).join('');
 }
 
-function stRenderAll(){ stRenderGoods(); stRenderKinds(); stRenderPlats(); }
+/* 店铺矩阵：把「平台勾选」翻译成「这次给哪些店铺出多少张」 */
+function stRenderShopTable(){
+  const tb = $('#stShopTable');
+  if(!tb) return;
+  const picked = ST_PLATFORMS.filter(p=>ST.plats.has(p.k));
+  const mainOn = ST.kinds.has('main'), detOn = ST.kinds.has('detail');
+  if(!picked.length){
+    tb.innerHTML = '<tbody><tr><td style="color:var(--text-3)">还没有勾选任何平台</td></tr></tbody>';
+    $('#stShopSum').textContent = '0 家';
+    return;
+  }
+  const rows = picked.map(p=>`<tr>
+      <td><b>${p.shop}</b><span class="st-shop-plat">${p.n}</span></td>
+      <td class="r"><span class="st-shop-code">${p.code}</span></td>
+      <td class="r">${mainOn ? '5 张' : '—'}</td>
+      <td class="r">${detOn ? '7 段' : '—'}</td>
+    </tr>`).join('');
+  tb.innerHTML = `<thead><tr><th>店铺</th><th class="r">编码</th><th class="r">主图</th><th class="r">详情</th></tr></thead><tbody>${rows}</tbody>`;
+  const per = (mainOn ? 5 : 0) + (detOn ? 7 : 0);
+  $('#stShopSum').textContent = picked.length + ' 家 · 共 ' + (picked.length * per) + ' 张';
+}
+
+function stRenderAll(){ stRenderGoods(); stRenderKinds(); stRenderPlats(); stRenderShopTable(); stRenderPhoto(); }
 
 /* ---------- 生成内容（演示：模板化输出） ---------- */
 const ST_COPY_TPL = {
@@ -2484,7 +2553,7 @@ function stPaintMain(cv, idx, g, platName){
     stTxt(ctx, f.model, P, P, W*0.036, L.sub, 600);
     stTxtWrap(ctx, f.points[0], P, P+W*0.062, W*0.074, L.ink, 800, 'left', W-P*2-W*0.05, 2);
     stTxt(ctx, f.points[1], P, P+W*0.235, W*0.040, L.sub, 500, 'left', W-P*2);
-    stDrawCase(ctx, W*0.52, H*0.635, W*0.50, W*0.50, L);
+    stPaintProduct(ctx, W*0.52, H*0.635, W*0.50, W*0.50, L, g);
     stPriceTag(ctx, W-P, H-P-52, f.price, L);
     stTxt(ctx, platName, W-P, P, W*0.032, L.sub, 600, 'right');
 
@@ -2498,12 +2567,12 @@ function stPaintMain(cv, idx, g, platName){
       stTxt(ctx, String(i+1), P+W*0.025, y+W*0.010, W*0.031, '#fff', 800, 'center');
       stTxtWrap(ctx, p, P+W*0.072, y+2, W*0.037, L.ink, 600, 'left', W*0.50, 2);
     });
-    stDrawCase(ctx, W*0.735, H*0.615, W*0.415, W*0.415, L);
+    stPaintProduct(ctx, W*0.735, H*0.615, W*0.415, W*0.415, L, g);
 
   } else if(idx === 2){
     /* ③ 细节图：局部放大 + 引线 */
     stTxt(ctx, '看得见的细节', P, P, W*0.062, L.ink, 800);
-    stDrawCase(ctx, W*0.50, H*0.455, W*0.46, W*0.46, L, 'zoom');
+    stPaintProduct(ctx, W*0.50, H*0.455, W*0.46, W*0.46, L, g, 'zoom');
     const notes = [f.points[0], f.points[1], f.points[2] || '全包边工艺'];
     notes.forEach((n,i)=>{
       const y = H*0.735 + i*H*0.082;
@@ -2531,7 +2600,7 @@ function stPaintMain(cv, idx, g, platName){
       stTxt(ctx, t, capX+pw/2, H*0.198+W*0.013, W*0.026, 'rgba(255,255,255,.88)', 600, 'center');
       capX += pw + W*0.016;
     });
-    stDrawCase(ctx, W*0.50, H*0.615, W*0.48, W*0.48, L);
+    stPaintProduct(ctx, W*0.50, H*0.615, W*0.48, W*0.48, L, g);
     stPriceTag(ctx, W-P, H-P-52, f.price, L);
 
   } else {
@@ -2546,7 +2615,7 @@ function stPaintMain(cv, idx, g, platName){
       stTxt(ctx, k, P, y, W*0.036, L.sub, 500);
       stTxt(ctx, v, W-P, y, W*0.036, L.ink, 700, 'right', W*0.58);
     });
-    stDrawCase(ctx, W*0.80, H-P-W*0.13, W*0.26, W*0.26, L);
+    stPaintProduct(ctx, W*0.80, H-P-W*0.13, W*0.26, W*0.26, L, g);
   }
 }
 
@@ -2594,7 +2663,7 @@ function stPaintDetail(cv, seg, g){
   } else if(seg === 2){
     /* 细节特写 */
     stTxt(ctx, '细节，是它贵的理由', P, H*0.075, W*0.056, ink, 800);
-    stDrawCase(ctx, W/2, H*0.495, W*0.385, W*0.385, L, 'zoom');
+    stPaintProduct(ctx, W/2, H*0.495, W*0.385, W*0.385, L, g, 'zoom');
     stTxt(ctx, f.points[2] || '全包边工艺', W/2, H*0.855, W*0.038, sub, 600, 'center', W-P*2);
 
   } else if(seg === 3){
@@ -2605,7 +2674,7 @@ function stPaintDetail(cv, seg, g){
     scenes.forEach((s,i)=>{
       const x = P + i*(cw+P);
       ctx.fillStyle = L.bg2; stRR(ctx, x, H*0.22, cw, ch, L.r); ctx.fill();
-      stDrawCase(ctx, x+cw/2, H*0.22+ch*0.46, cw*0.62, cw*0.62, L);
+      stPaintProduct(ctx, x+cw/2, H*0.22+ch*0.46, cw*0.62, cw*0.62, L, g, undefined, i);
       stTxt(ctx, s, x+cw/2, H*0.22+ch*0.80, W*0.034, ink, 600, 'center', cw*0.9);
     });
     ctx.strokeStyle = L.edge; ctx.lineWidth = 1.2;
@@ -2676,6 +2745,135 @@ function stDownload(cv){
   a.download = (cv.dataset.name || 'design') + '.png';
   a.click();
 }
+
+/* ---------- 商品实拍图：上传后主图 / 详情页直接用真图 ---------- */
+const ST_PHOTO = {};   /* gk -> dataURL */
+const ST_IMG   = {};   /* gk -> HTMLImageElement */
+
+function stRenderPhoto(){
+  const bar = $('#stPhotoBar');
+  if(!bar) return;
+  const th = $('#stPhotoThumb'), meta = $('#stPhotoMeta'), clr = $('#stPhotoClear');
+  const gk = ST.goods;
+  if(!gk){
+    bar.classList.add('is-off');
+    th.classList.remove('has');
+    th.innerHTML = '<span>未选商品</span>';
+    meta.textContent = '—';
+    clr.disabled = true;
+    return;
+  }
+  bar.classList.remove('is-off');
+  const url = ST_PHOTO[gk];
+  if(url){
+    const img = ST_IMG[gk];
+    th.classList.add('has');
+    th.innerHTML = '<img src="' + url + '" alt="商品实拍图">';
+    meta.textContent = img ? (img.naturalWidth + ' × ' + img.naturalHeight + ' · 已启用') : '载入中…';
+    clr.disabled = false;
+  } else {
+    th.classList.remove('has');
+    th.innerHTML = '<span>未上传<br>用示意图</span>';
+    meta.textContent = '示意图';
+    clr.disabled = true;
+  }
+}
+
+function stSetPhoto(gk, url){
+  ST_PHOTO[gk] = url;
+  const img = new Image();
+  img.onload = ()=>{ ST_IMG[gk] = img; stRenderPhoto(); stPaintAll(); };
+  img.onerror = ()=>{ toast('图片载入失败，请换一张'); };
+  img.src = url;
+}
+
+function stClearPhoto(gk){
+  delete ST_PHOTO[gk]; delete ST_IMG[gk];
+  stRenderPhoto(); stPaintAll();
+}
+
+/* 有实拍图就画真图（cover 裁切 + 圆角 + 投影），没有则回退矢量壳 */
+function stPaintProduct(ctx, cx, cy, w, h, L, g, mode, view){
+  const img = g ? ST_IMG[g.k] : null;
+  if(!img || !img.complete || !img.naturalWidth){
+    if(g) stDrawCase(ctx, cx, cy, w, h, L, mode);
+    return 'vector';
+  }
+  const x = cx - w/2, y = cy - h/2, r = Math.min(w, h) * 0.085;
+  ctx.save();
+  ctx.shadowColor = 'rgba(16,24,40,.20)'; ctx.shadowBlur = w*0.05; ctx.shadowOffsetY = h*0.03;
+  ctx.fillStyle = '#ffffff'; stRR(ctx, x, y, w, h, r); ctx.fill();
+  ctx.restore();
+  ctx.save();
+  stRR(ctx, x, y, w, h, r); ctx.clip();
+  /* view 0/1/2 用不同的缩放与取景位置，同一张图在三格里不重复 */
+  const zoomT = view === 1 ? 1.35 : (view === 2 ? 1.75 : 1);
+  const fx = view === 1 ? 0.30 : (view === 2 ? 0.72 : 0.5);
+  const fy = view === 1 ? 0.26 : (view === 2 ? 0.68 : 0.5);
+  const sc = Math.max(w / img.naturalWidth, h / img.naturalHeight) * zoomT;
+  const dw = img.naturalWidth * sc, dh = img.naturalHeight * sc;
+  ctx.drawImage(img, x - (dw-w)*fx, y - (dh-h)*fy, dw, dh);
+  ctx.restore();
+  ctx.strokeStyle = L.edge; ctx.lineWidth = Math.max(1, w*0.006);
+  stRR(ctx, x, y, w, h, r); ctx.stroke();
+  if(mode === 'zoom'){
+    ctx.save();
+    ctx.strokeStyle = L.accent; ctx.lineWidth = Math.max(2, w*0.016);
+    ctx.setLineDash([w*0.035, w*0.028]);
+    stRR(ctx, cx-h*0.11, y+h*0.10, h*0.22, h*0.80, h*0.05); ctx.stroke();
+    ctx.restore();
+  }
+  return 'photo';
+}
+
+/* ---------- 大图预览（统一入口） ---------- */
+let ST_LIGHT = { url:'', name:'design' };
+function stOpenLight(url, capText, w, h, name){
+  const img = $('#stLightImg');
+  ST_LIGHT = { url:url, name:name || 'design' };
+  img.src = url;
+  /* 超过 2:1 的长图交给 CSS max-height 等比缩放，不写死宽度 */
+  img.style.width = (h && w && h / w > 2) ? 'auto' : Math.min(w || 760, 760) + 'px';
+  $('#stLightCap').textContent = capText;
+  $('#stLight').classList.add('on');
+}
+function stDownloadLight(){
+  if(!ST_LIGHT.url){ return; }
+  const a = document.createElement('a');
+  a.href = ST_LIGHT.url; a.download = ST_LIGHT.name + '.png'; a.click();
+}
+
+/* ---------- 详情页长图：7 段纵向拼成一张 ---------- */
+function stExportLong(){
+  const cvs = Array.prototype.slice.call(document.querySelectorAll('#stDetailBlock canvas[data-dseg]'));
+  if(!cvs.length){ toast('请先生成详情页'); return; }
+  const W = cvs[0].width;
+  const H = cvs.reduce((a, c)=> a + c.height, 0);
+  const out = document.createElement('canvas');
+  out.width = W; out.height = H;
+  const o = out.getContext('2d');
+  o.fillStyle = '#ffffff'; o.fillRect(0, 0, W, H);
+  let y = 0;
+  cvs.forEach(c=>{ o.drawImage(c, 0, y); y += c.height; });
+  const url = out.toDataURL('image/png');
+  const sku = (ST_GOODS.find(x=>x.k === cvs[0].dataset.goods) || {}).sku || 'detail';
+  window.ST_LAST_LONG = { w:W, h:H, segments:cvs.length };
+  stOpenLight(url, '详情页长图 · ' + W + ' × ' + H + ' · ' + cvs.length + ' 段拼接', W, H, sku + '_detail_long');
+}
+
+/* 上传 / 清除实拍图 */
+document.addEventListener('change', function(e){
+  if(e.target.id !== 'stPhotoFile') return;
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  if(!ST.goods){ toast('请先选择商品'); e.target.value = ''; return; }
+  if(f.size > 8 * 1024 * 1024){ toast('图片超过 8MB，请压缩后再传'); e.target.value = ''; return; }
+  const gk = ST.goods;
+  const fr = new FileReader();
+  fr.onload = ()=> stSetPhoto(gk, fr.result);
+  fr.readAsDataURL(f);
+  e.target.value = '';
+});
 
 /* ③ 合规扫描：广告法高风险词（手机壳类目高频违规点） */
 const ST_BIZ_RULES = [
@@ -2787,7 +2985,7 @@ function stRenderResult(g, kinds, plats){
             <div class="st-thumb">
               <div class="st-thumb-box" style="aspect-ratio:${ratio}">
                 <canvas data-seg="${si}" data-goods="${g.k}" data-plat="${p.n}"
-                        data-name="${g.sku}_${p.k}_0${si+1}" width="${w}" height="${h}"></canvas>
+                        data-name="${g.sku}_${p.code}_0${si+1}" width="${w}" height="${h}"></canvas>
               </div>
               <div class="st-thumb-meta"><b>${p.n}</b> ${p.main} · 图 ${si+1}</div>
               <div class="st-thumb-desc">${scenes[si]||scenes[0]}</div>
@@ -2802,7 +3000,8 @@ function stRenderResult(g, kinds, plats){
   $('#stDetailBlock').innerHTML = has('detail') ? `
     <div class="st-block">
       <div class="st-block-h"><span class="st-block-n">3</span>详情页长图
-        <span class="st-block-tag">${ST_DETAIL_SEGS.length} 段 · 750 宽</span></div>
+        <span class="st-block-tag">${ST_DETAIL_SEGS.length} 段 · 750 宽</span>
+        <button class="btn btn-sm btn-ai" id="stExportLong" style="margin-left:auto">拼成一张长图</button></div>
       <div class="st-dseg-grid">
         ${ST_DETAIL_SEGS.map((s,i)=>`
           <div class="st-dseg">
@@ -4237,6 +4436,7 @@ document.addEventListener('click', e=>{
     ST.style = g.tone || 'clean';
     $$('#stStyles .tab').forEach(el=>el.classList.toggle('active', el.dataset.ststyle===ST.style));
     stRenderGoods();
+    stRenderPhoto();
     $('#stGoodsTag').textContent = g.n;
     /* 换商品后清空上次结果 */
     $('#stResult').style.display='none';
@@ -4248,14 +4448,14 @@ document.addEventListener('click', e=>{
   if(sk){
     const k = sk.dataset.stkind;
     if(ST.kinds.has(k)) ST.kinds.delete(k); else ST.kinds.add(k);
-    stRenderKinds();
+    stRenderKinds(); stRenderShopTable();
     return;
   }
   const sp = e.target.closest('[data-stplat]');
   if(sp){
     const k = sp.dataset.stplat;
     if(ST.plats.has(k)) ST.plats.delete(k); else ST.plats.add(k);
-    stRenderPlats();
+    stRenderPlats(); stRenderShopTable();
     return;
   }
   const ss = e.target.closest('[data-ststyle]');
@@ -4274,19 +4474,27 @@ document.addEventListener('click', e=>{
     return;
   }
   if(e.target.id==='stSaveAll'){ toast('已全部存入素材库（演示）'); return; }
+  if(e.target.id==='stExportLong'){ stExportLong(); return; }
+  if(e.target.id==='stLightDl'){ stDownloadLight(); return; }
+  if(e.target.id==='stPhotoClear'){
+    if(!ST.goods){ toast('请先选择商品'); return; }
+    stClearPhoto(ST.goods);
+    toast('已清除实拍图，改回矢量示意图');
+    return;
+  }
   /* 点击设计稿看大图 */
   const cvHit = e.target.closest('#stMainBlock canvas, #stDetailBlock canvas');
   if(cvHit){
-    const img = $('#stLightImg'), cap = $('#stLightCap');
-    img.src = cvHit.toDataURL('image/png');
-    img.style.width = Math.min(cvHit.width, 760) + 'px';
     const plat = cvHit.dataset.plat || '';
-    const seg = cvHit.dataset.seg !== undefined ? ('主图 · 图' + (+cvHit.dataset.seg + 1)) : ('详情页 · 第' + (+cvHit.dataset.dseg + 1) + '段');
-    cap.textContent = plat + '  ' + seg + '  ' + cvHit.width + '×' + cvHit.height;
-    $('#stLight').classList.add('on');
+    const seg = cvHit.dataset.seg !== undefined
+      ? ('主图 · 图' + (+cvHit.dataset.seg + 1))
+      : ('详情页 · 第' + (+cvHit.dataset.dseg + 1) + '段');
+    stOpenLight(cvHit.toDataURL('image/png'),
+      plat + '  ' + seg + '  ' + cvHit.width + '×' + cvHit.height,
+      cvHit.width, cvHit.height, cvHit.dataset.name);
     return;
   }
-  if(e.target.closest('#stLight') && !e.target.closest('#stLightImg')){
+  if(e.target.closest('#stLight') && !e.target.closest('#stLightImg') && !e.target.closest('#stLightDl')){
     $('#stLight').classList.remove('on');
     return;
   }
