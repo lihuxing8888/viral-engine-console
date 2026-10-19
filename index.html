@@ -138,7 +138,7 @@ body{
 .st-copy-desc{font-size:12px;color:var(--text-2);margin-top:9px;padding:9px 12px;background:var(--panel-2);
   border-left:3px solid var(--brand-2);border-radius:0 8px 8px 0;line-height:1.75}
 .st-meta{font-size:10.5px;color:var(--text-3);margin-top:9px}
-.st-main-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:11px}
+.st-main-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(206px,1fr));gap:12px}
 .st-thumb{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel-2)}
 .st-thumb-box{width:100%;background:linear-gradient(135deg,#eef2ff,#f8f5ff);position:relative;overflow:hidden;
   display:flex;align-items:center;justify-content:center;padding:9px;box-sizing:border-box}
@@ -167,6 +167,32 @@ body{
 .st-detail-t{font-size:12.5px;font-weight:600;color:var(--text)}
 .st-detail-d{font-size:11px;color:var(--text-3);margin-top:4px;line-height:1.7}
 .st-note{font-size:10.5px;color:var(--text-3);margin-top:10px;line-height:1.65}
+
+/* ---- 素材工坊 v2：Canvas 设计稿 ---- */
+.st-thumb-box{padding:0}
+.st-thumb-box canvas{width:100%;height:100%;display:block}
+.st-lock{font-size:10.5px;color:var(--text-3);background:var(--panel-2);border:1px solid var(--line);
+  border-radius:8px;padding:8px 11px;margin-bottom:11px;line-height:1.7}
+.st-lock b{color:var(--text-2)}
+.st-sw{display:inline-block;width:9px;height:9px;border-radius:3px;vertical-align:middle;margin:0 2px;
+  border:1px solid rgba(0,0,0,.1)}
+.st-dl-btn{width:100%;border:0;border-top:1px solid var(--line);background:transparent;color:var(--text-3);
+  font-size:10px;padding:5px 0;cursor:pointer;font-family:inherit}
+.st-dl-btn:hover{background:var(--panel);color:var(--text)}
+.st-dseg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:12px}
+.st-dseg{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel-2)}
+.st-dseg canvas{width:100%;height:auto;display:block}
+.st-dseg-cap{font-size:10px;color:var(--text-3);padding:7px 9px;line-height:1.4}
+.st-comp{font-size:10.5px;border-radius:8px;padding:8px 11px;margin:10px 0 4px;line-height:1.65}
+.st-comp.ok{background:#eefaf3;color:#166534;border:1px solid #bbf0d1}
+.st-comp.bad{background:#fff4f2;color:#b42318;border:1px solid #ffd4cc}
+.st-thumb-box canvas,.st-dseg canvas{cursor:zoom-in}
+.st-light{position:fixed;inset:0;background:rgba(12,16,24,.86);z-index:1250;display:none;
+  align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:28px;box-sizing:border-box}
+.st-light.on{display:flex}
+.st-light img{max-width:min(88vw,760px);max-height:76vh;border-radius:8px;box-shadow:0 24px 70px rgba(0,0,0,.55);background:#fff}
+.st-light-cap{color:rgba(255,255,255,.8);font-size:12px}
+.st-light-tip{color:rgba(255,255,255,.5);font-size:11px}
 
 /* 拆解模式选择器 */
 .sb-mode{display:grid;grid-template-columns:1fr 1fr;gap:11px}
@@ -1069,6 +1095,7 @@ body{
                 </div>
               </div>
               <div class="card-body">
+                <div id="stComp" style="display:none"></div>
                 <div id="stCopyBlock"></div>
                 <div id="stMainBlock"></div>
                 <div id="stDetailBlock"></div>
@@ -1089,6 +1116,12 @@ body{
           </div>
         </div>
       </section>
+
+      <div class="st-light" id="stLight">
+        <img id="stLightImg" alt="">
+        <div class="st-light-cap" id="stLightCap"></div>
+        <div class="st-light-tip">点击任意处或按 Esc 关闭</div>
+      </div>
 
       <!-- ---------- 整体复盘 ---------- -->
       <section class="view" id="view-review">
@@ -2265,19 +2298,400 @@ const ST_COPY_TPL = {
 
 /* 主图生成的「画面构成」：每个风格 3 套不同版式 */
 const ST_MAIN_SCENES = {
-  clean:['纯白背景 · 商品居中 · 顶部大字卖点','浅灰渐变 · 45° 商品角度 · 左侧竖排卖点','细节放大圆窗 · 右下价格角标'],
-  warm: ['暖木色背景 · 商品与生活道具同框','自然光场景 · 手持使用动作 · 上方柔光文案','暖调渐变 · 商品 3/4 侧 · 底部场景短句'],
-  hard: ['高饱和撞色底 · 超大促销数字','爆炸贴 + 价格锚点 · 商品居中放大','上下分屏 · 上问题下解决 · 红色强调条']
+  clean:['首图 · 纯白底 · 商品居中 · 顶部大字卖点 + 右下价格',
+         '卖点图 · 左侧竖排 3 条卖点 · 右侧商品',
+         '细节图 · 中轴 / 镜头局部放大 · 引线标注',
+         '场景图 · 上下分屏 · 上方场景词 · 下方商品',
+         '规格图 · 参数表格 · 右下角商品小图'],
+  warm: ['首图 · 暖米色底 · 商品居中 · 顶部柔光文案 + 价格',
+         '卖点图 · 左侧竖排 3 条卖点 · 右侧台面商品',
+         '细节图 · 皮革纹理与缝线微距 · 引线标注',
+         '场景图 · 上下分屏 · 生活方式场景词',
+         '规格图 · 暖色参数表格 · 右下角商品小图'],
+  hard: ['首图 · 高饱和撞色底 · 超大价格字 · 商品居中',
+         '卖点图 · 左侧竖排 3 条卖点 · 右侧商品放大',
+         '细节图 · 红色强调框局部放大 · 引线标注',
+         '场景图 · 上下分屏 · 上问题下解决',
+         '规格图 · 对比式参数表 · 右下角商品小图']
 };
 
 /* 每张主图显示的短标签（不重复，对应不同版式） */
 const ST_THUMB_TAGS = {
-  clean:['双中轴全包','1.2mm超薄','不磨钛边框'],
-  warm: ['商务质感','菱格皮纹','四角气囊'],
-  hard: ['摔了8次没事','磁吸+支架','立减¥50']
+  clean:['双中轴全包','1.2mm 超薄','铰链位加厚','通勤单手开','适配 iPhone Duo'],
+  warm: ['商务质感','菱格皮纹','头层牛皮','会议桌上','适配 Mate X7'],
+  hard: ['摔了8次没事','磁吸+支架','四角气囊','立减¥50','适配 Z Fold7']
 };
 
-const ST_DETAIL_SEGS = ['首屏 · 一句话价值主张','核心卖点 · 3 条图文','细节特写 · 材质 / 工艺','使用场景 · 3 组对比','规格参数 · 表格','售后承诺 · 运费险 / 七天无理由'];
+/* ============================================================
+   素材工坊 · Canvas 设计稿引擎
+   三个机制借鉴自 GitHub 同行（只借鉴设计，不复制代码）：
+   ① Campaign Style Lock —— 一次锁定色板/字体/圆角/价格标，
+      整套主图与详情页共用同一份令牌，避免"拼凑感"
+      （liangdabiao/ecom-details-image 1409★）
+   ② 商品事实锁定 —— 厚度/重量/适配机型只从商品档案取，
+      换风格只改视觉令牌，不改任何事实字段
+      （QIYU-JACKMAN/codexQIYU-image-workflow 94★）
+   ③ 5 张主图 + 7 段详情页 —— 行业默认结构
+      （上述两个项目均为 5 主图 + 7~9 详情页）
+   ============================================================ */
+
+/* ① Campaign Style Lock：风格一旦锁定，所有画面元素都从这里取值 */
+const ST_LOCK = {
+  clean:{ bg:'#ffffff', bg2:'#f2f5f9', ink:'#171a20', sub:'#6b7280', accent:'#2f6bff',
+          price:'#e4393c', edge:'#dde3ea', caseFill:'#eaf0f7', caseEdge:'#b6c2d1',
+          r:14, pad:44, font:'"PingFang SC","Microsoft YaHei",-apple-system,sans-serif' },
+  warm: { bg:'#fdf7ef', bg2:'#f2e3cd', ink:'#45301f', sub:'#8a6b50', accent:'#b96f33',
+          price:'#c0392b', edge:'#e3d0b8', caseFill:'#f7ecdb', caseEdge:'#c8a882',
+          r:18, pad:44, font:'"PingFang SC","Microsoft YaHei",-apple-system,sans-serif' },
+  hard: { bg:'#ff2b2b', bg2:'#ffd400', ink:'#ffffff', sub:'#fff3b0', accent:'#ffffff',
+          price:'#111111', edge:'#ffffff', caseFill:'#ffffff', caseEdge:'#7a1010',
+          r:6, pad:40, font:'"PingFang SC","Microsoft YaHei",-apple-system,sans-serif' }
+};
+
+/* 圆角矩形兜底（老浏览器无 roundRect） */
+function stRR(ctx,x,y,w,h,r){
+  r = Math.min(r, w/2, h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
+}
+
+function stTxt(ctx,s,x,y,size,color,weight,align,maxW){
+  ctx.save();
+  ctx.font = (weight||600)+' '+size+'px '+ST_LOCK[ST.style].font;
+  ctx.fillStyle = color; ctx.textAlign = align||'left'; ctx.textBaseline = 'top';
+  if(maxW && ctx.measureText(s).width > maxW){
+    while(s.length>2 && ctx.measureText(s+'…').width > maxW) s = s.slice(0,-1);
+    s += '…';
+  }
+  ctx.fillText(s,x,y);
+  ctx.restore();
+  return ctx.measureText(s).width;
+}
+
+/* 按宽度自动折成最多 n 行 */
+function stTxtWrap(ctx,s,x,y,size,color,weight,align,maxW,maxLines){
+  ctx.save();
+  ctx.font = (weight||600)+' '+size+'px '+ST_LOCK[ST.style].font;
+  /* 把「英文/数字」当成不可拆的整体，中文单字可断 */
+  const tokens = s.match(/[A-Za-z0-9][A-Za-z0-9.%]*|[·，、。；：!？]|\s+|[^\sA-Za-z0-9.%·，、。；：!？]/g) || [s];
+  const lines = []; let cur = '';
+  for(const tk of tokens){
+    if(ctx.measureText(cur+tk).width > maxW && cur.trim()){
+      lines.push(cur.trim()); cur = /^\s+$/.test(tk) ? '' : tk;
+    } else cur += tk;
+  }
+  if(cur.trim()) lines.push(cur.trim());
+  ctx.restore();
+  const use = lines.slice(0, maxLines||2);
+  if(lines.length > use.length) use[use.length-1] = use[use.length-1].slice(0,-1) + '…';
+  const lh = size * 1.28;
+  use.forEach((ln,i)=> stTxt(ctx, ln, x, y + i*lh, size, color, weight, align));
+  return use.length * lh;
+}
+
+/* 画一只折叠屏手机壳（正面示意：外壳 + 中轴 + 镜头模组） */
+function stDrawCase(ctx,cx,cy,w,h,L,mode){
+  const x = cx-w/2, y = cy-h/2, r = Math.min(w,h)*0.13;
+  /* 投影 */
+  ctx.save();
+  ctx.shadowColor = 'rgba(16,24,40,.16)'; ctx.shadowBlur = w*0.05; ctx.shadowOffsetY = h*0.028;
+  ctx.fillStyle = L.caseFill; stRR(ctx,x,y,w,h,r); ctx.fill();
+  ctx.restore();
+  /* 外壳描边 */
+  ctx.strokeStyle = L.caseEdge; ctx.lineWidth = Math.max(2,w*0.014);
+  stRR(ctx,x,y,w,h,r); ctx.stroke();
+  /* 中轴（折叠屏特征，双线） */
+  ctx.save();
+  ctx.strokeStyle = L.caseEdge; ctx.lineWidth = Math.max(1.5,w*0.008);
+  ctx.globalAlpha = .85;
+  ctx.beginPath(); ctx.moveTo(cx-w*0.012,y+h*0.06); ctx.lineTo(cx-w*0.012,y+h*0.94); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx+w*0.012,y+h*0.06); ctx.lineTo(cx+w*0.012,y+h*0.94); ctx.stroke();
+  ctx.restore();
+  /* 镜头模组：左上角圆角块 + 3 个圆 */
+  const mw = w*0.34, mh = h*0.30, mx = x+w*0.075, my = y+h*0.075;
+  ctx.fillStyle = L.caseEdge; ctx.globalAlpha = .22;
+  stRR(ctx,mx,my,mw,mh,mw*0.28); ctx.fill();
+  ctx.globalAlpha = 1;
+  const lensR = mw*0.13;
+  [[0.30,0.28],[0.70,0.28],[0.50,0.70]].forEach(([px,py])=>{
+    ctx.beginPath(); ctx.arc(mx+mw*px, my+mh*py, lensR, 0, Math.PI*2);
+    ctx.fillStyle = L.caseFill; ctx.fill();
+    ctx.strokeStyle = L.caseEdge; ctx.lineWidth = Math.max(1,w*0.006); ctx.stroke();
+  });
+  /* 高光斜纹 */
+  ctx.save();
+  ctx.globalAlpha = .06; ctx.strokeStyle = L.caseEdge; ctx.lineWidth = w*0.09;
+  ctx.beginPath(); ctx.moveTo(x-w*0.1,y+h*1.05); ctx.lineTo(x+w*1.05,y-h*0.1); ctx.stroke();
+  ctx.restore();
+  /* 细节图模式：把中轴区放大描一圈 */
+  if(mode === 'zoom'){
+    ctx.save();
+    ctx.strokeStyle = L.accent; ctx.lineWidth = Math.max(2,w*0.016);
+    ctx.setLineDash([w*0.035, w*0.028]);
+    stRR(ctx,cx-h*0.11,y+h*0.10,h*0.22,h*0.80,h*0.05); ctx.stroke();
+    ctx.restore();
+  }
+}
+
+/* 价格标（圆角块 + 白字） */
+function stPriceTag(ctx,x,y,price,L){
+  const fs = 30;
+  ctx.font = '800 '+fs+'px '+L.font;
+  const tw = ctx.measureText(price).width;
+  const padX = 20, w = tw+padX*2, h = fs+22;
+  ctx.fillStyle = L.price; stRR(ctx,x-w,y,w,h,L.r*0.6); ctx.fill();
+  stTxt(ctx,price,x-w+padX,y+11,fs,'#fff',800,'left');
+  return w;
+}
+
+/* ---------- ② 商品事实：只从商品档案取，风格不改事实 ---------- */
+function stFacts(g){
+  return {
+    name: g.n,
+    price: g.price,
+    sku: g.sku,
+    /* 适配机型从商品名里取第一段 */
+    model: g.n.split(' ').slice(0,2).join(' '),
+    thickness: (g.selling.find(s=>/mm/i.test(s)) || '').match(/[\d.]+mm/i)?.[0] || '1.2mm',
+    weight: (g.selling.find(s=>/g\b|克/.test(s)) || '').match(/[\d.]+\s*g/)?.[0] || '18g',
+    scene: g.scene,
+    points: g.selling
+  };
+}
+
+/* 主图绘制：idx = 0..4 对应五种版式 */
+function stPaintMain(cv, idx, g, platName){
+  const L = ST_LOCK[ST.style], f = stFacts(g);
+  const W = cv.width, H = cv.height, P = L.pad;
+  const ctx = cv.getContext('2d');
+
+  /* 背景 */
+  if(ST.style === 'clean'){ ctx.fillStyle = L.bg; ctx.fillRect(0,0,W,H); }
+  else if(ST.style === 'warm'){
+    const gr = ctx.createLinearGradient(0,0,0,H);
+    gr.addColorStop(0,L.bg); gr.addColorStop(1,L.bg2);
+    ctx.fillStyle = gr; ctx.fillRect(0,0,W,H);
+  } else {
+    ctx.fillStyle = L.bg; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = L.bg2; ctx.fillRect(0,H*0.72,W,H*0.28);
+  }
+
+  if(idx === 0){
+    /* ① 首图：顶部大字 + 居中商品 + 右下价格 */
+    stTxt(ctx, f.model, P, P, W*0.036, L.sub, 600);
+    stTxtWrap(ctx, f.points[0], P, P+W*0.062, W*0.074, L.ink, 800, 'left', W-P*2-W*0.05, 2);
+    stTxt(ctx, f.points[1], P, P+W*0.235, W*0.040, L.sub, 500, 'left', W-P*2);
+    stDrawCase(ctx, W*0.52, H*0.635, W*0.50, W*0.50, L);
+    stPriceTag(ctx, W-P, H-P-52, f.price, L);
+    stTxt(ctx, platName, W-P, P, W*0.032, L.sub, 600, 'right');
+
+  } else if(idx === 1){
+    /* ② 卖点图：左文右图 */
+    stTxt(ctx, '三个理由', P, P, W*0.075, L.ink, 800);
+    const list = f.points.slice(0,3);
+    list.forEach((p,i)=>{
+      const y = P+W*0.135 + i*W*0.145;
+      ctx.fillStyle = L.accent; stRR(ctx, P, y+4, W*0.050, W*0.050, W*0.025); ctx.fill();
+      stTxt(ctx, String(i+1), P+W*0.025, y+W*0.010, W*0.031, '#fff', 800, 'center');
+      stTxtWrap(ctx, p, P+W*0.072, y+2, W*0.037, L.ink, 600, 'left', W*0.50, 2);
+    });
+    stDrawCase(ctx, W*0.735, H*0.615, W*0.415, W*0.415, L);
+
+  } else if(idx === 2){
+    /* ③ 细节图：局部放大 + 引线 */
+    stTxt(ctx, '看得见的细节', P, P, W*0.062, L.ink, 800);
+    stDrawCase(ctx, W*0.50, H*0.455, W*0.46, W*0.46, L, 'zoom');
+    const notes = [f.points[0], f.points[1], f.points[2] || '全包边工艺'];
+    notes.forEach((n,i)=>{
+      const y = H*0.735 + i*H*0.082;
+      ctx.fillStyle = L.accent;
+      ctx.beginPath(); ctx.arc(P+W*0.012, y+W*0.020, W*0.011, 0, Math.PI*2); ctx.fill();
+      stTxt(ctx, n, P+W*0.038, y, W*0.035, L.sub, 600, 'left', W-P*2-W*0.05);
+    });
+
+  } else if(idx === 3){
+    /* ④ 场景图：上下分屏 */
+    const sc = f.scene.split('/').map(t=>t.trim()).filter(Boolean);
+    const bigInk = ST.style==='hard' ? '#ffffff' : L.bg;
+    ctx.fillStyle = L.ink; ctx.globalAlpha = .92;
+    ctx.fillRect(0,0,W,H*0.295); ctx.globalAlpha = 1;
+    stTxt(ctx, f.model, P, H*0.042, W*0.030, 'rgba(255,255,255,.66)', 600, 'left', W*0.54);
+    stTxt(ctx, '场景实拍 · 未合成', W-P, H*0.044, W*0.026, 'rgba(255,255,255,.5)', 500, 'right');
+    stTxt(ctx, sc[0] || '日常', P, H*0.088, W*0.066, bigInk, 800, 'left', W-P*2);
+    /* 其余场景做成小胶囊，占满色块下沿 */
+    let capX = P;
+    sc.slice(1,3).forEach(t=>{
+      ctx.font = '600 '+(W*0.026)+'px '+L.font;
+      const pw = ctx.measureText(t).width + W*0.040, ph = W*0.052;
+      ctx.fillStyle = 'rgba(255,255,255,.14)';
+      stRR(ctx, capX, H*0.198, pw, ph, ph/2); ctx.fill();
+      stTxt(ctx, t, capX+pw/2, H*0.198+W*0.013, W*0.026, 'rgba(255,255,255,.88)', 600, 'center');
+      capX += pw + W*0.016;
+    });
+    stDrawCase(ctx, W*0.50, H*0.615, W*0.48, W*0.48, L);
+    stPriceTag(ctx, W-P, H-P-52, f.price, L);
+
+  } else {
+    /* ⑤ 规格图：参数表 */
+    stTxt(ctx, '参数一览', P, P, W*0.068, L.ink, 800);
+    const rows = [['适配机型', f.model], ['厚度', f.thickness], ['整壳重量', f.weight],
+                  ['工艺', (f.points[2]||'—').split('·')[0].trim()], ['货号', f.sku]];
+    rows.forEach(([k,v],i)=>{
+      const y = P+W*0.115 + i*W*0.108;
+      ctx.strokeStyle = L.edge; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(P,y+W*0.086); ctx.lineTo(W-P,y+W*0.086); ctx.stroke();
+      stTxt(ctx, k, P, y, W*0.036, L.sub, 500);
+      stTxt(ctx, v, W-P, y, W*0.036, L.ink, 700, 'right', W*0.58);
+    });
+    stDrawCase(ctx, W*0.80, H-P-W*0.13, W*0.26, W*0.26, L);
+  }
+}
+
+/* 详情页单段绘制：seg = 0..6 */
+function stPaintDetail(cv, seg, g){
+  const L = ST_LOCK[ST.style], f = stFacts(g);
+  const W = cv.width, H = cv.height, P = L.pad;
+  const ctx = cv.getContext('2d');
+
+  ctx.fillStyle = (seg===0 || seg===4) ? L.ink : L.bg;
+  ctx.fillRect(0,0,W,H);
+  const onDark = (seg===0 || seg===4);
+  const ink = onDark ? (ST.style==='hard'?'#fff':L.bg) : L.ink;
+  const sub = onDark ? 'rgba(255,255,255,.72)' : L.sub;
+
+  if(seg === 0){
+    /* 首屏：一句话价值主张 */
+    stTxt(ctx, f.model + ' · 专用', W/2, H*0.115, W*0.040, sub, 600, 'center');
+    stTxtWrap(ctx, f.points[0], W/2, H*0.215, W*0.070, ink, 800, 'center', W-P*2, 2);
+    stTxt(ctx, f.points[1], W/2, H*0.455, W*0.042, sub, 500, 'center', W-P*2);
+    stPriceTag(ctx, W/2+62, H*0.545, f.price, L);
+    /* 底部三格关键数据，填掉首屏下半部空白 */
+    const stats = [[f.thickness,'厚度'],[f.weight,'整壳重量'],['双中轴','结构']];
+    const sw = (W-P*2-40)/3, sy = H*0.705, sh = H*0.175;
+    stats.forEach(([v,k],i)=>{
+      const sx = P + i*(sw+20);
+      ctx.fillStyle = 'rgba(255,255,255,.10)';
+      stRR(ctx, sx, sy, sw, sh, L.r); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,.08)'; ctx.lineWidth = 1; stRR(ctx, sx, sy, sw, sh, L.r); ctx.stroke();
+      stTxt(ctx, v, sx+sw/2, sy+sh*0.26, W*0.046, ink, 800, 'center', sw*0.9);
+      stTxt(ctx, k, sx+sw/2, sy+sh*0.735, W*0.026, 'rgba(255,255,255,.55)', 500, 'center', sw*0.9);
+    });
+
+  } else if(seg === 1){
+    /* 核心卖点 */
+    stTxt(ctx, '三个理由，选它', P, H*0.072, W*0.058, ink, 800);
+    f.points.forEach((p,i)=>{
+      const y = H*0.215 + i*H*0.215, ch = H*0.175;
+      ctx.fillStyle = L.bg2; stRR(ctx, P, y, W-P*2, ch, L.r); ctx.fill();
+      ctx.fillStyle = L.accent; stRR(ctx, P+W*0.030, y+(ch-W*0.075)/2, W*0.075, W*0.075, W*0.03); ctx.fill();
+      stTxt(ctx, String(i+1), P+W*0.0675, y+(ch-W*0.075)/2+W*0.018, W*0.042, '#fff', 800, 'center');
+      stTxtWrap(ctx, p, P+W*0.130, y+(ch-W*0.046*1.28)/2, W*0.046, ink, 650, 'left', W-P*2-W*0.165, 2);
+    });
+
+  } else if(seg === 2){
+    /* 细节特写 */
+    stTxt(ctx, '细节，是它贵的理由', P, H*0.075, W*0.056, ink, 800);
+    stDrawCase(ctx, W/2, H*0.495, W*0.385, W*0.385, L, 'zoom');
+    stTxt(ctx, f.points[2] || '全包边工艺', W/2, H*0.855, W*0.038, sub, 600, 'center', W-P*2);
+
+  } else if(seg === 3){
+    /* 使用场景 · 三格 */
+    stTxt(ctx, '三个场景，天天在用', P, H*0.09, W*0.062, ink, 800);
+    const scenes = f.scene.split('/').map(s=>s.trim()).slice(0,3);
+    const cw = (W-P*2-P*2)/3, ch = H*0.48;
+    scenes.forEach((s,i)=>{
+      const x = P + i*(cw+P);
+      ctx.fillStyle = L.bg2; stRR(ctx, x, H*0.22, cw, ch, L.r); ctx.fill();
+      stDrawCase(ctx, x+cw/2, H*0.22+ch*0.46, cw*0.62, cw*0.62, L);
+      stTxt(ctx, s, x+cw/2, H*0.22+ch*0.80, W*0.034, ink, 600, 'center', cw*0.9);
+    });
+    ctx.strokeStyle = L.edge; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(P, H*0.805); ctx.lineTo(W-P, H*0.805); ctx.stroke();
+    stTxt(ctx, '通勤、出差、单手开合，一副壳覆盖日常三种握持状态', W/2, H*0.845, W*0.031, sub, 500, 'center', W-P*2);
+
+  } else if(seg === 4){
+    /* 适配机型（手机壳特有，同行 7-9 段里的关键一段） */
+    stTxt(ctx, '先确认你的机型', W/2, H*0.14, W*0.062, ink, 800, 'center');
+    const models = ['iPhone Duo','Mate X6 / X7','Mate XT 三折','Z Fold7 / Z Flip7','MIX Fold4 / Flip','Find N5 / N3 Flip'];
+    models.forEach((m,i)=>{
+      const col = i % 2, row = Math.floor(i/2);
+      const x = P + col*(W/2-P*0.5), y = H*0.30 + row*H*0.155;
+      ctx.fillStyle = 'rgba(255,255,255,.13)'; stRR(ctx, x, y, W/2-P*1.1, H*0.115, 8); ctx.fill();
+      stTxt(ctx, m, x+18, y+H*0.036, W*0.038, '#fff', 600);
+    });
+    stTxt(ctx, '下单前请核对机型，拍错型号不支持换货', W/2, H*0.90, W*0.030, sub, 500, 'center');
+
+  } else if(seg === 5){
+    /* 规格参数表 */
+    stTxt(ctx, '规格参数', P, H*0.085, W*0.058, ink, 800);
+    const rows = [['适配机型', f.model],['厚度', f.thickness],['整壳重量', f.weight],
+                  ['材质 / 工艺', f.points[2] || '—'],['包装清单', '手机壳 ×1 · 防尘袋 ×1'],['货号', f.sku]];
+    rows.forEach(([k,v],i)=>{
+      const y = H*0.255 + i*H*0.102;
+      ctx.strokeStyle = L.edge; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(P,y+H*0.085); ctx.lineTo(W-P,y+H*0.085); ctx.stroke();
+      stTxt(ctx, k, P, y, W*0.036, sub, 500);
+      stTxt(ctx, v, W-P, y, W*0.036, ink, 650, 'right', W*0.56);
+    });
+
+  } else {
+    /* 售后承诺 */
+    stTxt(ctx, '买了不担心', W/2, H*0.16, W*0.062, ink, 800, 'center');
+    [['运费险','退货运费由我们承担'],['七天无理由','不影响二次销售可退'],
+     ['破损包赔','运输破损全额补发']].forEach(([t,d],i)=>{
+      const y = H*0.30 + i*H*0.215;
+      ctx.fillStyle = L.accent; stRR(ctx, P, y, W*0.016, H*0.172, 4); ctx.fill();
+      stTxt(ctx, t, P+W*0.045, y, W*0.042, ink, 700);
+      stTxt(ctx, d, P+W*0.045, y+W*0.058, W*0.033, sub, 500);
+    });
+  }
+
+  /* 统一页脚：段序号 */
+  if(seg > 0){
+    stTxt(ctx, String(seg+1).padStart(2,'0') + ' / 07', W-P, H-P*0.62, W*0.027,
+      onDark ? 'rgba(255,255,255,.5)' : L.sub, 600, 'right');
+  }
+}
+
+/* 渲染挂载点上的所有 canvas */
+function stPaintAll(){
+  document.querySelectorAll('#stMainBlock canvas[data-seg]').forEach(cv=>{
+    const g = ST_GOODS.find(x=>x.k === cv.dataset.goods);
+    if(g) stPaintMain(cv, +cv.dataset.seg, g, cv.dataset.plat || '');
+  });
+  document.querySelectorAll('#stDetailBlock canvas[data-dseg]').forEach(cv=>{
+    const g = ST_GOODS.find(x=>x.k === cv.dataset.goods);
+    if(g) stPaintDetail(cv, +cv.dataset.dseg, g);
+  });
+}
+
+/* 下载单张 */
+function stDownload(cv){
+  const url = cv.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (cv.dataset.name || 'design') + '.png';
+  a.click();
+}
+
+/* ③ 合规扫描：广告法高风险词（手机壳类目高频违规点） */
+const ST_BIZ_RULES = [
+  { n:'绝对化数据', re:/100\s*%|百分百/ },
+  { n:'绝对化承诺', re:/绝对|永不|永久|零风险|保证不|绝不/ },
+  { n:'伪权威认证', re:/军工级|军规|国家级|世界级/ },
+  { n:'品牌侵权', re:/官方同款|官方认?证|苹果认证|原装|原厂/ },
+  { n:'最高级用语', re:/最好|最美|最强|最低价|最高级|最便宜|最佳|顶级|第一品牌|全国第一/ }
+];
+function stCompliance(text){
+  const hits = ST_BIZ_RULES.filter(r=>r.re.test(text)).map(r=>r.n);
+  return { hits, ok: hits.length === 0 };
+}
+
+
+const ST_DETAIL_SEGS = ['首屏 · 一句话价值主张','核心卖点 · 3 条图文','细节特写 · 材质 / 工艺','使用场景 · 3 组对比','适配机型 · 兼容对照','规格参数 · 表格','售后承诺 · 运费险 / 七天无理由'];
 
 /* 启动生成 */
 function stRun(){
@@ -2353,61 +2767,67 @@ function stRenderResult(g, kinds, plats){
       <div class="st-meta">风格：${ST_STYLES[style]} · 适用于 ${plats.map(p=>p.n).join(' / ')||'全平台'}</div>
     </div>` : '';
 
-  /* --- 主图 --- */
+  /* --- 主图：5 张一套，Canvas 真实像素 --- */
   $('#stMainBlock').innerHTML = has('main') ? `
     <div class="st-block">
       <div class="st-block-h"><span class="st-block-n">2</span>商品主图
-        <span class="st-block-tag">${plats.length} 个平台规格 · 每平台 2 图</span></div>
+        <span class="st-block-tag">5 张一套 · ${plats.length} 个平台规格</span></div>
+      <div class="st-lock">
+        <b>样式令牌已锁定</b>：${ST_STYLES[style]} ·
+        主色 <span class="st-sw" style="background:${ST_LOCK[style].accent}"></span> ·
+        圆角 ${ST_LOCK[style].r}px ·
+        5 张主图与 ${ST_DETAIL_SEGS.length} 段详情页共用同一份令牌，整套视觉统一
+      </div>
       <div class="st-main-grid">
         ${plats.map(p=>{
           const scenes = ST_MAIN_SCENES[style] || ST_MAIN_SCENES.clean;
-          const tags = ST_THUMB_TAGS[style] || ST_THUMB_TAGS.clean;
           const [w,h] = p.main.split('×');
-          /* 竖图（小红书 1080×1440）用 3/4，其余用 1/1，避免比例失真 */
           const ratio = (+h > +w) ? '3 / 4' : '1 / 1';
-          return [0,1].map(si=>`
+          return [0,1,2,3,4].map(si=>`
             <div class="st-thumb">
               <div class="st-thumb-box" style="aspect-ratio:${ratio}">
-                <div class="st-thumb-inner">
-                  ${si===0
-                    ? `<div class="st-thumb-kick">${p.n}</div>
-                       <div class="st-thumb-ph"></div>
-                       <div class="st-thumb-txt">${tags[0]}</div>
-                       <div class="st-thumb-price">${g.price}</div>`
-                    : `<div class="st-thumb-row">
-                         <div class="st-thumb-ph sm"></div>
-                         <div class="st-thumb-lines">
-                           <div class="st-thumb-txt l">${tags[1]}</div>
-                           <div class="st-thumb-txt l">${tags[2]}</div>
-                         </div>
-                       </div>`}
-                </div>
+                <canvas data-seg="${si}" data-goods="${g.k}" data-plat="${p.n}"
+                        data-name="${g.sku}_${p.k}_0${si+1}" width="${w}" height="${h}"></canvas>
               </div>
-              <div class="st-thumb-meta"><b>${p.n}</b> ${p.main}</div>
+              <div class="st-thumb-meta"><b>${p.n}</b> ${p.main} · 图 ${si+1}</div>
               <div class="st-thumb-desc">${scenes[si]||scenes[0]}</div>
+              <button class="st-dl-btn" data-stdl="${si}" data-stplat="${p.k}">下载 PNG</button>
             </div>`).join('');
         }).join('')}
       </div>
-      <div class="st-note">主图由商品实拍图 + AI 排版生成，画面元素均来自我自己拍摄的商品素材。</div>
+      <div class="st-note">主图按平台规格以真实像素渲染（天猫/京东/抖店 800×800，拼多多 750×750，小红书 1080×1440），点「下载 PNG」可直接取用。</div>
     </div>` : '';
 
-  /* --- 详情页 --- */
+  /* --- 详情页：7 段 Canvas 长图 --- */
   $('#stDetailBlock').innerHTML = has('detail') ? `
     <div class="st-block">
       <div class="st-block-h"><span class="st-block-n">3</span>详情页长图
-        <span class="st-block-tag">${ST_DETAIL_SEGS.length} 段</span></div>
-      <div class="st-detail-list">
+        <span class="st-block-tag">${ST_DETAIL_SEGS.length} 段 · 750 宽</span></div>
+      <div class="st-dseg-grid">
         ${ST_DETAIL_SEGS.map((s,i)=>`
-          <div class="st-detail-seg">
-            <div class="st-detail-idx">${i+1}</div>
-            <div style="flex:1">
-              <div class="st-detail-t">${s}</div>
-              <div class="st-detail-d">${i===1?copy.points.map(p=>'· '+p).join('　'):(i===0?copy.title:(i===4?'含 '+g.selling.length+' 项核心参数':'按商品实际信息填充'))}</div>
-            </div>
+          <div class="st-dseg">
+            <canvas data-dseg="${i}" data-goods="${g.k}" data-name="${g.sku}_detail_${String(i+1).padStart(2,'0')}"
+                    width="750" height="${i===0?520:(i===4?560:460)}"></canvas>
+            <div class="st-dseg-cap">${i+1}. ${s}</div>
           </div>`).join('')}
       </div>
-      <div class="st-note">详情页按 ${plats.map(p=>p.n+' '+p.detail).join(' / ')||'所选平台'} 规格分别导出。</div>
+      <div class="st-note">详情页按 ${plats.map(p=>p.n+' '+p.detail).join(' / ')||'所选平台'} 规格导出；适配机型一段建议按实际库存 SKU 增补。</div>
     </div>` : '';
+
+  /* 画完所有 canvas */
+  stPaintAll();
+
+  /* 广告法自检：手机壳类目高频违规词 */
+  const allCopy = copy.title + ' ' + copy.points.join(' ') + ' ' + (copy.desc||'');
+  const comp = stCompliance(allCopy);
+  const compEl = $('#stComp');
+  if(compEl){
+    compEl.style.display = '';
+    compEl.className = 'st-comp ' + (comp.ok ? 'ok' : 'bad');
+    compEl.textContent = comp.ok
+      ? '广告法自检通过：未命中绝对化数据 / 绝对化承诺 / 伪权威认证 / 品牌侵权 / 最高级用语'
+      : '命中 ' + comp.hits.length + ' 个高危词：' + comp.hits.join('、') + ' —— 上架前建议改写，壳类目这类词是抽检重点';
+  }
 }
 
 /* 复制全部文案 */
@@ -3854,6 +4274,31 @@ document.addEventListener('click', e=>{
     return;
   }
   if(e.target.id==='stSaveAll'){ toast('已全部存入素材库（演示）'); return; }
+  /* 点击设计稿看大图 */
+  const cvHit = e.target.closest('#stMainBlock canvas, #stDetailBlock canvas');
+  if(cvHit){
+    const img = $('#stLightImg'), cap = $('#stLightCap');
+    img.src = cvHit.toDataURL('image/png');
+    img.style.width = Math.min(cvHit.width, 760) + 'px';
+    const plat = cvHit.dataset.plat || '';
+    const seg = cvHit.dataset.seg !== undefined ? ('主图 · 图' + (+cvHit.dataset.seg + 1)) : ('详情页 · 第' + (+cvHit.dataset.dseg + 1) + '段');
+    cap.textContent = plat + '  ' + seg + '  ' + cvHit.width + '×' + cvHit.height;
+    $('#stLight').classList.add('on');
+    return;
+  }
+  if(e.target.closest('#stLight') && !e.target.closest('#stLightImg')){
+    $('#stLight').classList.remove('on');
+    return;
+  }
+  /* 下载单张设计稿 */
+  const dl = e.target.closest('[data-stdl]');
+  if(dl){
+    const si = dl.dataset.stdl, pk = dl.dataset.stplat;
+    const cv = document.querySelector('#stMainBlock canvas[data-plat="'+pk+'"][data-seg="'+si+'"]')
+            || document.querySelector('#stMainBlock canvas[data-seg="'+si+'"]');
+    if(cv){ stDownload(cv); toast('已下载 PNG（'+cv.width+'×'+cv.height+'）'); }
+    return;
+  }
   /* 上传区点击 */
   if(e.target.closest('#sbDrop')){
     toast('演示环境：请选择下方示例素材');
@@ -3907,7 +4352,11 @@ document.addEventListener('keydown', e=>{
   if(n >= 1 && n <= VIEW_ORDER.length){
     switchView(VIEW_ORDER[n-1]);
   }
-  if(e.key === 'Escape'){ closeDrawer(); }
+  if(e.key === 'Escape'){
+    const lg = $('#stLight');
+    if(lg && lg.classList.contains('on')){ lg.classList.remove('on'); return; }
+    closeDrawer();
+  }
 });
 
 /* 初始化 */
