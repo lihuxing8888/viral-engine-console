@@ -226,6 +226,21 @@ body{
 .lib-thumb{aspect-ratio:1/1;background:var(--panel-2);overflow:hidden;cursor:zoom-in}
 .lib-thumb.wide{aspect-ratio:3/2}
 .lib-thumb img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+
+/* 逐张风格工具条 / 角标文案输入 */
+.st-perst{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 12px;padding:7px 10px;
+  border:1px dashed var(--line);border-radius:10px;background:var(--panel)}
+.st-perst-lb{font-size:11.5px;color:var(--text-3);white-space:nowrap}
+.st-perst-b{font-size:11.5px;padding:4px 9px;border-radius:999px;border:1px solid var(--line);
+  background:#fff;color:var(--text-2);cursor:pointer;font-family:inherit;transition:.12s}
+.st-perst-b:hover{border-color:var(--accent);color:var(--accent)}
+.st-perst-b.on{border-color:var(--accent);background:rgba(47,107,255,.08);color:var(--accent);font-weight:650}
+.st-perst-tip{font-size:10.5px;color:var(--text-3);margin-left:auto}
+.st-badge-in{flex:1;min-width:0;box-sizing:border-box;padding:6px 9px;border:1.5px solid var(--line);
+  border-radius:8px;font-size:11.5px;background:var(--panel);color:var(--text);outline:none;font-family:inherit}
+.st-badge-in:focus{border-color:var(--accent);background:#fff}
+.st-thumb-ov{font-style:normal;font-size:9.5px;font-weight:700;color:var(--accent);
+  border:1px solid rgba(47,107,255,.35);border-radius:4px;padding:0 4px;margin-left:2px}
 .lib-code{position:absolute;top:6px;left:6px;font-size:9.5px;font-weight:800;letter-spacing:.4px;
   background:rgba(12,16,24,.72);color:#fff;padding:2px 6px;border-radius:5px}
 .lib-meta{padding:7px 9px 8px;border-top:1px solid var(--line)}
@@ -1160,13 +1175,19 @@ body{
                   <div class="tab" data-ststyle="warm" style="flex:1;text-align:center">暖调生活</div>
                   <div class="tab" data-ststyle="hard" style="flex:1;text-align:center">高对比促销</div>
                 </div>
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
                   <span style="font-size:11.5px;color:var(--text-3);white-space:nowrap">主图角标</span>
                   <div class="tabs" id="stBadgePick" style="flex:1">
                     <div class="tab active" data-stbadge="both" style="flex:1;text-align:center;padding:5px 4px">角标+贴纸</div>
                     <div class="tab" data-stbadge="badge" style="flex:1;text-align:center;padding:5px 4px">只角标</div>
                     <div class="tab" data-stbadge="off" style="flex:1;text-align:center;padding:5px 4px">不加</div>
                   </div>
+                </div>
+                <div style="display:flex;gap:6px;margin-bottom:10px">
+                  <input id="stBadgeTag" class="st-badge-in" maxlength="14" value=""
+                         placeholder="卖点角标（默认取商品标签）">
+                  <input id="stBadgeSale" class="st-badge-in" maxlength="16" value="立减 50"
+                         placeholder="促销贴纸（留空不出）">
                 </div>
                 <textarea id="stPrompt" rows="3" placeholder="补充卖点或要求，如：突出加厚不透光、适合小个子、含运费险"
                   style="width:100%;box-sizing:border-box;padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;
@@ -2405,7 +2426,10 @@ const ST_STYLES = {
   hard:  '高对比促销'
 };
 
-const ST = { goods:null, kinds:new Set(['copy','main','detail']), plats:new Set(['tmall','jd','xhs','douyin']), style:'clean', dw:750, timer:null };
+const ST = { goods:null, kinds:new Set(['copy','main','detail']), plats:new Set(['tmall','jd','xhs','douyin']),
+             style:'clean', dw:750, timer:null,
+             /* 逐张风格覆盖：{图位序号: 'clean'|'warm'|'hard'}，没有键就是跟随全局 */
+             perStyle:{} };
 
 /* 渲染商品列表 */
 function stRenderGoods(){
@@ -2509,16 +2533,16 @@ function stLibArchive(g, plats){
   document.querySelectorAll('#stMainBlock canvas[data-seg]').forEach(cv=>{
     const pl = ST_PLATFORMS.find(p=>p.n === cv.dataset.plat);
     push({ gk:g.k, gname:g.n, sku:g.sku, shop:pl ? pl.shop : '未归属',
-           code:pl ? pl.code : '--', kind:'main', idx:+cv.dataset.seg + 1,
-           w:cv.width, h:cv.height, style, thumb:stLibThumb(cv) });
+           code:pl ? pl.code : '--', plat:cv.dataset.plat || '', kind:'main', idx:+cv.dataset.seg + 1,
+           w:cv.width, h:cv.height, style:cv.dataset.style || style, thumb:stLibThumb(cv) });
   });
   document.querySelectorAll('#stDetailBlock canvas[data-dseg]').forEach(cv=>{
     const same = ST_PLATFORMS.filter(p=>p.dw === cv.width && ST.plats.has(p.k));
     /* 同一宽度被多家店共用时如实标注，避免把 750 宽详情错算成天猫独占 */
     const shop = same.length > 1 ? '多店共用' : (same.length ? same[0].shop : '未归属');
     const code = same.length > 1 ? 'MULTI' : (same.length ? same[0].code : '--');
-    push({ gk:g.k, gname:g.n, sku:g.sku, shop, code, kind:'detail', idx:+cv.dataset.dseg + 1,
-           w:cv.width, h:cv.height, style, thumb:stLibThumb(cv) });
+    push({ gk:g.k, gname:g.n, sku:g.sku, shop, code, plat:'', kind:'detail', idx:+cv.dataset.dseg + 1,
+           w:cv.width, h:cv.height, style:cv.dataset.style || style, thumb:stLibThumb(cv) });
   });
 
   stLibSave();
@@ -2609,6 +2633,30 @@ function stLibRender(){
       <div class="lib-code">${x.code}</div>
       <div class="lib-meta"><b>${x.gname}</b><span>${x.kind==='main'?'主图':'详情'} ${x.idx} · ${x.w}×${x.h} · ${x.sku}</span></div>
     </div>`).join('');
+}
+
+/* 素材库点开看大图：不是把 240 宽缩略图放大（那只会糊），
+   而是拿归档时记下的「商品 × 图位 × 尺寸 × 风格」现场重绘一张原始尺寸的图。
+   存储成本为零，看到的和当初生成的一模一样 —— 前提是渲染函数保持纯函数。 */
+function stLibPreview(key){
+  const x = ST_LIB.items.find(i=>i.key === key);
+  if(!x){ return; }
+  const g = ST_GOODS.find(y=>y.k === x.gk);
+  if(!g){ toast('这个商品已经不在商品库里，无法重绘'); return; }
+  const cv = document.createElement('canvas');
+  cv.width = x.w; cv.height = x.h;
+  if(x.kind === 'main'){
+    const pl = ST_PLATFORMS.find(p=>p.code === x.code) || ST_PLATFORMS.find(p=>p.n === x.plat);
+    stPaintMain(cv, Math.max(0, (x.idx || 1) - 1), g, pl ? pl.n : '', x.style || '');
+  } else {
+    stPaintDetail(cv, Math.max(0, (x.idx || 1) - 1), g, x.style || '');
+  }
+  const url = cv.toDataURL('image/png');
+  stOpenLight(url,
+    x.shop + ' · ' + (x.kind === 'main' ? '主图' : '详情') + ' ' + x.idx +
+    ' · ' + x.w + '×' + x.h + ' · ' + (ST_STYLES[x.style] || x.style || '—') +
+    ' · 按归档参数重绘原尺寸',
+    x.w, x.h, x.sku + '_' + x.code + '_' + (x.kind === 'main' ? '' : 'detail_') + x.idx);
 }
 
 /* =========================================================
@@ -2927,41 +2975,61 @@ function stPriceTag(ctx,x,y,price,L,scale){
    同一个版式，大促挂贴纸、日常不挂，靠的是开关而不是重排版式。
    位置一律贴右上角、纵向堆叠，因为五套版式的右上角都是空白区；
    参数表那版右上角被表格占满，所以不挂。 */
-const ST_BADGE = { mode: 'both' };   /* both | badge | off */
-const ST_BADGE_SALE = '立减 50';
+const ST_BADGE = { mode: 'both', tag: '', sale: '立减 50' };   /* tag/sale 留空：角标回退商品标签、不贴促销 */
+const ST_BADGE_SAFE = 0.34;   /* 角标最宽占画面比例，超了先缩字号，再超才截断 */
 
-function stPaintBadge(ctx, W, H, L, g, topY, pad, onDark){
+/* 角标文案自适应：先缩字号（不低于 62%），仍超宽再逐字截断加省略号。
+   为什么不给固定宽度：文案从「立减 50」换成「前 100 名立减 100」，
+   固定宽度不是顶出画面就是空一大截 —— 得让它自己量。 */
+function stBadgeFit(ctx, txt, fs0, maxW, L){
+  const src = String(txt == null ? '' : txt);
+  let fs = fs0, s = src;
+  ctx.font = '800 ' + fs + 'px ' + L.font;
+  while(ctx.measureText(s).width > maxW && fs > fs0 * 0.62){
+    fs = Math.max(fs0 * 0.62, fs - fs0 * 0.05);
+    ctx.font = '800 ' + fs + 'px ' + L.font;
+  }
+  let cut = false;
+  while(s.length > 1 && ctx.measureText(s).width > maxW){ s = s.slice(0, -1); cut = true; }
+  if(cut) s = s.slice(0, -1) + '…';
+  return { fs: fs, txt: s };
+}
+
+function stPaintBadge(ctx, W, H, L, g, topY, pad, onDark, style){
   if(ST_BADGE.mode === 'off') return 0;
+  const S = style || ST.style;
   const right = W - pad;
   /* 落在深色区（高对比风格的撞色底、场景图的顶部色块）时，
      角标必须反过来用白底深字 —— 否则 accent 蓝压深灰、白底配白字都看不清 */
-  const lightBg = (ST.style === 'hard') || !!onDark;
+  const lightBg = (S === 'hard') || !!onDark;
   const badgeBg  = lightBg ? '#ffffff' : L.accent;
   const badgeInk = lightBg ? '#171a20' : '#ffffff';
   let y = topY, n = 0;
+  const maxW = W * ST_BADGE_SAFE;
 
-  /* 卖点角标：商品自带 tag（主推 / 新品）优先，没有就写现货 —— 不编造卖点 */
-  const txt = g.tag || '现货';
-  let fs = W * 0.028;
-  ctx.font = '800 ' + fs + 'px ' + L.font;
-  let bh = W * 0.056, bw = ctx.measureText(txt).width + bh * 0.72;
+  /* 卖点角标：手填文案 > 商品自带 tag（主推 / 新品）> 现货 —— 三级回退，不编造卖点 */
+  const tagTxt = String(ST_BADGE.tag || '').trim() || g.tag || '现货';
+  let fit = stBadgeFit(ctx, tagTxt, W * 0.028, maxW, L);
+  let bh = W * 0.056;
+  let bw = Math.min(ctx.measureText(fit.txt).width + bh * 0.72, maxW);
   ctx.fillStyle = badgeBg;
   stRR(ctx, right - bw, y, bw, bh, bh * 0.30); ctx.fill();
-  stTxt(ctx, txt, right - bw / 2, y + (bh - fs) / 2, fs, badgeInk, 800, 'center');
+  stTxt(ctx, fit.txt, right - bw / 2, y + (bh - fit.fs) / 2, fit.fs, badgeInk, 800, 'center');
   y += bh + W * 0.018;
   n++;
 
-  /* 促销贴纸：轻微倾斜更像贴上去的，但角度控制在 3° 内，不然显廉价 */
-  if(ST_BADGE.mode === 'both'){
-    fs = W * 0.030;
-    ctx.font = '800 ' + fs + 'px ' + L.font;
-    bh = W * 0.062; bw = ctx.measureText(ST_BADGE_SALE).width + bh * 0.66;
+  /* 促销贴纸：轻微倾斜更像贴上去的，但角度控制在 3° 内，不然显廉价。
+     文案留空 = 这一轮不做促销，直接不挂 —— 比再去点一次「只角标」快一步 */
+  const saleTxt = String(ST_BADGE.sale == null ? '' : ST_BADGE.sale).trim();
+  if(ST_BADGE.mode === 'both' && saleTxt){
+    fit = stBadgeFit(ctx, saleTxt, W * 0.030, maxW, L);
+    bh = W * 0.062; bw = Math.min(ctx.measureText(fit.txt).width + bh * 0.66, maxW);
     ctx.save();
     ctx.translate(right - bw / 2, y + bh / 2);
     ctx.rotate(-0.052);
     ctx.fillStyle = L.price;
     stRR(ctx, -bw / 2, -bh / 2, bw, bh, bh * 0.18); ctx.fill();
-    stTxt(ctx, ST_BADGE_SALE, 0, -fs * 0.52, fs, '#ffffff', 800, 'center');
+    stTxt(ctx, fit.txt, 0, -fit.fs * 0.52, fit.fs, '#ffffff', 800, 'center');
     ctx.restore();
     n++;
   }
@@ -2984,14 +3052,18 @@ function stFacts(g){
 }
 
 /* 主图绘制：idx = 0..4 对应五种版式 */
-function stPaintMain(cv, idx, g, platName){
-  const L = ST_LOCK[ST.style], f = stFacts(g);
+function stPaintMain(cv, idx, g, platName, styleOverride){
+  /* S = 这张图自己的风格：默认跟全局，被「逐张换风格」覆盖时以覆盖值为准。
+     五张一套同调性是最常见的做法，但大促常常「首图高对比、其余保持清爽」，
+     所以风格必须是 per-canvas 的，不能只是全局开关。 */
+  const S = styleOverride || ST.style;
+  const L = ST_LOCK[S], f = stFacts(g);
   const W = cv.width, H = cv.height, P = L.pad * (W/800);
   const ctx = cv.getContext('2d');
 
   /* 背景 */
-  if(ST.style === 'clean'){ ctx.fillStyle = L.bg; ctx.fillRect(0,0,W,H); }
-  else if(ST.style === 'warm'){
+  if(S === 'clean'){ ctx.fillStyle = L.bg; ctx.fillRect(0,0,W,H); }
+  else if(S === 'warm'){
     const gr = ctx.createLinearGradient(0,0,0,H);
     gr.addColorStop(0,L.bg); gr.addColorStop(1,L.bg2);
     ctx.fillStyle = gr; ctx.fillRect(0,0,W,H);
@@ -3010,7 +3082,7 @@ function stPaintMain(cv, idx, g, platName){
     stTxt(ctx, platName, W-P, P, W*0.032, L.sub, 600, 'right');
     /* 首图的大字卖点会折到两行、右端顶到 0.88W，所以角标不下挂在顶部，
        改贴商品图右上角 —— 那一列 0.79~0.95W 是整张图唯一的空档 */
-    stPaintBadge(ctx, W, H, L, g, H*0.402, P);
+    stPaintBadge(ctx, W, H, L, g, H*0.402, P, false, S);
 
   } else if(idx === 1){
     /* ② 卖点图：左文右图 */
@@ -3023,7 +3095,7 @@ function stPaintMain(cv, idx, g, platName){
       stTxtWrap(ctx, p, P+W*0.072, y+2, W*0.037, L.ink, 600, 'left', W*0.50, 2);
     });
     stPaintProduct(ctx, W*0.735, H*0.615, W*0.415, W*0.415, L, g, undefined, 1);
-    stPaintBadge(ctx, W, H, L, g, P + W*0.052, P);
+    stPaintBadge(ctx, W, H, L, g, P + W*0.052, P, false, S);
 
   } else if(idx === 2){
     /* ③ 细节图：局部放大 + 引线 */
@@ -3036,12 +3108,12 @@ function stPaintMain(cv, idx, g, platName){
       ctx.beginPath(); ctx.arc(P+W*0.012, y+W*0.020, W*0.011, 0, Math.PI*2); ctx.fill();
       stTxt(ctx, n, P+W*0.038, y, W*0.035, L.sub, 600, 'left', W-P*2-W*0.05);
     });
-    stPaintBadge(ctx, W, H, L, g, P + W*0.052, P);
+    stPaintBadge(ctx, W, H, L, g, P + W*0.052, P, false, S);
 
   } else if(idx === 3){
     /* ④ 场景图：上下分屏 */
     const sc = f.scene.split('/').map(t=>t.trim()).filter(Boolean);
-    const bigInk = ST.style==='hard' ? '#ffffff' : L.bg;
+    const bigInk = S==='hard' ? '#ffffff' : L.bg;
     ctx.fillStyle = L.ink; ctx.globalAlpha = .92;
     ctx.fillRect(0,0,W,H*0.295); ctx.globalAlpha = 1;
     stTxt(ctx, f.model, P, H*0.042, W*0.030, 'rgba(255,255,255,.66)', 600, 'left', W*0.54);
@@ -3060,7 +3132,7 @@ function stPaintMain(cv, idx, g, platName){
     stPaintProduct(ctx, W*0.50, H*0.615, W*0.48, W*0.48, L, g, undefined, 3);
     stPriceTag(ctx, W-P, H-P-52*(W/800), f.price, L, W/800);
     /* 场景词胶囊在左侧，色块内右侧是空的，角标挪进色块 */
-    stPaintBadge(ctx, W, H, L, g, H*0.112, P, true);
+    stPaintBadge(ctx, W, H, L, g, H*0.112, P, true, S);
 
   } else {
     /* ⑤ 规格图：参数表 */
@@ -3079,15 +3151,16 @@ function stPaintMain(cv, idx, g, platName){
 }
 
 /* 详情页单段绘制：seg = 0..6 */
-function stPaintDetail(cv, seg, g){
-  const L = ST_LOCK[ST.style], f = stFacts(g);
+function stPaintDetail(cv, seg, g, styleOverride){
+  const S = styleOverride || ST.style;
+  const L = ST_LOCK[S], f = stFacts(g);
   const W = cv.width, H = cv.height, P = L.pad * (W/750);
   const ctx = cv.getContext('2d');
 
   ctx.fillStyle = (seg===0 || seg===4) ? L.ink : L.bg;
   ctx.fillRect(0,0,W,H);
   const onDark = (seg===0 || seg===4);
-  const ink = onDark ? (ST.style==='hard'?'#fff':L.bg) : L.ink;
+  const ink = onDark ? (S==='hard'?'#fff':L.bg) : L.ink;
   const sub = onDark ? 'rgba(255,255,255,.72)' : L.sub;
 
   if(seg === 0){
@@ -3189,11 +3262,32 @@ function stPaintDetail(cv, seg, g){
 function stPaintAll(){
   document.querySelectorAll('#stMainBlock canvas[data-seg]').forEach(cv=>{
     const g = ST_GOODS.find(x=>x.k === cv.dataset.goods);
-    if(g) stPaintMain(cv, +cv.dataset.seg, g, cv.dataset.plat || '');
+    if(g) stPaintMain(cv, +cv.dataset.seg, g, cv.dataset.plat || '', cv.dataset.style || '');
   });
   document.querySelectorAll('#stDetailBlock canvas[data-dseg]').forEach(cv=>{
     const g = ST_GOODS.find(x=>x.k === cv.dataset.goods);
-    if(g) stPaintDetail(cv, +cv.dataset.dseg, g);
+    if(g) stPaintDetail(cv, +cv.dataset.dseg, g, cv.dataset.style || '');
+  });
+}
+
+/* 逐张换风格：改 canvas 上的 data-style → 重绘 → 同步 chip 与说明文字。
+   只重绘画布、不重建 DOM，所以懒加载、选中态、滚动位置都不丢。 */
+const ST_STYLE_CYCLE = ['', 'clean', 'warm', 'hard'];
+function stApplyPerStyle(){
+  document.querySelectorAll('#stMainBlock canvas[data-seg]').forEach(cv=>{
+    cv.dataset.style = ST.perStyle[cv.dataset.seg] || '';
+  });
+  stPaintAll();
+  document.querySelectorAll('#stPerStyle .st-perst-b').forEach(b=>{
+    const si = b.dataset.stper, ps = ST.perStyle[si];
+    b.classList.toggle('on', !!ps);
+    b.textContent = '图' + (+si + 1) + ' · ' + (ps ? ST_STYLES[ps] : '跟随');
+  });
+  /* 说明文字必须跟着这张图的实际风格走 —— 否则写着「纯白底」图里却是红底 */
+  document.querySelectorAll('#stMainBlock .st-thumb-desc[data-stdesc]').forEach(d=>{
+    const si = +d.dataset.stdesc;
+    const arr = ST_MAIN_SCENES[ST.perStyle[si] || ST.style] || ST_MAIN_SCENES.clean;
+    d.textContent = arr[si] || arr[0];
   });
 }
 
@@ -3313,7 +3407,9 @@ function stZipByShop(){
   const dirCount = {};
 
   const add = (dir, cv, row)=>{
-    const name = (cv.dataset.name || 'img') + '.png';
+    /* 单张换过风格的，文件名带后缀 —— 否则同一图位两张图同名，解压直接覆盖 */
+    const ov = cv.dataset.style || '';
+    const name = (cv.dataset.name || 'img') + (ov ? '_' + ov.toUpperCase() : '') + '.png';
     const path = dir + '/' + name;
     files.push({ name: path, u8: stDataURL2U8(cv.toDataURL('image/png')) });
     dirCount[dir] = (dirCount[dir] || 0) + 1;
@@ -3344,11 +3440,14 @@ function stZipByShop(){
     });
   });
 
+  const perN = [0,1,2,3,4].filter(i=>ST.perStyle[i]).length;
+
   /* 说明文件：解压后先看这个，不用回头问「750 该传哪家」 */
   const note = [
     '抖音爆款引擎 · 素材打包说明',
     '商品：' + g.n + '（' + g.sku + '）',
-    '风格：' + (ST_STYLES[ST.style] || ST.style),
+    '风格：' + (ST_STYLES[ST.style] || ST.style)
+      + (perN ? '（其中 ' + perN + ' 个图位单独换风格，文件名已带 _WARM / _HARD 后缀）' : ''),
     '打包时间：' + new Date().toLocaleString('zh-CN'),
     '',
     '目录结构',
@@ -3529,9 +3628,17 @@ function stExportLong(){
   stOpenLight(url, '详情页长图 · ' + W + ' × ' + H + ' · ' + cvs.length + ' 段拼接', W, H, sku + '_detail_' + W + '_long');
 }
 
-/* 素材库关键词：输入即筛选 */
+/* 输入事件：素材库关键词 + 角标文案（角标打字时防抖重绘，不然每敲一个字重画 25 张图） */
 document.addEventListener('input', function(e){
-  if(e.target.id !== 'libQ') return;
+  const id = e.target.id;
+  if(id === 'stBadgeTag' || id === 'stBadgeSale'){
+    ST_BADGE[id === 'stBadgeTag' ? 'tag' : 'sale'] = e.target.value || '';
+    if(!document.querySelectorAll('#stMainBlock canvas[data-seg]').length) return;
+    if(ST.badgeTimer) clearTimeout(ST.badgeTimer);
+    ST.badgeTimer = setTimeout(stPaintAll, 200);
+    return;
+  }
+  if(id !== 'libQ') return;
   ST_LIB.q = e.target.value || '';
   stLibRender();
 });
@@ -3682,21 +3789,33 @@ function stRenderResult(g, kinds, plats){
         <span class="st-block-tag">5 张一套 · ${plats.length} 个平台规格</span>
         <button class="btn btn-sm btn-ai" id="stZip" style="margin-left:auto" title="按店铺分目录打包高清 PNG，并附上传清单">按店铺打包 ZIP</button></div>
       ${stLockHTML(style)}
+      <div class="st-perst" id="stPerStyle">
+        <span class="st-perst-lb">逐张风格</span>
+        ${[0,1,2,3,4].map(si=>{
+          const ps = ST.perStyle[si];
+          return `<button class="st-perst-b${ps?' on':''}" data-stper="${si}"
+                  title="只换这一张的调性，其余四张不受影响；再点一次换下一档">图${si+1} · ${ps?ST_STYLES[ps]:'跟随'}</button>`;
+        }).join('')}
+        <span class="st-perst-tip">点一下换一档，循环回「跟随」</span>
+      </div>
       <div class="st-main-grid">
         ${plats.map(p=>{
-          const scenes = ST_MAIN_SCENES[style] || ST_MAIN_SCENES.clean;
           const [w,h] = p.main.split('×');
           const ratio = (+h > +w) ? '3 / 4' : '1 / 1';
-          return [0,1,2,3,4].map(si=>`
+          return [0,1,2,3,4].map(si=>{
+            const ov = ST.perStyle[si] || '';
+            const scenes = ST_MAIN_SCENES[ov || style] || ST_MAIN_SCENES.clean;
+            return `
             <div class="st-thumb">
               <div class="st-thumb-box" style="aspect-ratio:${ratio}">
-                <canvas data-seg="${si}" data-goods="${g.k}" data-plat="${p.n}"
+                <canvas data-seg="${si}" data-goods="${g.k}" data-plat="${p.n}" data-style="${ov}"
                         data-name="${g.sku}_${p.code}_0${si+1}" width="${w}" height="${h}"></canvas>
               </div>
-              <div class="st-thumb-meta"><b>${p.n}</b> ${p.main} · 图 ${si+1}</div>
-              <div class="st-thumb-desc">${scenes[si]||scenes[0]}</div>
+              <div class="st-thumb-meta"><b>${p.n}</b> ${p.main} · 图 ${si+1}${ov?` <i class="st-thumb-ov">${ST_STYLES[ov]}</i>`:''}</div>
+              <div class="st-thumb-desc" data-stdesc="${si}">${scenes[si]||scenes[0]}</div>
               <button class="st-dl-btn" data-stdl="${si}" data-stplat="${p.k}">下载 PNG</button>
-            </div>`).join('');
+            </div>`;
+          }).join('');
         }).join('')}
       </div>
       <div class="st-note">主图按平台规格以真实像素渲染（天猫/京东/抖店 800×800，拼多多 750×750，小红书 1080×1440），点「下载 PNG」可直接取用。右上角角标取商品标签，参数表那版不挂角标以免压住表格；「按店铺打包 ZIP」会把高清图按店铺分目录打包。</div>
@@ -5159,6 +5278,28 @@ document.addEventListener('click', e=>{
     stRenderPlats(); stRenderShopTable();
     return;
   }
+  /* 逐张换风格：单个图位循环 跟随 → 清爽 → 暖调 → 高对比 → 跟随 */
+  const sper = e.target.closest('[data-stper]');
+  if(sper){
+    const si = sper.dataset.stper;
+    const cur = ST.perStyle[si] || '';
+    const next = ST_STYLE_CYCLE[(ST_STYLE_CYCLE.indexOf(cur) + 1) % ST_STYLE_CYCLE.length];
+    if(next) ST.perStyle[si] = next; else delete ST.perStyle[si];
+    stApplyPerStyle();
+    /* 元信息行上那个风格小标是生成时写死的，覆盖态一变要跟着改 */
+    document.querySelectorAll('#stMainBlock canvas[data-seg="' + si + '"]').forEach(cv=>{
+      const meta = cv.closest('.st-thumb').querySelector('.st-thumb-meta');
+      const old = meta.querySelector('.st-thumb-ov');
+      if(next){
+        if(old) old.textContent = ST_STYLES[next];
+        else meta.insertAdjacentHTML('beforeend', ' <i class="st-thumb-ov">' + ST_STYLES[next] + '</i>');
+      } else if(old) old.remove();
+    });
+    toast(next ? '图 ' + (+si+1) + ' 已换成「' + ST_STYLES[next] + '」'
+               : '图 ' + (+si+1) + ' 已恢复跟随全局风格');
+    return;
+  }
+
   const sbd = e.target.closest('[data-stbadge]');
   if(sbd){
     ST_BADGE.mode = sbd.dataset.stbadge;
@@ -5228,13 +5369,7 @@ document.addEventListener('click', e=>{
   }
   const libCard = e.target.closest('[data-libid]');
   if(libCard){
-    const it = ST_LIB.items.find(x=>x.key === libCard.dataset.libid);
-    if(it){
-      stOpenLight(it.thumb,
-        it.shop + ' · ' + (it.kind==='main'?'主图':'详情') + ' ' + it.idx
-          + ' · ' + it.w + '×' + it.h + ' · 缩略索引（高清请回工坊重出）',
-        240, Math.round(240 * it.h / it.w), it.sku + '_' + it.code + '_' + it.idx);
-    }
+    stLibPreview(libCard.dataset.libid);
     return;
   }
   const dwBtn = e.target.closest('[data-dw]');
