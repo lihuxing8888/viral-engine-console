@@ -266,6 +266,9 @@ function pick(detail, link) {
       share: st.share_count || 0
     },
     author: (detail.author && (detail.author.nickname || detail.author.unique_id)) || '',
+    /* 抖音号：unique_id 是作者自己设的（可能为空），短号是平台分配的纯数字兜底。
+       两个都是抖音前台公开信息，拿来做「这个人到底是谁」的回查键。 */
+    douyinId: (detail.author && (detail.author.unique_id || detail.author.short_id || '')) || '',
     publishTime: detail.create_time ? new Date(detail.create_time * 1000).toISOString().slice(0, 10) : '',
     playUrl: src.url,
     /* 实际可下载到的最高画质 —— 这才是"无水印保存"真正落地的分辨率 */
@@ -889,6 +892,7 @@ const server = http.createServer(async (req, res) => {
         downloadedBytes: mp4Size
       },
       author: info.author,
+      douyinId: info.douyinId || '',
       publishTime: info.publishTime,
       hashtags: info.hashtags || [],
       metrics: mt,
