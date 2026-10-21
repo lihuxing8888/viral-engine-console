@@ -252,6 +252,29 @@ function pick(detail, link) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/**
+ * 解析失败时说清楚是哪一种失败。
+ * 「没拿到详情数据」这句话对用户没用 —— 可能是视频删了，也可能是这台机器的出口 IP
+ * 被抖音当成爬虫。两种情况的处理办法完全不同，必须分开说，不能糊成一句。
+ */
+function explainBlocked(hits, empty, captcha, snap) {
+  const s = String(snap || '');
+  if (hits > 0 && empty >= hits) {
+    return '抖音把接口数据吞了：详情接口请求了 ' + hits + ' 次，全部返回 200 但 body 是空的'
+      + (captcha ? '，同时页面挂起了验证码' : '')
+      + '。这是按出口 IP 判定的风控 —— 机房/云服务器 IP 会被当成爬虫，家用宽带不会。'
+      + '这一步要在住宅网络下完成（把服务跑在自己电脑上就能过）。';
+  }
+  if (hits === 0 && /抱歉|出错/.test(s)) {
+    return '抖音直接拒绝了这次访问，页面只回了「抱歉出错」。这同样是出口 IP 被风控，'
+      + '不是链接有问题 —— 换成本机的家用宽带就能正常解析。';
+  }
+  if (hits === 0) {
+    return '页面没触发详情接口，通常是要登录、视频已删、或者链接不是视频页。';
+  }
+  return '详情接口回来了但里面没有视频数据，可能是视频已删或设为私密。';
+}
+
 async function parseUrl(input) {
   let link = String(input || '').trim();
   if (!link) throw new Error('链接为空');
@@ -265,15 +288,25 @@ async function parseUrl(input) {
   });
   const page = await ctx.newPage();
   let detail = null;
+  /* 风控取证：抖音拦人不是返回 403，而是「200 + 空 body」，光看状态码会误判成接口正常。
+     所以要分别记：接口发了几次、几次是空的、有没有加载验证码。 */
+  let detailHits = 0;
+  let detailEmpty = 0;
+  let captchaSeen = false;
 
   page.on('response', async (res) => {
     const u = res.url();
+    if (u.includes('verifycenter') || u.includes('/captcha/')) captchaSeen = true;
     if (!detail && u.includes('/aweme/v1/web/aweme/detail/')) {
+      detailHits++;
       try {
         const j = JSON.parse(await res.text());
         const d = j.aweme_detail || (j.aweme_details && j.aweme_details[0]);
         if (d) detail = d;
-      } catch (e) { /* 响应不是 JSON 就跳过 */ }
+      } catch (e) {
+        /* body 为空或不是 JSON —— 这恰恰是机房 IP 被拦的典型样子 */
+        detailEmpty++;
+      }
     }
   });
 
@@ -283,7 +316,8 @@ async function parseUrl(input) {
     for (let i = 0; i < 44 && !detail; i++) await sleep(500);
     if (!detail) {
       const snap = await page.evaluate(() => document.body ? document.body.innerText.slice(0, 200) : '').catch(() => '');
-      throw new Error('没拿到详情数据（可能需要登录、视频已删、或链接不是视频页）' + (snap ? ' | 页面提示：' + snap.replace(/\s+/g, ' ').slice(0, 80) : ''));
+      const tip = snap ? ' | 页面提示：' + snap.replace(/\s+/g, ' ').slice(0, 80) : '';
+      throw new Error(explainBlocked(detailHits, detailEmpty, captchaSeen, snap) + tip);
     }
     const info = pick(detail, link);
     fs.writeFileSync(path.join(CACHE, info.awemeId + '.json'), JSON.stringify(info, null, 2), 'utf-8');
