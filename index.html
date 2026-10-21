@@ -840,31 +840,26 @@ body{
       <section class="view" id="view-copyrival">
         <div class="demo-bar"><b>结构 + 完整文案</b><span>文案原文<b style="background:none;color:inherit;padding:0">完整保留，不截断、不打码，可复制</b>；下面的「为什么能火」只读文案本身，每条都带原文证据。<b style="background:none;color:inherit;padding:0">互动数字一个都不存</b>——赞 / 评 / 藏 / 转没有公开接口，播放量平台不公开，完播率是作者后台私有数据，与其存一个来路不明的数，不如不存。</span></div>
         <div class="card" style="margin-bottom:14px">
-          <div class="card-body" style="display:flex;gap:12px;align-items:stretch;flex-wrap:wrap">
-            <div style="flex:1;min-width:210px;display:flex;flex-direction:column;justify-content:center">
-              <div style="font-size:13px;font-weight:700;margin-bottom:4px">采集同行视频</div>
-              <div style="font-size:11.5px;color:var(--text-3);line-height:1.7">
-                贴链接入库；<b style="background:none;color:inherit;padding:0;color:var(--ok)">把文案也贴进来，才能分析它为什么火</b><br>
-                一行一条，支持多行批量。
-              </div>
-            </div>
-            <textarea class="input" id="rivalLink" rows="3"
-              placeholder="https://v.douyin.com/xxxxxx/&#10;一行一条，可一次贴多条"
-              style="flex:2;min-width:240px;min-height:58px;resize:vertical;padding:8px 10px;line-height:1.6;font-size:12px;font-family:inherit"></textarea>
-            <button class="btn btn-primary" id="doCollect" style="align-self:stretch;padding:0 20px;white-space:nowrap">采集入库</button>
+          <div class="card-head">
+            <h3>贴一条同行视频链接</h3>
+            <span class="desc">文案、BGM、画面、运镜、剪辑节奏都由后台解析 —— 你不用手抄任何东西</span>
           </div>
-          <div class="card-body" style="padding-top:0;display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap">
-            <textarea class="input" id="rivalText" rows="3"
-              placeholder="（可选）把这条视频的完整文案粘进来 —— 贴了才会做爆款原因分析，并完整保存在库里"
-              style="flex:1;min-width:260px;min-height:58px;resize:vertical;padding:8px 10px;line-height:1.7;font-size:12px;font-family:inherit"></textarea>
-            <div style="flex:0 0 auto;max-width:250px;font-size:10.5px;color:var(--text-3);line-height:1.7;padding-top:4px">
-              多条链接配多段文案时，用<b style="background:none;color:inherit;padding:0;color:var(--text-2)">空行分段</b>，按顺序一一对应。<br>
-              不贴文案也能入库，只是没有原因分析，之后可以在详情页补。
+          <div class="card-body">
+            <div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap">
+              <textarea class="input" id="rivalLink" rows="2"
+                placeholder="https://v.douyin.com/xxxxxx/&#10;一行一条，可一次贴多条；直接粘抖音「复制链接」出来的整段文字也行"
+                style="flex:1;min-width:260px;min-height:52px;resize:vertical;padding:9px 11px;line-height:1.6;font-size:12.5px;font-family:inherit"></textarea>
+              <button class="btn btn-primary" id="doCollect" style="align-self:stretch;padding:0 22px;white-space:nowrap">采集入库</button>
+              <button class="btn" id="importAnalysis" style="align-self:stretch;padding:0 16px;white-space:nowrap">导入解析结果</button>
             </div>
-          </div>
-          <div class="card-body" style="padding-top:0;font-size:11px;color:var(--text-3);display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
-            <span>入库时拆的是<b style="background:none;color:inherit;padding:0">结构</b>：钩子类型、论证方式、情绪曲线、植入位置、CTA 模型，并逐条给出「为什么可能火」的原文证据。<b style="background:none;color:inherit;padding:0">不记录任何互动数字</b>——抖音没有公开接口。</span>
+            <div style="font-size:10.5px;color:var(--text-3);line-height:1.85;margin-top:9px;display:flex;gap:6px;align-items:flex-start">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:3px"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+              <span>
+                入库后状态是<b style="background:none;color:inherit;padding:0;color:var(--text-2)">「待解析」</b>。解析要真的打开这个视频、读它的文案、听它的 BGM、抽帧看画面和运镜，<b style="background:none;color:inherit;padding:0;color:var(--text-2)">单文件静态页做不到</b>，所以由后台跑完后用「导入解析结果」回填。<br>
+                <b style="background:none;color:inherit;padding:0;color:var(--text-2)">纯展示类视频（全程 BGM、没有一句口播）也能解析</b> —— 这种情况下画面、运镜、剪辑节奏、音乐就是它的全部爆款因素，文案一栏会如实写「无口播」。<br>
+                解析拿到的是<b style="background:none;color:inherit;padding:0;color:var(--text-2)">页面公开数据</b>：文案、BGM 曲名、时长、分辨率、赞 / 评 / 藏 / 转。<b style="background:none;color:inherit;padding:0">播放量、完播率、成交数据拿不到</b>，不猜。
+              </span>
+            </div>
           </div>
         </div>
         <div class="filters">
@@ -1483,6 +1478,68 @@ function firstSentence(text){
   const ss = splitSent(text);
   return ss[0] || String(text || '').slice(0, 42);
 }
+
+/* 从抖音分享出来的整段文字里挖出作者写的标题。
+   复制链接得到的原文形如：
+     「6.15 看看【某某的作品】买了 iPhone Duo 别急着配壳 https://v.douyin.com/xx/ 复制此链接，打开抖音搜索」
+   这段标题是作者自己写的公开内容，不是我们编的，可以当真文案用（只是「标题级」，
+   字数少，分析精度不如完整口播稿）。
+   如果整行只有链接没有标题，返回空串 —— 绝不拿 URL 顶替文案。 */
+function shareTitleOf(line){
+  let s = String(line || '');
+
+  /* ① 只去掉链接本身 */
+  s = s.replace(/https?:\/\/[^\s，,；;、）)】]+/g, ' ');
+
+  /* ② 必须先剥前缀，再删尾巴。
+        顺序反了会出事：分享码格式是「7.89 XzG:/ 复制打开抖音，看看【…】标题」，
+        先按「打开抖音」删尾巴，会把标题连同前缀一起砍掉，只剩「复制」两个字。 */
+  s = s.replace(/^\s*\d{1,2}[.\-\/]\d{1,2}\s+/, ' ');          // 6.15
+  s = s.replace(/^\s*[A-Za-z0-9]{2,8}:\/\s*/, ' ');              // XzG:/
+  s = s.replace(/^\s*(复制)?打开抖音[，,]?\s*/, ' ');
+  s = s.replace(/^\s*正在直播[，,]?\s*/, ' ');
+  s = s.replace(/^\s*看[看一]?(?=【[^】]{0,24}的直播间】)/, ' ');
+
+  /* ③ 再删抖音分享文案的固定尾巴 */
+  s = s.replace(/复制此链接[\s\S]*$/, ' ');
+  s = s.replace(/打开抖音[\s\S]*$/, ' ');
+  s = s.replace(/直接观看视频[\s\S]*$/, ' ');
+  /* 手机端「复制链接」常带一段分享码：10/21 k@C.uS —— 不是标题，删掉 */
+  s = s.replace(/\s*\d{1,2}\/\d{1,2}\s+[A-Za-z0-9@.:]{2,14}\s*$/, ' ');
+  s = s.replace(/\s*[a-z]@[A-Za-z0-9.]{2,12}\s*$/, ' ');
+
+  /* ④ 【】里两种东西要分开处理：
+        【某某的作品】 / 【某某的直播间】 是账号标记，删掉；
+        其余的【】本身就是标题，脱壳保留。
+     另外「看看」紧贴账号标记时是模板词，一并删掉。 */
+  s = s.replace(/看[看一]?(?=【[^】]{0,32}的作品】)/g, ' ');
+  s = s.replace(/【[^】]{0,32}的作品】/g, ' ');
+  s = s.replace(/【[^】]{0,24}的直播间】/g, ' ');
+  s = s.replace(/^【([\s\S]{2,80})】/, ' $1 ');
+  s = s.replace(/[【】]/g, ' ');
+
+  /* ⑤ 话题标签不属于正文 */
+  s = s.replace(/#\s*[^\s#]{1,30}/g, ' ');
+
+  s = s.replace(/[|｜]/g, ' ');
+  s = s.replace(/\s+/g, ' ').trim();
+  s = s.replace(/^[，,。、：:\s]+/, '').replace(/[，,。、：:\s]+$/, '');
+
+  /* 提取结果必须真的是「文字」。
+     有人会把互动数直接贴在链接后面（「… /  12500 386 1074 132」），
+     这种纯数字串不是标题，绝不能当文案入库 —— 否则等于换个口子造假。 */
+  const cjk = (s.match(/[\u4e00-\u9fa5]/g) || []).length;
+  const alpha = (s.match(/[A-Za-z]/g) || []).length;
+  if (cjk < 2 && alpha < 4) return '';
+
+  return s;
+}
+
+/* 有没有「够用来分析」的文案。阈值从 12 降到 8 —— 分享文案里的标题常在 8~11 字，
+   按 12 字判会把它们当成没文案。 */
+function hasTextOf(r){
+  return !!(r && r.text && String(r.text).trim().length >= 8);
+}
 /* 强引导词：单字「买」「点」命中率太高（"买壳""点烟"都会误判），只认明确动作 */
 const CTA_STRONG = /(链接|下面|主页|点进|点开|拍下|下单|带走|入手|橱窗|去拍|小黄车|评论区)/;
 
@@ -1566,6 +1623,10 @@ function inferStruct(text, title){
    这些是文本层面的归因假设，不是平台后台验证过的因果。 */
 function analyzeHit(text, title){
   const body = String(text || '');
+  /* 没有文案就没有分析对象。以前这里会兜底塞一条「能复用的只有…」，
+     对空文本而言那是凭空产物 —— 直接返回空，让界面老实显示「没有素材」。 */
+  if (body.trim().length < 8)
+    return { hit: [], risk: [], stat: { chars: 0, nums: 0, me: 0, you: 0, scenes: 0 } };
   const t = (title && body.indexOf(String(title)) < 0) ? (String(title) + '。' + body) : body;
   const first = firstSentence(t);
   const nums = numbersIn(t);
@@ -2035,23 +2096,150 @@ function renderRival(){
         <div class="cc-src">${r.author}</div>
         <div class="cc-time">${r.date}</div>
       </div>
-      <div style="font-weight:700;font-size:12.5px;margin-bottom:8px">${r.title}</div>
-      <div style="background:var(--panel-2);border:1px dashed var(--line);border-radius:9px;padding:9px 11px;margin-bottom:9px">
-        <div style="font-size:10px;color:var(--text-3);font-weight:700;margin-bottom:5px;letter-spacing:.3px">钩子模板</div>
-        <div style="font-size:12px;font-weight:600;color:var(--brand-2)">${r.struct.hookTemplate}</div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--text-2);margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-3)">钩子类型</span><b>${r.struct.hook}</b></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-3)">情绪曲线</span><b>${r.struct.emotion}</b></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-3)">植入位置</span><b>${r.struct.placement}</b></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-3)">爆款原因</span><b style="color:var(--ok)">${(r.text && r.text.length>=12) ? analyzeHit(r.text, r.title).hit.length + ' 条' : '待补文案'}</b></div>
-      </div>
-      <div class="cc-text" style="font-size:11.5px;color:var(--text-3);margin-bottom:9px">${truncText(r.text, 76)}</div>
+      <div style="font-weight:700;font-size:12.5px;margin-bottom:8px">${r.title
+        || '<span style="color:var(--text-3);font-weight:600">待解析 · 还没有标题</span>'}</div>
+      ${r.video ? `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">${videoMetaRow(r)}</div>` : ''}
+      ${r.analysis
+        ? `<div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-bottom:9px">
+             ${Object.keys(dimGroup(r.analysis.factors)).map(d=>{
+               const m = DIM_META[d] || DIM_META['其他'];
+               const n = dimGroup(r.analysis.factors)[d].length;
+               return `<span style="font-size:10.5px;font-weight:700;color:${m.c};background:${m.bg};border-radius:6px;padding:2.5px 8px">${d} ${n}</span>`;
+             }).join('')}
+             <span style="margin-left:auto;font-size:10.5px;font-weight:700;color:var(--ok)">${(r.analysis.factors||[]).length} 项</span>
+           </div>`
+        : `<div style="background:var(--panel-2);border:1px dashed var(--line);border-radius:9px;padding:10px 11px;margin-bottom:9px">
+             <div style="font-size:10px;color:var(--text-3);font-weight:700;margin-bottom:4px;letter-spacing:.3px">待解析</div>
+             <div style="font-size:11px;color:var(--text-3);line-height:1.7">只存了链接。文案、BGM、画面、运镜要后台真跑一次才知道 —— 这里不猜。</div>
+           </div>`}
+      ${(r.text && r.title && r.text.indexOf(r.title) === 0)
+        ? (r.text.length > r.title.length + 4
+            ? `<div class="cc-text" style="font-size:11.5px;color:var(--text-3);margin-bottom:9px">${truncText(r.text.slice(r.title.length).trim(), 76)}</div>`
+            : '')
+        : (r.text ? `<div class="cc-text" style="font-size:11.5px;color:var(--text-3);margin-bottom:9px">${truncText(r.text, 76)}</div>` : '')}
       <div style="display:flex;gap:6px;margin-top:10px">
         <button class="btn btn-sm btn-ai" style="flex:1;justify-content:center" data-extract="${r.id}">提取爆款基因</button>
         <button class="btn btn-sm" data-rival="${r.id}">拆解</button>
       </div>
     </div>`).join('');
+}
+
+/* ───────────────── 解析结果渲染 ─────────────────
+   一条视频的爆款因素可能全在画面 / 音乐 / 运镜上（纯展示类没有口播），
+   所以这里不按「文案优先」排，而是按导入时给的维度分组。 */
+const DIM_META = {
+  '文案': { c:'#2b7fff', bg:'#eaf2ff' },
+  '画面': { c:'#7a3ff2', bg:'#f2ecff' },
+  '音乐': { c:'#0aa06e', bg:'#e6f7f1' },
+  '运镜': { c:'#e0771a', bg:'#fff4e5' },
+  '剪辑': { c:'#c92a63', bg:'#ffeaf2' },
+  '节奏': { c:'#8a5a00', bg:'#fff8e1' },
+  '其他': { c:'#6b7280', bg:'#f3f4f6' }
+};
+
+function dimGroup(factors){
+  const m = {};
+  (factors || []).forEach(f=>{
+    const d = DIM_META[f.dim] ? f.dim : '其他';
+    (m[d] = m[d] || []).push(f);
+  });
+  return m;
+}
+
+function videoMetaRow(r){
+  const v = r.video; if(!v) return '';
+  const bits = [];
+  if(v.durationSec) bits.push(v.durationSec + ' 秒');
+  if(v.width && v.height) bits.push(v.width + '×' + v.height);
+  if(v.music && v.music.title) bits.push('BGM《' + v.music.title + '》' + (v.music.author ? ' · ' + v.music.author : ''));
+  return bits.map(x=>`<span style="background:var(--panel-2);border:1px solid var(--line-2);border-radius:7px;padding:3px 8px;font-size:10.5px;color:var(--text-2)">${x}</span>`).join('');
+}
+
+function statRow(r){
+  const v = r.video; if(!v || !v.stats) return '';
+  const items = [['赞', v.stats.digg], ['评', v.stats.comment], ['藏', v.stats.collect], ['转', v.stats.share]];
+  return `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+    ${items.map(([k,n])=>`<div style="flex:1;min-width:64px;background:var(--panel-2);border:1px solid var(--line-2);border-radius:9px;padding:8px 10px;text-align:center">
+      <div style="font-size:10px;color:var(--text-3);font-weight:700">${k}</div>
+      <div style="font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:2px">${fmtN(n)}</div></div>`).join('')}
+  </div>
+  <div style="font-size:10px;color:var(--text-3);margin-top:6px;line-height:1.6">以上是视频页公开展示的互动数。播放量、完播率、成交数据平台不公开，这里没有、也不猜。</div>`;
+}
+
+function analysisBlocks(r){
+  const a = r.analysis; if(!a) return '';
+  const row = (lbl, val)=> val ? `<div class="kv"><span class="k">${lbl}</span><span class="v">${val}</span></div>` : '';
+
+  const vis = a.visual || {};
+  const cam = a.camera || {};
+  const aud = a.audio || {};
+  const sho = a.shots || {};
+
+  const visHtml = (vis.framing || vis.subject || vis.lighting || vis.subtitles || (vis.scenes && vis.scenes.length)) ? `
+    <div class="sec-title">画面 <span style="font-weight:600;color:var(--text-3);font-size:11px">抽帧逐段看出来的</span></div>
+    ${row('构图 / 画幅', vis.framing)}
+    ${row('主体', vis.subject)}
+    ${row('光线 / 调色', vis.lighting)}
+    ${row('字幕', vis.subtitles)}
+    ${vis.scenes && vis.scenes.length ? `<div style="margin-top:6px;font-size:11.5px;color:var(--text-2);line-height:1.9">${vis.scenes.map((x,i)=>`<div style="display:flex;gap:8px"><b style="color:var(--text-3);flex-shrink:0">${i+1}</b><span>${x}</span></div>`).join('')}</div>` : ''}
+  ` : '';
+
+  const camHtml = (cam.movement || cam.note) ? `
+    <div class="sec-title">运镜 <span style="font-weight:600;color:var(--text-3);font-size:11px">机位怎么动的</span></div>
+    ${row('运动方式', cam.movement)}
+    ${cam.note ? `<div style="font-size:11.5px;color:var(--text-2);line-height:1.85;margin-top:4px">${cam.note}</div>` : ''}
+  ` : '';
+
+  const shotHtml = (sho.count || sho.rhythm) ? `
+    <div class="sec-title">剪辑节奏 <span style="font-weight:600;color:var(--text-3);font-size:11px">逐帧算的切点</span></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+      ${sho.count ? `<div style="flex:1;min-width:72px;background:var(--panel-2);border:1px solid var(--line-2);border-radius:9px;padding:8px 10px;text-align:center"><div style="font-size:10px;color:var(--text-3);font-weight:700">镜头数</div><div style="font-size:15px;font-weight:800;margin-top:2px">${sho.count}</div></div>` : ''}
+      ${sho.avgSec ? `<div style="flex:1;min-width:72px;background:var(--panel-2);border:1px solid var(--line-2);border-radius:9px;padding:8px 10px;text-align:center"><div style="font-size:10px;color:var(--text-3);font-weight:700">平均镜头</div><div style="font-size:15px;font-weight:800;margin-top:2px">${sho.avgSec}s</div></div>` : ''}
+    </div>
+    ${sho.rhythm ? `<div style="font-size:11.5px;color:var(--text-2);line-height:1.85">${sho.rhythm}</div>` : ''}
+  ` : '';
+
+  const audHtml = (aud.hasVoice !== undefined || aud.note) ? `
+    <div class="sec-title">音轨 <span style="font-weight:600;color:var(--text-3);font-size:11px">听出来 / 测出来的</span></div>
+    ${row('有没有口播', aud.hasVoice ? '<b style="color:var(--ok)">有</b>' : '<b style="color:var(--brand-2)">没有（纯展示）</b>')}
+    ${aud.note ? `<div style="font-size:11.5px;color:var(--text-2);line-height:1.85;margin-top:4px">${aud.note}</div>` : ''}
+  ` : '';
+
+  const groups = dimGroup(a.factors);
+  const dimOrder = ['文案','画面','音乐','运镜','剪辑','节奏','其他'];
+  const facHtml = (a.factors && a.factors.length) ? `
+    <div class="sec-title">爆款因素 <span style="font-weight:600;color:var(--text-3);font-size:11px">${a.factors.length} 条，按维度分组</span></div>
+    ${dimOrder.filter(d=>groups[d]).map(d=>{
+      const m = DIM_META[d];
+      return `<div style="margin-bottom:11px">
+        <div style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:${m.c};background:${m.bg};border-radius:7px;padding:3px 9px;margin-bottom:7px">
+          ${d} <span style="opacity:.7;font-weight:600">${groups[d].length}</span></div>
+        ${groups[d].map(h=>`
+          <div style="background:var(--panel-2);border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;margin-bottom:6px">
+            <div style="display:flex;gap:7px;align-items:baseline;margin-bottom:3px">
+              <span style="flex-shrink:0;width:5px;height:5px;border-radius:50%;background:${m.c};margin-top:6px"></span>
+              <b style="font-size:12px">${h.k}</b>
+            </div>
+            <div style="font-size:11px;color:var(--text-2);line-height:1.75;padding-left:12px">${h.why || ''}</div>
+            ${h.ev ? `<div style="font-size:10.5px;color:var(--text-3);line-height:1.6;padding-left:12px;margin-top:3px">原文证据：${h.ev}</div>` : ''}
+          </div>`).join('')}
+      </div>`;
+    }).join('')}
+  ` : '';
+
+  const rkHtml = (a.risks && a.risks.length) ? `
+    <div class="sec-title">可能拖后腿的地方 <span style="font-weight:600;color:var(--text-3);font-size:11px">${a.risks.length} 条</span></div>
+    ${a.risks.map(h=>`
+      <div style="background:var(--warn-soft);border:1px solid #ffe6c7;border-radius:10px;padding:10px 12px;margin-bottom:6px">
+        <div style="display:flex;gap:7px;align-items:baseline;margin-bottom:3px">
+          <span style="flex-shrink:0;width:5px;height:5px;border-radius:50%;background:#f5a623;margin-top:6px"></span>
+          <b style="font-size:12px;color:#8a5a00">${h.k}</b>
+        </div>
+        <div style="font-size:11px;color:#8a5a00;opacity:.88;line-height:1.7;padding-left:12px">${h.why || ''}</div>
+      </div>`).join('')}
+  ` : '';
+
+  return visHtml + camHtml + shotHtml + audHtml + facHtml + rkHtml;
 }
 
 function mineTagStats(){
@@ -4840,7 +5028,7 @@ function rivalDrawer(id){
   const r = state.rival.find(x=>x.id===id); if(!r) return;
   const st = r.struct || inferStruct(r.text || '', r.title || '');
   const an = analyzeHit(r.text || '', r.title || '');
-  const hasText = !!(r.text && r.text.length >= 12);
+  const hasText = hasTextOf(r);
 
   const structCard = (lbl, val)=>`
       <div style="background:var(--panel-2);border:1px solid var(--line-2);border-radius:10px;padding:11px 12px">
@@ -4870,7 +5058,9 @@ function rivalDrawer(id){
     </div>`).join('') : `<div style="font-size:11.5px;color:var(--ok)">没发现明显短板。</div>`;
 
   const bodyHtml = hasText
-    ? `<div class="ai-script" style="color:var(--text-2);white-space:pre-wrap;line-height:1.95">${r.text.replace(/</g,'&lt;')}</div>`
+    ? `${r.textSrc === 'share' ? `<div style="background:var(--warn-soft);border:1px solid #ffe6c7;border-radius:9px;padding:9px 12px;margin-bottom:9px;font-size:11px;color:#8a5a00;line-height:1.7">
+         当前只有<b>分享文案里的标题</b>（${an.stat.chars} 字），是从你粘贴的分享文字里提取的作者原文。补上完整口播稿，原因分析会准很多。</div>` : ''}
+       <div class="ai-script" style="color:var(--text-2);white-space:pre-wrap;line-height:1.95">${r.text.replace(/</g,'&lt;')}</div>`
     : `<div style="background:var(--panel-2);border:1px dashed var(--line);border-radius:10px;padding:12px 14px">
          <div style="font-size:11.5px;color:var(--text-3);line-height:1.75;margin-bottom:9px">
            这一条只存了链接，还没有文案。补上完整文案，就能拆结构、给它做爆款原因分析。</div>
@@ -4885,9 +5075,9 @@ function rivalDrawer(id){
 
   const html = `
     <div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:12px">
-      <span class="tag tag-ai">结构已拆解</span>
+      <span class="tag tag-ai">${r.analysis ? '已解析' : '待解析'}</span>
+      ${r.analysis ? '' : `<span class="tag" title="按文案关键词粗判，不是平台数据" style="opacity:.75">${(r.struct||{}).hook || ''}</span>`}
       ${(r.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}
-      <span class="tag">${r.cat}</span>
     </div>
 
     <div style="background:var(--ok-soft);border:1px solid #c9f0e2;border-radius:10px;padding:10px 12px;
@@ -4902,8 +5092,32 @@ function rivalDrawer(id){
     </div>
     ${bodyHtml}
 
-    <div class="sec-title">这条为什么能火 <span style="font-weight:600;color:var(--text-3);font-size:11px">依据文案本身，命中 ${an.hit.length} 条</span></div>
-    ${hitHtml}
+    ${r.video ? `<div class="sec-title">视频概览 <span style="font-weight:600;color:var(--text-3);font-size:11px">页面公开数据</span></div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">${videoMetaRow(r)}</div>
+      ${statRow(r)}` : ''}
+
+    ${r.analysis ? `
+      <div class="sec-title">文案 <span style="font-weight:600;color:var(--text-3);font-size:11px">${hasText ? an.stat.chars + ' 字' : ((r.analysis.audio && r.analysis.audio.hasVoice === false) ? '无口播' : '未取到')}</span></div>
+      ${hasText
+        ? `<div class="ai-script" style="color:var(--text-2);white-space:pre-wrap;line-height:1.95">${r.text.replace(/</g,'&lt;')}</div>`
+        : `<div style="background:var(--panel-2);border:1px dashed var(--line);border-radius:10px;padding:11px 13px;font-size:11.5px;color:var(--text-3);line-height:1.8">
+             ${(r.analysis.audio && r.analysis.audio.hasVoice === false)
+               ? '这条没有口播文案 —— 纯展示类内容，全程只有 BGM。它的爆款因素全在画面、运镜、剪辑节奏和音乐上，下面按维度列出。'
+               : '这条没取到文案。'}</div>`}
+      ${(r.analysis.audio && r.analysis.audio.hasVoice === false) && hasText
+        ? `<div style="background:var(--warn-soft);border:1px solid #ffe6c7;border-radius:9px;padding:9px 12px;margin-top:8px;font-size:11px;color:#8a5a00;line-height:1.75">
+             注意：这条<b>视频里没有口播</b>，上面是发布时填的描述文案，和画面对白的程度不一定一致。纯展示类内容的爆款因素主要在画面、运镜、剪辑节奏和音乐上。</div>` : ''}
+      ${analysisBlocks(r)}
+    ` : `
+      <div class="sec-title">这条为什么能火 <span style="font-weight:600;color:var(--text-3);font-size:11px">${hasText ? '依据文案本身，命中 ' + an.hit.length + ' 条' : '需要先解析'}</span></div>
+      ${hitHtml}
+      ${!r.video ? `<div style="background:var(--panel-2);border:1px dashed var(--line);border-radius:10px;padding:11px 13px;margin-top:6px">
+        <div style="font-size:11.5px;color:var(--text-3);line-height:1.8">
+          <b style="color:var(--text-2)">还没有解析结果。</b>这条只存了链接，目前能看到的只有从分享文字里提取的标题（如果有）。<br>
+          完整解析要打开视频、读文案、听 BGM、抽帧看画面和运镜，静态页做不到，需要后台跑一次后用「导入解析结果」回填。
+        </div>
+      </div>` : ''}
+    `}
 
     <div class="sec-title">可能拖后腿的地方 <span style="font-weight:600;color:var(--text-3);font-size:11px">${an.risk.length} 条</span></div>
     ${riskHtml}
@@ -5231,6 +5445,7 @@ document.addEventListener('click', e=>{
     const v = el ? String(el.value || '').trim() : '';
     if(v.length < 12){ toast('文案太短，至少 12 个字'); return; }
     r.text = v;
+    r.textSrc = 'manual';
     r.struct = inferStruct(v, r.title || '');
     r.tags = tagsFromText(v);
     r.cat = catFromText(v);
@@ -5412,15 +5627,162 @@ document.addEventListener('click', e=>{
 });
 
 /* 采集同行 */
-/* 采集同行：贴链接入库；链接 + 文案一起贴时，文案完整保存并用于原因分析。
-   一行一条链接，文案按空行分段，按顺序对应。不解析、不生成任何表现数字。 */
+/* ───────────── 解析结果回填 ─────────────
+   后台解析产出的 JSON 按 awemeId 或 link 匹配回填。
+   匹配不到就新建一条 —— 因为用户可能先拿结果后补链接。
+
+   只接受解析脚本真实产出的字段，任何字段缺失就留空，
+   不在这里补默认值：没测到就是没测到。 */
+function nextRivalId(){
+  const max = state.rival.reduce((m,x)=>{
+    const n = parseInt(String(x.id||'').replace(/^R/i,''), 10);
+    return isNaN(n) ? m : Math.max(m, n);
+  }, 0);
+  return 'R' + String(max + 1).padStart(3,'0');
+}
+
+function applyAnalysisList(list){
+  let matched = 0, created = 0, failed = 0;
+
+  list.forEach(item=>{
+    if(!item || typeof item !== 'object'){ failed++; return; }
+    const aid = String(item.awemeId || '').trim();
+    const link = String(item.link || '').trim();
+
+    let r = null;
+    if(aid) r = state.rival.find(x=>String(x.awemeId||'') === aid);
+    if(!r && link) r = state.rival.find(x=>{
+      if(!x.link) return false;
+      if(x.link === link) return true;
+      return aid && x.link.indexOf(aid) >= 0;
+    });
+
+    if(!r){
+      if(!link && !aid){ failed++; return; }
+      r = {
+        id: nextRivalId(),
+        title: '', text: '', textSrc: '', link: link || ('https://www.douyin.com/video/' + aid),
+        awemeId: aid, video: null, analysis: null,
+        tags: ['强钩子'], cat: '其他品类',
+        author: item.author || '解析导入',
+        struct: inferStruct('', ''),
+        date: item.publishTime || new Date().toISOString().slice(0,10)
+      };
+      state.rival.unshift(r);
+      created++;
+    } else {
+      matched++;
+    }
+
+    /* 文案：解析到的完整文案覆盖掉之前从分享标题提的占位 */
+    if(item.desc && String(item.desc).trim().length >= 8){
+      r.text = String(item.desc).trim();
+      r.textSrc = 'parsed';
+    }
+
+    /* 客观数据 */
+    r.video = {
+      awemeId: aid || r.awemeId || '',
+      durationSec: item.durationSec || null,
+      width: item.width || null,
+      height: item.height || null,
+      ratio: item.ratio || '',
+      music: item.music || null,
+      stats: item.stats || null,
+      publishTime: item.publishTime || '',
+      author: item.author || r.author,
+      shots: item.shots || null,
+      audio: item.audio || null
+    };
+
+    /* 语义分析 */
+    r.analysis = {
+      visual: item.visual || null,
+      camera: item.camera || null,
+      shots: item.shots || null,
+      audio: item.audio || null,
+      factors: Array.isArray(item.factors) ? item.factors.filter(x=>x && x.k) : [],
+      risks: Array.isArray(item.risks) ? item.risks.filter(x=>x && x.k) : []
+    };
+
+    if(!r.title){
+      r.title = item.title
+        || (r.text ? firstSentence(r.text).slice(0, 28) : '')
+        || (r.video.music && r.video.music.title ? 'BGM《' + r.video.music.title + '》' : '')
+        || ('视频 ' + (aid || '').slice(-6));
+    }
+    if(r.text) r.struct = inferStruct(r.text, r.title);
+    if(r.text){ r.tags = tagsFromText(r.text); r.cat = catFromText(r.text); }
+  });
+
+  renderRivalTags(); renderRival();
+  return { matched, created, failed };
+}
+
+/* 导入解析结果面板 */
+const importBtn = $('#importAnalysis');
+if(importBtn) importBtn.addEventListener('click', ()=>{
+  const sample = '{\n' +
+    '  "awemeId": "7562511783883164979",\n' +
+    '  "link": "https://www.douyin.com/video/7562511783883164979",\n' +
+    '  "desc": "完整文案原文，没有口播就留空",\n' +
+    '  "durationSec": 36.9, "width": 1080, "height": 1920,\n' +
+    '  "music": { "title": "Catch My Breath", "author": "DJtianyu" },\n' +
+    '  "stats": { "digg": 16, "comment": 0, "collect": 6, "share": 0 },\n' +
+    '  "shots": { "count": 11, "avgSec": 3.4, "rhythm": "每 3~5 秒换一个卖点" },\n' +
+    '  "audio": { "hasVoice": false, "note": "全程 BGM 铺底，无口播" },\n' +
+    '  "visual": { "framing": "竖屏 9:16，固定机位平视", "subject": "手部 + 产品", "subtitles": "顶部居中白字" },\n' +
+    '  "camera": { "movement": "固定机位", "note": "无推拉摇移" },\n' +
+    '  "factors": [\n' +
+    '    { "dim": "画面", "k": "因素标题", "ev": "证据", "why": "为什么有效" },\n' +
+    '    { "dim": "音乐", "k": "...", "ev": "...", "why": "..." }\n' +
+    '  ],\n' +
+    '  "risks": [ { "dim": "画面", "k": "...", "why": "..." } ]\n' +
+    '}';
+
+  const html = `
+    <div style="background:var(--panel-2);border:1px solid var(--line-2);border-radius:10px;padding:11px 13px;margin-bottom:12px;font-size:11.5px;color:var(--text-2);line-height:1.85">
+      把后台解析产出的 JSON 粘进来。可以是一个对象，也可以是数组（批量）。
+      <b>按 awemeId 或链接自动匹配</b>已有条目：匹配到就回填，匹配不到就新建一条。
+    </div>
+    <div class="sec-title">解析结果 JSON</div>
+    <textarea class="input" id="importJson" rows="14" placeholder="${sample.replace(/</g,'&lt;')}"
+      style="width:100%;resize:vertical;padding:10px 12px;line-height:1.7;font-size:11.5px;font-family:ui-monospace,Consolas,monospace"></textarea>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:11px;flex-wrap:wrap">
+      <button class="btn btn-sm btn-ai" id="doImport">导入并回填</button>
+      <button class="btn btn-sm" id="fillImportSample">填入示例</button>
+      <span style="font-size:10.5px;color:var(--text-3)">factors 里的 dim 可选：文案 / 画面 / 音乐 / 运镜 / 剪辑 / 节奏 / 其他</span>
+    </div>`;
+
+  openDrawer(html, '导入解析结果', '解析由后台跑，结果粘回这里');
+
+  const fill = document.getElementById('fillImportSample');
+  if(fill) fill.addEventListener('click', ()=>{
+    document.getElementById('importJson').value = sample;
+  });
+
+  const ok = document.getElementById('doImport');
+  if(ok) ok.addEventListener('click', ()=>{
+    const raw = String(document.getElementById('importJson').value || '').trim();
+    if(!raw){ toast('先把解析结果粘进来'); return; }
+    let data;
+    try { data = JSON.parse(raw); }
+    catch(e){ toast('JSON 格式有误：' + String(e.message).slice(0, 60)); return; }
+    const list = Array.isArray(data) ? data : [data];
+    const res = applyAnalysisList(list);
+    closeDrawer();
+    toast('导入完成：回填 ' + res.matched + ' 条，新建 ' + res.created + ' 条' +
+          (res.failed ? '，' + res.failed + ' 条无法识别' : ''));
+  });
+});
+
+/* 采集同行：只贴链接。文案、BGM、画面、运镜等由后台解析后导入。
+   不解析、不生成任何表现数字。 */
 $('#doCollect').addEventListener('click', ()=>{
   const raw = String($('#rivalLink').value || '').trim();
   if(!raw){ toast('请先粘贴抖音视频链接'); return; }
-  const txtRaw = String(($('#rivalText') && $('#rivalText').value) || '').trim();
 
   const rows = raw.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
-  const blocks = txtRaw ? txtRaw.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean) : [];
 
   let maxId = state.rival.reduce((m, x)=>{
     const n = parseInt(String(x.id || '').replace(/^R/i, ''), 10);
@@ -5434,22 +5796,30 @@ $('#doCollect').addEventListener('click', ()=>{
     const um = line.match(/https?:\/\/[^\s，,；;、）)】]+/);
     if(!um){ skipped++; return; }
     const link = um[0];
-    /* 配对文案：1 段配 1 条；N 段配 N 条；其余情况全给第一条 */
+    /* 只从这一行分享文字里挖作者写的标题当占位。
+       真正的完整文案（口播稿）由后台解析时拿到，回填后标 textSrc='parsed'。
+       提不到标题也没关系，卡片会显示「待解析」。 */
     let body = '';
-    if(blocks.length === 1) body = idx === 0 ? blocks[0] : '';
-    else if(blocks.length === rows.length) body = blocks[idx] || '';
-    else if(blocks.length > 1) body = idx === 0 ? blocks.join('\n\n') : '';
-    const hasBody = body.length >= 12;
+    let src = '';
+    const t = shareTitleOf(line);
+    if(t.length >= 8){ body = t; src = 'share'; }
+
+    const hasBody = !!src;
+    const title = hasBody ? firstSentence(body).slice(0, 28) : '';
 
     added.push({
       id: 'R' + String(++maxId).padStart(3, '0'),
-      title: hasBody ? firstSentence(body).slice(0, 28) : (link.length > 28 ? link.slice(0, 28) + '…' : link),
+      title: title,
       text: hasBody ? body : '',
+      textSrc: src,
       link: link,
+      awemeId: (link.match(/\/video\/(\d{8,})/) || [])[1] || '',
+      video: null,
+      analysis: null,
       tags: hasBody ? tagsFromText(body) : ['强钩子'],
       cat: hasBody ? catFromText(body) : '其他品类',
       author: '新建采集',
-      struct: inferStruct(hasBody ? body : '', hasBody ? firstSentence(body).slice(0, 28) : ''),
+      struct: inferStruct(hasBody ? body : '', title),
       date: new Date().toISOString().slice(0, 10)
     });
   });
@@ -5458,19 +5828,11 @@ $('#doCollect').addEventListener('click', ()=>{
 
   state.rival.unshift.apply(state.rival, added);
   $('#rivalLink').value = '';
-  if($('#rivalText')) $('#rivalText').value = '';
   renderRivalTags(); renderRival();
 
-  const withText = added.filter(x=>x.text).length;
-  if(added.length === 1){
-    const a = added[0];
-    toast(a.text
-      ? '已入库：' + a.struct.hook + ' · 命中 ' + analyzeHit(a.text, a.title).hit.length + ' 条可解释点'
-      : '已入库，但还没有文案 —— 点开这一条补上，就能分析它为什么火');
-  } else {
-    toast('已入库 ' + added.length + ' 条' + (withText ? '（' + withText + ' 条带文案已分析）' : '') +
-          (skipped ? '；另有 ' + skipped + ' 行没识别到链接' : ''));
-  }
+  let msg = '已入库 ' + added.length + ' 条，状态「待解析」';
+  if(skipped) msg += '；' + skipped + ' 行没识别到链接';
+  toast(msg);
 });
 
 /* 保存我的文案 */
