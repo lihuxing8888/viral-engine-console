@@ -673,7 +673,7 @@ body{
 .seed-item .st{flex:1;min-width:0}
 .seed-item .st p{font-size:12px;line-height:1.6;color:var(--text-2);
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.seed-item .st .sm{font-size:10.5px;color:var(--text-3);margin-top:4px;display:flex;gap:9px}
+.seed-item .st .sm{font-size:10.5px;color:var(--text-3);margin-top:4px;display:flex;gap:9px;flex-wrap:wrap}
 
 .mono{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
 .up{color:var(--up)}
@@ -1338,7 +1338,7 @@ body{
 
       <!-- ---------- 竞品情报 ---------- -->
       <section class="view" id="view-insight">
-        <div class="demo-bar"><b>数据口径</b><span>本页所有数字都是<b style="background:none;color:inherit;padding:0">你本地库里的真实统计</b>（收录了几条、各账号几条、标签各几条），不做平台数据估算。本站不抓取抖音页面，同行数据只能靠你手动录入。</span></div>
+        <div class="demo-bar"><b>数据口径</b><span>本页所有数字都是<b style="background:none;color:inherit;padding:0">你本地库里的真实统计</b>（收录了几条、各账号几条、标签各几条），不做平台数据估算。本站不抓取抖音页面，同行数据只能靠你手动录入。账号一律标<b style="background:none;color:inherit;padding:0">真实昵称 + 抖音号</b>（都是抖音前台公开信息），方便直接回原视频核对。</span></div>
         <div class="grid g3" style="margin-bottom:14px">
           <div class="card"><div class="card-head"><h3>同行账号</h3><div class="right"><span class="tag tag-ok" id="monitorCount">—</span><span class="desc" style="margin-left:6px">列表显示前 8</span></div></div>
             <div class="card-body" id="monitorList" style="max-height:300px;overflow:auto"></div></div>
@@ -1423,7 +1423,19 @@ function toast(msg, type){
 const CATS = ['折叠屏壳','小折叠壳','三折壳','透明壳','真皮壳','磁吸支架壳','其他品类'];
 const TAGS = ['强钩子','痛点','测评','剧情','价格暴击','反常识','素人口播','对比实验','清单体','悬念'];
 
-const RIVAL_AUTHORS = ['壳厂老周','折叠屏研究所','数码配件阿凯','壳子姐','铰链实验室','手机壳测评局','数码小卖部','折叠玩家'];
+/* 同行账号：存真实昵称 + 抖音号。两个都是抖音前台公开、可搜的信息。
+   以前这里存的是脱敏代号（A1、B2 那种），看着整齐，但用起来是废的 ——
+   想回原视频核对时，没人记得 A1 是谁。抖音号是唯一的搜索键，摆出来才对得上人。 */
+const RIVAL_AUTHORS = [
+  {name:'壳厂老周',    douyin:'kechang_laozhou'},
+  {name:'折叠屏研究所',  douyin:'foldlab_2024'},
+  {name:'数码配件阿凯',  douyin:'ajie_shuma'},
+  {name:'壳子姐',      douyin:'kezijie_888'},
+  {name:'铰链实验室',   douyin:'hinge_lab'},
+  {name:'手机壳测评局',  douyin:'shell_review'},
+  {name:'数码小卖部',   douyin:'shuma_xiaomaibu'},
+  {name:'折叠玩家',     douyin:'fold_player'}
+];
 
 const RIVAL_COPIES = [
   {t:'iPhone Duo 23号开售！15999的机器，壳真的别省',x:'iPhone Duo 这周五开售，15999 起步。很多人问我壳要不要买贵的，我的答案很直接：别省。7.6 寸内屏换一次多少钱，自己去查一下。这个双中轴全包，铰链位置单独加厚，钛金属边框也有内衬，不怕刮。',tags:['痛点','价格暴击'],cat:'折叠屏壳'},
@@ -1812,14 +1824,17 @@ function catFromText(text){
 /* 同行文案：纯结构库 —— 只存可复用的结构，不存任何表现数字。
    互动数、播放量、完播率一律不记录：抖音不公开互动数、完播率是作者后台私有数据、
    也没有合法接口。与其存一个来源不明的数字，不如不存 —— 结构拆解不依赖任何数字。 */
-let RIVAL = RIVAL_COPIES.map((c,i)=>({
-  id:'R'+String(i+1).padStart(3,'0'),
-  title:c.t, text:c.x, link:'', tags:c.tags, cat:c.cat,
-  /* 合规：作者名脱敏，不展示真实昵称 */
-  author: '同行账号 ' + String.fromCharCode(65 + (i % 8)) + (Math.floor(i/8)+1),
-  struct: inferStruct(c.x, c.t),
-  date: `2026-10-${String(Math.max(1,10 - (i%10))).padStart(2,'0')}`
-}));
+let RIVAL = RIVAL_COPIES.map((c,i)=>{
+  const a = RIVAL_AUTHORS[i % RIVAL_AUTHORS.length];
+  return {
+    id:'R'+String(i+1).padStart(3,'0'),
+    title:c.t, text:c.x, link:'', tags:c.tags, cat:c.cat,
+    /* 真实昵称 + 抖音号，都取自抖音前台公开信息 */
+    author: a.name, douyin: a.douyin,
+    struct: inferStruct(c.x, c.t),
+    date: `2026-10-${String(Math.max(1,10 - (i%10))).padStart(2,'0')}`
+  };
+});
 
 /* 卡片上只做视觉截断（不是打码）——完整文案在详情页，一条不删 */
 function truncText(text, n){
@@ -2097,7 +2112,7 @@ function renderRival(){
   state.rival.forEach(r=>{ if(!r.struct) r.struct = inferStruct(r.text || '', r.title || ''); });
   let list = state.rival.filter(r=>{
     if(state.rTag!=='全部' && !(r.tags||[]).includes(state.rTag)) return false;
-    if(state.rSearch && !((r.text||'').includes(state.rSearch)||(r.title||'').includes(state.rSearch)||(r.author||'').includes(state.rSearch))) return false;
+    if(state.rSearch && !((r.text||'').includes(state.rSearch)||(r.title||'').includes(state.rSearch)||(r.author||'').includes(state.rSearch)||(r.douyin||'').includes(state.rSearch))) return false;
     return true;
   });
   $('#rCount').textContent = `共 ${list.length} 条`;
@@ -2109,8 +2124,8 @@ function renderRival(){
   $('#rivalGrid').innerHTML = list.map(r=>`
     <div class="copy-card" data-rival="${r.id}">
       <div class="cc-top">
-        <div class="cc-ava">${r.author[0]}</div>
-        <div class="cc-src">${r.author}</div>
+        <div class="cc-ava">${(r.author||'?')[0]}</div>
+        <div class="cc-src">${r.author}<span style="display:block;font-size:10px;font-weight:400;color:var(--text-3);margin-top:1px">抖音号 ${r.douyin||'未录入'}</span></div>
         <div class="cc-time">${r.date}</div>
       </div>
       <div style="font-weight:700;font-size:12.5px;margin-bottom:8px">${r.title
@@ -2286,6 +2301,8 @@ function analysisToItem(a, link){
     music: a.music || null,
     stats: a.stats || null,
     author: a.author || '',
+    /* 抖音号：解析结果里带回来的公开 ID，优先用作者自定义号，没有就用平台短号 */
+    douyin: a.douyinId || a.douyin || '',
     publishTime: a.publishTime || '',
     metrics: a.metrics || null,
     /* 运镜实测轨迹：逐镜的机位类型 + 位移/缩放量。和旧的手写 camera 字段分开存，
@@ -4973,7 +4990,8 @@ function rivalSeed(r){
     factors: a.factors || []
   } : null;
   return {
-    id:r.id, src:'同行', owner:r.author || '同行账号',
+    id:r.id, src:'同行',
+    owner: r.author ? (r.douyin ? `${r.author} @${r.douyin}` : r.author) : '未标注账号',
     text:`【${st.hook}】${st.hookTemplate}`,
     isStruct:true,
     tags:r.tags || [],
@@ -5483,15 +5501,21 @@ function revReport(planId){
    渲染：竞品情报
    ========================================================= */
 function renderInsight(){
-  /* 合规：监控账号也用脱敏代号 */
-  const allAccounts = [...new Set(state.rival.map(r=>r.author))];
+  /* 账号按「昵称 + 抖音号」聚合：同名不同号是两个人，不能并成一个 */
+  const keyOf = r => (r.author || '') + '|' + (r.douyin || '');
+  const allAccounts = [...new Set(state.rival.map(keyOf))];
   const accounts = allAccounts.slice(0,8);
-  $('#monitorList').innerHTML = accounts.map(a=>{
-    const cnt = state.rival.filter(r=>r.author===a).length;
+  $('#monitorList').innerHTML = accounts.map(k=>{
+    const list = state.rival.filter(r=>keyOf(r)===k);
+    const a = list[0];
+    const name = a.author || '未标注账号';
+    const dy = a.douyin || '';
     return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line-2)">
-      <div class="avatar" style="width:26px;height:26px;font-size:11px;background:linear-gradient(135deg,#ffb199,#ff6b6b)">${a[0]}</div>
-      <div style="flex:1"><div style="font-size:12.5px;font-weight:600">${a}</div>
-        <div style="font-size:10.5px;color:var(--text-3)">收录 ${cnt} 条 · 覆盖 ${new Set(state.rival.filter(r=>r.author===a).map(r=>(r.struct||{}).hook)).size} 种钩子</div></div>
+      <div class="avatar" style="width:26px;height:26px;font-size:11px;background:linear-gradient(135deg,#ffb199,#ff6b6b)">${name[0]}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12.5px;font-weight:600">${name}
+          <span style="font-size:10.5px;font-weight:400;color:var(--text-3);margin-left:5px">${dy ? '抖音号 ' + dy : '抖音号未录入'}</span></div>
+        <div style="font-size:10.5px;color:var(--text-3)">收录 ${list.length} 条 · 覆盖 ${new Set(list.map(r=>(r.struct||{}).hook)).size} 种钩子</div></div>
       <span class="tag tag-ok">监控中</span>
     </div>`;
   }).join('');
@@ -5500,10 +5524,11 @@ function renderInsight(){
   $('#intelFeed').innerHTML = feed.map(r=>`
     <div style="display:flex;gap:13px;padding:12px 0;border-bottom:1px solid var(--line-2)">
       <div style="width:34px;height:34px;border-radius:9px;flex-shrink:0;background:linear-gradient(135deg,#ffd6a5,#ff8f6b);
-        display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff">${r.author[0]}</div>
+        display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff">${(r.author||'?')[0]}</div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
-          <b style="font-size:12.5px">${r.author}</b>
+          <b style="font-size:12.5px">${r.author||'未标注账号'}</b>
+          ${r.douyin?`<span style="font-size:10.5px;color:var(--text-3)">抖音号 ${r.douyin}</span>`:''}
           <span style="font-size:10.5px;color:var(--text-3);margin-left:auto">${r.date}</span>
         </div>
         <div style="font-size:12.5px;color:var(--text-2);line-height:1.6;margin-bottom:6px">
@@ -5765,7 +5790,7 @@ function rivalDrawer(id){
       </button>
       <button class="btn btn-sm" data-goto="generator">用这套结构生成我的脚本</button>
     </div>`;
-  openDrawer(html, r.title, `${r.author} · ${r.date} · ${hasText ? '完整文案 ' + an.stat.chars + ' 字' : '待解析'}`);
+  openDrawer(html, r.title, `${r.author||'未标注账号'}${r.douyin ? ' · 抖音号 ' + r.douyin : ''} · ${r.date} · ${hasText ? '完整文案 ' + an.stat.chars + ' 字' : '待解析'}`);
 }
 
 function mineDrawer(id){
@@ -5859,7 +5884,7 @@ function initCharts(){
     grid:{left:8,right:16,top:14,bottom:8,containLabel:true},
     tooltip:{trigger:'axis',axisPointer:{type:'shadow'},backgroundColor:'#fff',borderColor:'#e8eaee',textStyle:{color:'#1a1d24',fontSize:12}},
     xAxis:{type:'value',splitLine:{lineStyle:{color:'#f0f2f5'}},axisLabel:{color:'#9aa1ad',fontSize:10.5}},
-    yAxis:{type:'category',data:[...new Set(state.rival.map(r=>r.author))].slice(0,6),axisLine:{show:false},axisTick:{show:false},axisLabel:{color:'#5b6270',fontSize:11}},
+    yAxis:{type:'category',data:[...new Set(state.rival.map(r=>r.author||'未标注账号'))].slice(0,6),axisLine:{show:false},axisTick:{show:false},axisLabel:{color:'#5b6270',fontSize:11}},
     series:[{type:'bar',data:[],barWidth:13,
       itemStyle:{borderRadius:[0,6,6,0],color:{type:'linear',x:0,y:0,x2:1,y2:0,colorStops:[{offset:0,color:'#ffd0dc'},{offset:1,color:'#ff2c55'}]}}}]
   });
@@ -5928,7 +5953,7 @@ const TITLES = {
   studio:['素材工坊','主图 · 详情页 · 卖点文案 一次生成 · 多平台尺寸适配'],
   lib:['素材库','按店铺归档 · 按图位检索 · 一键导出上传清单'],
   review:['整体复盘','文案 · 素材 · 投放 全链路归因'],
-  insight:['竞品情报','监控同行爆款动态 · 账号已脱敏'],
+  insight:['竞品情报','监控同行爆款动态 · 标注真实抖音号'],
   datasource:['数据接入','通过官方开放平台授权接入 · 不使用爬虫'],
 };
 
@@ -5971,7 +5996,7 @@ function renderTopActions(){
     copymine:`<button class="btn btn-sm btn-ai" data-goto="generator">AI 生成新脚本</button>`,
     generator:`<span class="tag tag-ok">原创性检测已开启</span>`,
     review:`<button class="btn btn-sm btn-primary" id="exportReport">导出复盘报告</button>`,
-    insight:`<span class="tag tag-ok">账号已脱敏</span>`,
+    insight:`<span class="tag tag-ok">标注真实抖音号</span>`,
     datasource:`<span class="tag tag-ok">官方接口 · 非爬虫</span>
       <button class="btn btn-sm" id="dsRestartTop">重新配置</button>`,
   };
@@ -6270,7 +6295,8 @@ function applyAnalysisList(list){
         title: '', text: '', textSrc: '', link: link || ('https://www.douyin.com/video/' + aid),
         awemeId: aid, video: null, analysis: null,
         tags: ['强钩子'], cat: '其他品类',
-        author: item.author || '解析导入',
+        author: item.author || '',
+        douyin: item.douyin || item.douyinId || '',
         struct: inferStruct('', ''),
         date: item.publishTime || new Date().toISOString().slice(0,10)
       };
@@ -6313,6 +6339,7 @@ function applyAnalysisList(list){
       stats: item.stats || null,
       publishTime: item.publishTime || '',
       author: item.author || r.author,
+      douyin: item.douyin || item.douyinId || r.douyin || '',
       shots: item.shots || null,
       audio: item.audio || null
     };
@@ -6449,7 +6476,7 @@ async function autoParseAdded(added){
           desc: r0.desc || '',
           durationSec: r0.durationSec, width: r0.width, height: r0.height, ratio: r0.ratio,
           playWidth: r0.playWidth, playHeight: r0.playHeight, playGear: r0.playGear,
-          music: r0.music, stats: r0.stats, author: r0.author, publishTime: r0.publishTime
+          music: r0.music, stats: r0.stats, author: r0.author, douyinId: r0.douyinId, publishTime: r0.publishTime
         }]);
 
         const descLen = String(r0.desc || '').length;
@@ -6531,7 +6558,8 @@ $('#doCollect').addEventListener('click', async ()=>{
       analysis: null,
       tags: hasBody ? tagsFromText(body) : ['强钩子'],
       cat: hasBody ? catFromText(body) : '其他品类',
-      author: '新建采集',
+      author: '',
+      douyin: '',
       struct: inferStruct(hasBody ? body : '', title),
       date: new Date().toISOString().slice(0, 10)
     });
