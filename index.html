@@ -2132,11 +2132,11 @@ function renderRival(){
                  ? '文案在库里，点开能看文本层面的归因。画面、运镜、BGM 要后台真跑一次才有 —— 这里不猜。'
                  : '只存了链接。文案、BGM、画面、运镜要后台真跑一次才知道 —— 这里不猜。'}</div>
            </div>`}
-      ${(r.text && r.title && r.text.indexOf(r.title) === 0)
-        ? (r.text.length > r.title.length + 4
-            ? `<div class="cc-text" style="font-size:11.5px;color:var(--text-3);margin-bottom:9px">${truncText(r.text.slice(r.title.length).trim(), 76)}</div>`
-            : '')
-        : (r.text ? `<div class="cc-text" style="font-size:11.5px;color:var(--text-3);margin-bottom:9px">${truncText(r.text, 76)}</div>` : '')}
+      ${r.text ? `<div class="cc-text" style="font-size:11.5px;color:var(--text-3);margin-bottom:9px">${
+        r.textSrc === 'video'
+          ? `<b style="color:var(--text-2);font-size:10px;font-weight:800">${r.textKind === 'voice' ? '口播' : '视频文案'}</b> `
+          : (r.textSrc === 'share' ? `<b style="color:#a5771f;font-size:10px;font-weight:800">标题</b> ` : '')
+      }${truncText(r.text, 76)}</div>` : ''}
       <div style="display:flex;gap:6px;margin-top:10px">
         <button class="btn btn-sm btn-ai" style="flex:1;justify-content:center" data-extract="${r.id}">提取爆款基因</button>
         <button class="btn btn-sm" data-rival="${r.id}">拆解</button>
@@ -5650,7 +5650,11 @@ function rivalDrawer(id){
 
   const bodyHtml = hasText
     ? `${r.textSrc === 'share' ? `<div style="background:var(--warn-soft);border:1px solid #ffe6c7;border-radius:9px;padding:9px 12px;margin-bottom:9px;font-size:11px;color:#8a5a00;line-height:1.7">
-         当前只有<b>分享文案里的标题</b>（${an.stat.chars} 字），是从你粘贴的分享文字里提取的作者原文。补上完整口播稿，原因分析会准很多。</div>` : ''}
+         当前只有<b>标题</b>（${an.stat.chars} 字），是从你粘贴的分享文字里提取的作者原文，不是视频里说的话。跑一次解析就能拿到视频真正的文案。</div>` : ''}
+       ${r.textSrc === 'video' ? `<div style="background:#e6f7f1;border:1px solid #cdeee1;border-radius:9px;padding:8px 11px;margin-bottom:9px;font-size:11px;color:#0a7d57;line-height:1.7">
+         <b>${r.textKind === 'voice' ? '口播转写' : '视频里的文案'}</b> · ${r.textChars || r.text.length} 字 —— ${r.textKind === 'voice'
+           ? '来自音轨语音识别，人名、型号、专有名词可能有听错，建议对着视频核一遍。'
+           : '从画面字幕逐帧认出来的，是视频里真实呈现的字，不是作者写的标题。'}</div>` : ''}
        <div class="ai-script" style="color:var(--text-2);white-space:pre-wrap;line-height:1.95">${r.text.replace(/</g,'&lt;')}</div>`
     : `<div style="background:var(--panel-2);border:1px dashed var(--line);border-radius:10px;padding:12px 14px">
          <div style="font-size:11.5px;color:var(--text-3);line-height:1.75;margin-bottom:9px">
@@ -5676,6 +5680,9 @@ function rivalDrawer(id){
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0;margin-top:1px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       <span><b>用途</b>：这条文案是你自己摘录的公开内容，<b>只存在这个页面的本地数据里</b>，不会上传。分析结果用于理解结构，直接照搬原句发出去不算你的内容。</span>
     </div>
+
+    ${r.title ? `<div class="sec-title">标题 <span style="font-weight:600;color:var(--text-3);font-size:11px">作者写的，不是视频里说的话</span></div>
+      <div style="background:var(--panel-2);border:1px solid var(--line-2);border-radius:9px;padding:9px 12px;font-size:12px;color:var(--text-2);line-height:1.75">${String(r.title).replace(/</g,'&lt;')}</div>` : ''}
 
     ${r.analysis ? '' : `
     <div class="sec-title" style="display:flex;align-items:center;justify-content:space-between">
@@ -6273,10 +6280,22 @@ function applyAnalysisList(list){
       matched++;
     }
 
-    /* 文案：解析到的完整文案覆盖掉之前从分享标题提的占位 */
+    /* 文案：只有「视频里的文案」（画面字幕 / 口播转写）才算文案。
+       desc 是作者写的标题，单独放 title，绝不能再拿来顶替 r.text ——
+       卡片上写着「文案」而内容其实是标题，等于骗人。
+       两条来源路径都要认：analysisToItem 转换过的走 scriptTrack，
+       用户直接粘 JSON 的（扁平结构）走 metrics.script。 */
+    const st = item.scriptTrack ||
+      ((item.metrics && item.metrics.script && item.metrics.script.ok) ? item.metrics.script : null);
+    if(st && st.text){
+      r.text = st.text;
+      r.textSrc = 'video';
+      r.textKind = st.source;        /* subtitle / voice / both */
+      r.textChars = st.chars;
+    }
     if(item.desc && String(item.desc).trim().length >= 8){
-      r.text = String(item.desc).trim();
-      r.textSrc = 'parsed';
+      r.title = String(item.desc).trim().slice(0, 40);
+      if(!st || !st.text) r.titleOnly = true;
     }
 
     /* 客观数据 */
@@ -6311,7 +6330,8 @@ function applyAnalysisList(list){
         audio: item.audio || null,
         metrics: item.metrics || null,
         camTrack: item.camTrack || null,
-        scriptTrack: item.scriptTrack || null,
+        scriptTrack: item.scriptTrack ||
+          ((item.metrics && item.metrics.script && item.metrics.script.ok) ? item.metrics.script : null),
         missing: Array.isArray(item.missing) ? item.missing : [],
         factors: Array.isArray(item.factors) ? item.factors.filter(x=>x && (x.k || x.claim)).map(x=>({
           dim: x.dim || '其他',
