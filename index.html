@@ -1402,7 +1402,11 @@ const fmt = n => n >= 10000 ? (n/10000).toFixed(1)+'万' : n.toLocaleString('zh-
 const fmtN = n => (n === null || n === undefined || isNaN(n)) ? '—' : fmt(n);
 const money = n => '¥' + n.toLocaleString('zh-CN',{maximumFractionDigits:0});
 const pct = n => n.toFixed(1) + '%';
-const rnd = (a,b) => Math.random()*(b-a)+a;
+/* 这个项目不再用随机数生成任何「分数」。
+   2026-10-21 清理：原来 rnd(84,97) 被拿去冒充「AI 预估爆款值」、rnd(6,23) 冒充原创度，
+   和全站「不猜数字」的原则直接冲突，已全部换成真算（见 maxSimilarity / structureChecks）。
+   以后要加新指标，先问它能不能被验证 —— 不能验证就别显示。 */
+/* const rnd = (a,b) => Math.random()*(b-a)+a;   ← 已停用，留着这行是为了让搜索能找到它 */
 const pick = a => a[Math.floor(Math.random()*a.length)];
 
 function toast(msg, type){
@@ -4839,28 +4843,64 @@ function dsRunSync(){
 /* =========================================================
    渲染：AI 生成
    ========================================================= */
-/* 同行种子只提供"结构"，不提供原文（合规） */
+/* 同行种子只提供"结构"，不提供原文（合规）。
+   有实测解析结果的，卡片上直接给实测参数 —— 比正则猜出来的结构标签可信。 */
 function rivalSeed(r){
   /* 防御：结构缺失时即时补算，避免单条脏数据导致整个生成页渲染失败 */
   if(!r.struct) r.struct = inferStruct(r.text || '', r.title || '');
   const st = r.struct;
+  const a = r.analysis;
+  const rawMt = a && a.metrics;
+  const mt = rawMt ? {
+    cutCount: rawMt.cutCount,
+    avgShotSec: rawMt.avgShotSec,
+    hasVoice: rawMt.hasVoice,
+    /* 真实切点序列 + 片长：生成分镜时按这个分段，不用平均值 —— 平均值会把片尾那个长镜头抹掉 */
+    cuts: Array.isArray(rawMt.cuts) ? rawMt.cuts.slice(0, 20) : [],
+    durationSec: rawMt.durationSec || 0,
+    music: (r.video && r.video.music && r.video.music.title) || '',
+    factors: a.factors || []
+  } : null;
   return {
     id:r.id, src:'同行', owner:r.author || '同行账号',
     text:`【${st.hook}】${st.hookTemplate}`,
     isStruct:true,
     tags:r.tags || [],
-    data: st.hook + ' · ' + st.argument
+    data: mt
+      ? '实测 ' + mt.cutCount + ' 刀 · 均 ' + mt.avgShotSec + ' 秒 · ' + (mt.hasVoice === false ? '无口播' : '有口播')
+      : (st.hook + ' · ' + st.argument),
+    measured: !!mt,
+    mt: mt,
+    /* 原文只在内部用于相似度计算，界面上不展示（合规） */
+    rawText: String(r.text || '').trim().length >= 8 ? r.text : ''
+  };
+}
+/* 我的文案做种子：没有跑过解析，就不带任何实测信号 —— 不猜。
+   原来这里塞了 score:88-i*2，按列表顺序递减，看着像评分，实际是编的。 */
+function mineSeed(r){
+  return {
+    id:r.id, src:'我的', owner:'我的账号',
+    text:r.text || '', tags:r.tags || [],
+    measured:false, mt:null,
+    rawText:r.text || '',
+    data:r.source
   };
 }
 function seedPool(){
   /* 纯结构库：按收录时间倒序，不按任何表现指标排序 */
   const ranked = [...state.rival].sort((a,b)=> String(b.date||'').localeCompare(String(a.date||'')));
   if(state.seedTab==='rival') return ranked.slice(0,8).map(rivalSeed);
-  if(state.seedTab==='mine') return state.mine.slice(0,8).map((r,i)=>({id:r.id,src:'我的',owner:'我的账号',text:r.text,tags:r.tags||[],score:88-i*2,data:r.source}));
+  if(state.seedTab==='mine') return state.mine.slice(0,8).map(mineSeed);
   /* 混合 */
   const a = ranked.slice(0,4).map(rivalSeed);
-  const b = state.mine.slice(0,4).map((r,i)=>({id:r.id,src:'我的',owner:'我的账号',text:r.text,tags:r.tags||[],score:88-i*2,data:r.source}));
+  const b = state.mine.slice(0,4).map(mineSeed);
   return [...a,...b];
+}
+
+/* 当前被勾选的种子（含实测信号）。不能只用 seedPool() 的前 8 条 —— 勾的可能不在前排 */
+function selectedSeeds(){
+  const all = state.rival.map(rivalSeed).concat(state.mine.map(mineSeed));
+  return all.filter(sd=>state.seeds.has(sd.id));
 }
 
 function renderSeeds(){
@@ -4880,6 +4920,98 @@ function renderSeeds(){
     </div>`).join('');
 }
 
+/* ---------------------------------------------------------------
+   生成依据 · 全部可核查
+   这里原来用 rnd(84,97) 冒充「AI 预估爆款值」、rnd(6,23) 冒充「原创度」。
+   全站原则是不猜数字，所以换成能算的三样：
+     1) 相似度：字符 3-gram Jaccard，对选中样本的原文真算
+     2) 结构自检：脚本里可验证的硬规则，命中就勾，不折算成分数
+     3) 生成依据：选中样本的实测切点 / 平均镜头 / 有无口播
+   --------------------------------------------------------------- */
+
+function gramSet(str, n){
+  const s = String(str || '').replace(/[\s\p{P}\p{S}]/gu, '');
+  const set = new Set();
+  for (let i = 0; i + n <= s.length; i++) set.add(s.slice(i, i + n));
+  return set;
+}
+
+/* 与「最接近的那条」比较，取最大相似度 —— 这才是原创风险的真实值 */
+function maxSimilarity(text, seeds){
+  const target = String(text || '');
+  if (!target) return null;
+  const A = gramSet(target, 3);
+  if (!A.size) return null;
+  let best = null;
+  (seeds || []).forEach(sd => {
+    const srcText = String(sd.rawText || '');
+    if (!srcText) return;
+    const B = gramSet(srcText, 3);
+    if (!B.size) return;
+    let inter = 0;
+    A.forEach(g => { if (B.has(g)) inter++; });
+    const uni = A.size + B.size - inter;
+    const sim = uni ? (inter / uni * 100) : 0;
+    if (best === null || sim > best) best = sim;
+  });
+  return best === null ? null : +best.toFixed(1);
+}
+
+/* 结构自检：每条都能在脚本文本里对上，不做加权、不出分数 */
+function structureChecks(full, pureVisual){
+  const t = String(full || '');
+  if (pureVisual) {
+    return [
+      { k: '首帧就是成品', ok: /【开头/.test(t) && /第一帧就是完整成品/.test(t) },
+      { k: '每个镜头标了时长', ok: (t.match(/【画面\s*[\d.]+-[\d.]+ 秒/g) || []).length >= 3 },
+      { k: '有单句字幕设计', ok: /【字幕】/.test(t) },
+      { k: 'BGM 有卡点说明', ok: /【BGM】/.test(t) && /拍/.test(t) }
+    ];
+  }
+  return [
+    { k: '钩子落在前 3 秒', ok: /【开头\s*0-3 秒/.test(t) },
+    { k: '正文给出具体理由', ok: /第一，|原因很简单|真实感受是/.test(t) },
+    { k: '结尾有行动指令', ok: /【结尾/.test(t) && /点左下角|链接在下面|看评论区|小黄车/.test(t) },
+    { k: '出现具体数字', ok: /\d/.test(t) }
+  ];
+}
+
+/* 选中样本的实测信号汇总。没有解析结果的样本不参与。 */
+function seedSignal(seeds){
+  const measured = (seeds || []).filter(sd => sd.measured && sd.mt);
+  if (!measured.length) return null;
+  const lens = measured.map(sd => sd.mt.cutCount).filter(n => typeof n === 'number');
+  const avgs = measured.map(sd => sd.mt.avgShotSec).filter(n => typeof n === 'number' && n > 0);
+  const voiceKnown = measured.filter(sd => sd.mt.hasVoice === true || sd.mt.hasVoice === false);
+  const noVoice = voiceKnown.filter(sd => sd.mt.hasVoice === false).length;
+  const bgms = measured.map(sd => sd.mt.music).filter(Boolean);
+  return {
+    count: measured.length,
+    total: (seeds || []).length,
+    shotCount: lens.length ? Math.round(lens.reduce((a, b) => a + b, 0) / lens.length) : null,
+    avgShotSec: avgs.length ? +(avgs.reduce((a, b) => a + b, 0) / avgs.length).toFixed(2) : null,
+    /* 取第一条有完整切点序列的样本，作为分镜时间轴的真实依据 */
+    cuts: (measured.find(sd => sd.mt.cuts && sd.mt.cuts.length) || { mt: {} }).mt.cuts || [],
+    durationSec: (measured.find(sd => sd.mt.durationSec) || { mt: {} }).mt.durationSec || 0,
+    /* 多数实测样本无口播 → 按纯展示排分镜；判断不了一律按口播处理 */
+    pureVisual: voiceKnown.length > 0 && noVoice > voiceKnown.length / 2,
+    voiceKnown: voiceKnown.length,
+    bgm: bgms[0] || ''
+  };
+}
+
+/* 纯展示分镜的镜头内容池 —— 每条对应一个镜头位置，按顺序铺 */
+const PURE_VISUAL = [
+  '成品全貌入画，占满竖屏，背景纯色或实景虚化',
+  '核心卖点特写：手部动作带出细节，不做静止摆拍',
+  '使用场景一：{cat}在真实环境里被用起来的那一下',
+  '对比展示：同价位参照物摆在旁边，差异让人自己看',
+  '细节推近：材质 / 做工 / 接口，一个镜头只讲一件事',
+  '使用场景二：换一个人、换一个场景再用一遍',
+  '整体回看：成品放回生活场景，收在画面正中',
+  '收尾定格：主卖点字幕压在画面上，停 1 秒'
+];
+
 /* 模拟 AI 生成（规则化，展示产品形态；真实版本此处调用大模型API） */
 const HOOKS = {
   '痛点直击型':['你是不是也遇到过这种情况','90%的人都做错了这件事','别再硬撑了，这个问题有解'],
@@ -4896,16 +5028,74 @@ const BODY = [
 const REASONS = ['实测数据不虚标','在日常场景里确实好用','性价比是同类里最高的','细节做工比预期好很多','复购率一直很稳','评论区口碑没有翻车','用完不用反复换'];
 const CTAS = ['点左下角，今天的价格比平时低。','想入的趁现在，链接在下面。','不确定适不适合你的，先看评论区。','需要的话我放小黄车了。'];
 
-function genScript(style, cat, len, idx){
+function genScript(style, cat, len, idx, seeds){
   const ho = state.handoff;   /* 从分镜结构单带入的骨架（可能为 null） */
+  const pool = Array.isArray(seeds) ? seeds : [];
+  const sig = seedSignal(pool);
+  const pureVisual = !!(sig && sig.pureVisual);
+
   const h = ho && ho.hook ? `【${ho.hook}】${pick(HOOKS[style])}` : pick(HOOKS[style]);
-  const b = pick(BODY)
-    .replace('{cat}',cat)
-    .replace('{r1}',pick(REASONS)).replace('{r2}',pick(REASONS)).replace('{r3}',pick(REASONS));
-  const cta = ho && ho.cta ? `【${ho.cta}】${pick(CTAS)}` : pick(CTAS);
-  const lenTip = len.includes('15') ? '总时长控制在25秒内，节奏要快。'
-    : len.includes('30') ? '总时长约45秒，中段留1个信息点。'
-    : '总时长约75秒，可加一段真实使用场景。';
+  /* 三档上限要和“目标时长”一致：15-30 / 30-60 / 60-90，说 25 秒会和 30 秒档打架 */
+  const lenTip = len.includes('15') ? '把总时长压在 30 秒内，前 3 秒必须给到信息。'
+    : len.includes('30') ? '总时长控制在 60 秒内，中段留 1 个信息点。'
+    : '总时长控制在 90 秒内，可加一段真实使用场景。';
+
+  let b = '', cta = '', full = '';
+  let shotN = null;      /* 这次实际排了几段画面，优化建议里要说准 */
+  let scaleNote = '';    /* 原片超目标时长时的压缩说明，没压缩就留空 */
+
+  if (pureVisual) {
+    /* 实测样本没有口播 —— 不给口播稿，按画面 / 字幕 / BGM 卡点出分镜。
+       时间轴用实测切点序列分段，不是拿平均时长铺。
+       用平均值会骗人：这条原片 10 个切点、片长 36.9 秒，切点间平均 2.27 秒，
+       但片尾从 25.43 秒到 36.9 秒是个 11 秒的长镜头。拿 2.27 秒铺 11 段只能到 25 秒，
+       最后 11 秒凭空消失 —— 而那恰恰是这条片子的收尾定格。 */
+    let bounds = [];
+    const cuts = (sig.cuts || []).filter(t => typeof t === 'number' && t > 0);
+    if (cuts.length >= 2) {
+      bounds = [0].concat(cuts);
+      const last = bounds[bounds.length - 1];
+      if (sig.durationSec && sig.durationSec > last + 0.5) bounds.push(+sig.durationSec.toFixed(2));
+    }
+    if (bounds.length < 3) {
+      /* 没切点可依时按片长等分 —— 仍然对得上总时长 */
+      const n = Math.max(4, Math.min(14, sig.shotCount || 8));
+      const per = (sig.durationSec || 20) / n;
+      bounds = [];
+      for (let i = 0; i <= n; i++) bounds.push(+(i * per).toFixed(2));
+    }
+    shotN = bounds.length - 1;
+    /* 目标时长上限：原片超了就等比压缩，切点间隔同比缩放 —— 节奏比例不变。
+       没超就不动，不为了凑时长硬拉。 */
+    const targetMax = len.includes('15') ? 30 : len.includes('30') ? 60 : 90;
+    if (sig.durationSec > targetMax + 1) {
+      const k = targetMax / sig.durationSec;
+      bounds = bounds.map(t => +(t * k).toFixed(2));
+      scaleNote = '原片 ' + sig.durationSec + ' 秒按比例压到 ' + targetMax + ' 秒（切点间隔同比缩放，节奏比例不变）';
+    }
+    /* 变体之间错开模板起点，否则 3 条生成出来一字不差；
+       最后一段固定用收尾模板，不让循环撞到中间镜头上 */
+    const rot = idx * 3;
+    const rows = [];
+    const bodyTpl = PURE_VISUAL.slice(0, PURE_VISUAL.length - 1);
+    for (let i = 0; i < shotN; i++) {
+      const tpl = (i === shotN - 1)
+        ? PURE_VISUAL[PURE_VISUAL.length - 1]
+        : bodyTpl[(i + rot) % bodyTpl.length];
+      rows.push('【画面 ' + bounds[i] + '-' + bounds[i + 1] + ' 秒｜机位待定】' + tpl.replace('{cat}', cat));
+    }
+    b = rows.join('\n');
+    cta = '主卖点字幕压在最后一帧，全片不出现口播。';
+    full = '【开头｜第一帧就是完整成品】\n第一帧就是完整成品，不要包装盒、不要空镜、不要对镜头说话。\n\n'
+      + b
+      + '\n\n【字幕】全程只留一句主卖点，其余信息交给画面。\n【BGM】卡点进第 1 拍，全片不叠人声。';
+  } else {
+    b = pick(BODY)
+      .replace('{cat}',cat)
+      .replace('{r1}',pick(REASONS)).replace('{r2}',pick(REASONS)).replace('{r3}',pick(REASONS));
+    cta = ho && ho.cta ? `【${ho.cta}】${pick(CTAS)}` : pick(CTAS);
+    full = `【开头 0-3 秒｜黄金钩子】\n${h}\n\n【正文 3 秒后｜给理由】\n${b}\n\n【结尾｜行动指令】\n${cta}`;
+  }
 
   /* 有骨架时：按骨架的镜头数拆节奏，并把上一步的流失点写进优化建议 */
   let rhythmTip = lenTip;
@@ -4921,24 +5111,50 @@ function genScript(style, cat, len, idx){
         : `延续骨架中"${ho.placement}"的植入位置`,
       '中段用具体数据代替形容词，商品露出不超过2次'
     ];
+  } else if (sig) {
+    /* 没带骨架但选了有实测的样本 —— 优化建议必须指向真数据 */
+    const shots = shotN || (sig.shotCount + 1);
+    highlights = [
+      pureVisual
+        ? `实测样本无口播，本条按纯展示排：${shots} 段画面全部照实测切点分段，只出画面和单句字幕`
+        : `实测样本 ${sig.shotCount} 刀 / 平均 ${sig.avgShotSec} 秒一刀，本条口播稿按同等信息密度写，分镜按这个节奏摊`,
+      pureVisual
+        ? '第一帧直接给完整成品 —— 纯展示类没有口播兜底，前一秒留白就会划走'
+        : '把钩子压在前 3 秒，说完就转画面，不铺垫',
+      sig.bgm ? `BGM 参考同类曲风（样本用的是《${sig.bgm}》，别直接照搬同一首）` : 'BGM 选无版权曲，卡点进第一拍',
+      '中段用具体数据代替形容词，商品露出不超过2次'
+    ];
+    rhythmTip = (pureVisual
+      ? `按实测切点铺 ${shots} 段画面，${scaleNote || '时间轴与原片一致（片尾长镜头照原样保留）'}；`
+      : `按实测节奏 ${sig.shotCount} 刀 / 均 ${sig.avgShotSec} 秒排，`) + lenTip;
   }
+
+  /* 生成依据：只写这次真用到的实测参数，没有就留空 */
+  let basis = '';
+  if (sig) {
+    const rhythm = (sig.cuts && sig.cuts.length)
+      ? sig.cuts.length + ' 个切点 / 片长 ' + (sig.durationSec || '?') + ' 秒'
+      : (sig.shotCount !== null ? '平均 ' + sig.shotCount + ' 刀 / 间隔 ' + sig.avgShotSec + ' 秒' : '节奏数据不全');
+    basis = sig.count + ' 条实测样本 · ' + rhythm + ' · ' + (sig.pureVisual ? '无口播（纯展示）' : '有口播');
+    if (scaleNote) basis += ' · 已按目标时长压缩';
+  } else if (ho) {
+    basis = '分镜结构骨架 · ' + ho.shotCount + ' 个镜头';
+  }
+
   return {
     id:'G'+Date.now()+'_'+idx,
     style, cat,
     hook:h, body:b, cta,
     fromHandoff: !!ho,
-    full:`【开头0-3秒｜黄金钩子】\n${h}\n\n【正文3-40秒｜给理由】\n${b}\n\n【结尾｜行动指令】\n${cta}`,
-    score: Math.round(rnd(84,97)),
-    metrics: {
-      hookScore: Math.round(rnd(ho?88:82, 98)),
-      rhythmScore: Math.round(rnd(ho?85:78, 96)),
-      convScore: Math.round(rnd(ho?84:80, 97))
-    },
+    pureVisual: pureVisual,
+    full: full,
+    basis: basis,
+    /* 结构自检：4 条硬规则，能逐条核对，不打分 */
+    checks: structureChecks(full, pureVisual),
     tip: rhythmTip,
     highlight: highlights,
-    /* 合规：与种子原文的相似度检测（模拟）。真实版本调用文本相似度算法 */
-    similarity: +(rnd(6, 23)).toFixed(1),
-    similarityPass: true,
+    /* 相似度：字符 3-gram Jaccard，对选中样本的原文真算；没原文就是 null，不编 */
+    similarity: maxSimilarity(full, pool),
     createdAt: new Date().toLocaleString('zh-CN',{hour12:false})
   };
 }
@@ -4961,44 +5177,65 @@ function renderGenResult(){
         ${g.fromHandoff?'<span class="tag tag-ok" style="font-size:9.5px">按带入结构生成</span>':''}
         <span class="tag">${g.style}</span>
         <span class="tag">${g.cat}</span>
-        <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
-          <span style="font-size:11px;color:var(--text-3)">AI预估爆款值</span>
-          <span style="font-size:18px;font-weight:800;color:var(--brand-2);font-variant-numeric:tabular-nums">${g.score}</span>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:7px;max-width:56%">
+          ${g.basis
+            ? `<span style="font-size:10.5px;color:var(--text-3);flex-shrink:0">生成依据</span>
+               <span style="font-size:11px;font-weight:700;color:var(--text-2);text-align:right;line-height:1.45">${g.basis}</span>`
+            : `<span style="font-size:10.5px;color:var(--text-3)">未选中带实测数据的样本 · 本条按通用结构生成</span>`}
         </div>
       </div>
       <div class="ai-script">${g.full
         .replace(/【(.+?)】/g,'<span class="hl2">【$1】</span>')
         .replace(/^(.+)$/gm, m=>m)}</div>
-      <div class="grid g3" style="margin-top:12px;gap:9px">
-        ${[['钩子强度',g.metrics.hookScore],['节奏控制',g.metrics.rhythmScore],['转化引导',g.metrics.convScore]].map(([k,v])=>`
-          <div style="background:var(--panel-2);border:1px solid var(--line-2);border-radius:9px;padding:9px 11px">
-            <div style="font-size:10.5px;color:var(--text-3);font-weight:600">${k}</div>
-            <div style="display:flex;align-items:center;gap:8px;margin-top:5px">
-              <div class="bar-track" style="flex:1;width:auto"><div class="bar-fill" style="width:${v}%;background:linear-gradient(90deg,#7b5cff,#4aa8ff)"></div></div>
-              <b style="font-size:12px">${v}</b>
-            </div>
-          </div>`).join('')}
+      <div style="margin-top:12px;background:var(--panel-2);border:1px solid var(--line-2);border-radius:9px;padding:10px 12px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="font-size:10.5px;color:var(--text-3);font-weight:700">结构自检</span>
+          <span style="font-size:10.5px;color:var(--text-3)">${g.checks.filter(c=>c.ok).length}/${g.checks.length} 项符合 · 逐条可核对，不打分</span>
+        </div>
+        <div style="display:flex;gap:6px 16px;flex-wrap:wrap">
+          ${g.checks.map(c=>`<span style="font-size:11.5px;display:inline-flex;align-items:center;gap:5px;color:${c.ok?'var(--ok)':'var(--text-3)'}">
+            <b style="font-size:12px">${c.ok?'✓':'✕'}</b> ${c.k}</span>`).join('')}
+        </div>
       </div>
       <div class="ai-box" style="margin-top:11px">
         <h4>优化建议</h4>
         <ul>${g.highlight.map(x=>`<li>${x}</li>`).join('')}<li>${g.tip}</li></ul>
       </div>
 
-      <div style="margin-top:11px;background:var(--ok-soft);border:1px solid #c9f0e2;border-radius:11px;padding:12px 14px">
-        <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
-          <b style="font-size:12px;color:var(--ok)">原创性检测通过</b>
-          <span style="margin-left:auto;font-size:11.5px;color:var(--text-2)">
-            与种子原文相似度 <b style="color:var(--ok)">${g.similarity}%</b>
-          </span>
-        </div>
-        <div class="bar-track" style="width:100%;height:6px;background:#d8f0e6">
-          <div class="bar-fill" style="width:${g.similarity}%;background:linear-gradient(90deg,#7bdcb0,#0aa06e)"></div>
-        </div>
-        <div style="font-size:10.5px;color:var(--text-3);margin-top:7px;line-height:1.6">
-          安全阈值 &lt; 25%　·　本脚本为基于结构模板的原创生成，可直接用于商业发布
-        </div>
-      </div>
+      ${(function(){
+        const sim = g.similarity;
+        if(sim === null){
+          return `<div style="margin-top:11px;background:var(--panel-2);border:1px dashed var(--line);border-radius:11px;padding:12px 14px">
+            <b style="font-size:12px;color:var(--text-2)">原创性：算不了</b>
+            <div style="font-size:10.5px;color:var(--text-3);margin-top:6px;line-height:1.75">
+              选中的样本没有采到文案原文，没有可比对象。相似度不是估的 —— 没有原文就不给数字。
+              想让它算，先在同行库里把这条的文案解析出来（贴链接入库即可）。
+            </div>
+          </div>`;
+        }
+        const pass = sim < 25;
+        const c = pass ? 'var(--ok)' : '#c92a63';
+        const bg = pass ? 'var(--ok-soft)' : '#ffeaf2';
+        const bd = pass ? '#c9f0e2' : '#ffd0e2';
+        const track = pass ? '#d8f0e6' : '#ffdce8';
+        const fill = pass ? 'linear-gradient(90deg,#7bdcb0,#0aa06e)' : 'linear-gradient(90deg,#ff9dc0,#c92a63)';
+        return `<div style="margin-top:11px;background:${bg};border:1px solid ${bd};border-radius:11px;padding:12px 14px">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+            <b style="font-size:12px;color:${c}">原创性检测${pass ? '通过' : '未通过'}</b>
+            <span style="margin-left:auto;font-size:11.5px;color:var(--text-2)">
+              与最接近的种子原文相似度 <b style="color:${c}">${sim}%</b>
+            </span>
+          </div>
+          <div class="bar-track" style="width:100%;height:6px;background:${track}">
+            <div class="bar-fill" style="width:${Math.min(100, sim * 2).toFixed(1)}%;background:${fill}"></div>
+          </div>
+          <div style="font-size:10.5px;color:var(--text-3);margin-top:7px;line-height:1.6">
+            字符 3-gram 重合度（Jaccard），对选中样本的原文真算　·　安全阈值 &lt; 25%
+            ${pass ? '' : '　·　已超阈值，改写钩子和理由部分再发'}
+          </div>
+        </div>`;
+      })()}
 
       <div style="display:flex;gap:7px;margin-top:11px">
         <button class="btn btn-sm btn-ai" data-save-gen="${i}">存为我的文案</button>
@@ -5858,7 +6095,8 @@ $('#doGenerate').addEventListener('click', ()=>{
     正在解析 ${basis} 的钩子结构、节奏与转化话术…</div>`;
   $('#genActions').innerHTML = '';
   setTimeout(()=>{
-    state.results = Array.from({length:num},(_,i)=>genScript(style,cat,len,i));
+    const pool = selectedSeeds();
+    state.results = Array.from({length:num},(_,i)=>genScript(style,cat,len,i,pool));
     renderGenResult();
     toast(`已生成 ${num} 条爆款脚本`);
   }, 1700);
