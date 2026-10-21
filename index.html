@@ -838,19 +838,33 @@ body{
 
       <!-- ---------- 同行爆款库 ---------- -->
       <section class="view" id="view-copyrival">
-        <div class="demo-bar"><b>数据口径</b><span>本页<b style="background:none;color:inherit;padding:0">只有赞 / 评 / 藏 / 转 四个数</b>，全部由你从抖音前台抄录，没抄就显示「未录入」，不做任何补值。播放量、完播率、点赞率属于作者后台私有或平台不公开数据，<b style="background:none;color:inherit;padding:0">本站不展示、不推算、不推测</b>。</span></div>
+        <div class="demo-bar"><b>纯结构库</b><span>这里<b style="background:none;color:inherit;padding:0">只存结构，不存任何表现数字</b>：钩子类型、论证方式、情绪曲线、植入位置、可复用模板。点赞 / 评论 / 播放 / 完播一律不记录——抖音不提供互动数的公开接口，完播率是作者后台私有数据，<b style="background:none;color:inherit;padding:0">与其存一个来源不明的数字，不如不存</b>。结构拆解只读文案本身，不依赖任何数字，这个库照样能用。</span></div>
         <div class="card" style="margin-bottom:14px">
-          <div class="card-body" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-            <div style="flex:1;min-width:230px">
-              <div style="font-size:13px;font-weight:700;margin-bottom:3px">采集同行爆款文案</div>
-              <div style="font-size:11.5px;color:var(--text-3)">粘贴链接 + 抄一下前台的赞 / 评 / 藏 / 转，就是全部数据来源</div>
+          <div class="card-body" style="display:flex;gap:12px;align-items:stretch;flex-wrap:wrap">
+            <div style="flex:1;min-width:210px;display:flex;flex-direction:column;justify-content:center">
+              <div style="font-size:13px;font-weight:700;margin-bottom:4px">采集同行视频</div>
+              <div style="font-size:11.5px;color:var(--text-3);line-height:1.7">
+                贴链接入库；<b style="background:none;color:inherit;padding:0;color:var(--ok)">把文案也贴进来，才能分析它为什么火</b><br>
+                一行一条，支持多行批量。
+              </div>
             </div>
-            <input class="input" id="rivalLink" placeholder="粘贴抖音视频链接…" style="flex:2;min-width:170px">
-            <input class="input" id="rivalLikes" placeholder="赞" title="抖音前台公开的点赞数" inputmode="numeric" style="width:78px">
-            <input class="input" id="rivalComments" placeholder="评" title="抖音前台公开的评论数" inputmode="numeric" style="width:78px">
-            <input class="input" id="rivalCollects" placeholder="藏" title="抖音前台公开的收藏数" inputmode="numeric" style="width:78px">
-            <input class="input" id="rivalShares" placeholder="转" title="抖音前台公开的转发数" inputmode="numeric" style="width:78px">
-            <button class="btn btn-primary" id="doCollect">采集入库</button>
+            <textarea class="input" id="rivalLink" rows="3"
+              placeholder="https://v.douyin.com/xxxxxx/&#10;一行一条，可一次贴多条"
+              style="flex:2;min-width:240px;min-height:58px;resize:vertical;padding:8px 10px;line-height:1.6;font-size:12px;font-family:inherit"></textarea>
+            <button class="btn btn-primary" id="doCollect" style="align-self:stretch;padding:0 20px;white-space:nowrap">采集入库</button>
+          </div>
+          <div class="card-body" style="padding-top:0;display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap">
+            <textarea class="input" id="rivalText" rows="3"
+              placeholder="（可选）把这条视频的完整文案粘进来 —— 贴了才会做爆款原因分析，并完整保存在库里"
+              style="flex:1;min-width:260px;min-height:58px;resize:vertical;padding:8px 10px;line-height:1.7;font-size:12px;font-family:inherit"></textarea>
+            <div style="flex:0 0 auto;max-width:250px;font-size:10.5px;color:var(--text-3);line-height:1.7;padding-top:4px">
+              多条链接配多段文案时，用<b style="background:none;color:inherit;padding:0;color:var(--text-2)">空行分段</b>，按顺序一一对应。<br>
+              不贴文案也能入库，只是没有原因分析，之后可以在详情页补。
+            </div>
+          </div>
+          <div class="card-body" style="padding-top:0;font-size:11px;color:var(--text-3);display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+            <span>入库时拆的是<b style="background:none;color:inherit;padding:0">结构</b>：钩子类型、论证方式、情绪曲线、植入位置、CTA 模型，并逐条给出「为什么可能火」的原文证据。<b style="background:none;color:inherit;padding:0">不记录任何互动数字</b>——抖音没有公开接口。</span>
           </div>
         </div>
         <div class="filters">
@@ -1384,8 +1398,6 @@ const $$ = s => [...document.querySelectorAll(s)];
 const fmt = n => n >= 10000 ? (n/10000).toFixed(1)+'万' : n.toLocaleString('zh-CN');
 /* 未录入一律显示「—」，绝不拿 0 冒充真值 */
 const fmtN = n => (n === null || n === undefined || isNaN(n)) ? '—' : fmt(n);
-/* 四项里有任意一项录过就算「有数」 */
-const hasStat = r => !!r && [r.likes, r.comments, r.collects, r.shares].some(v => v !== null && v !== undefined && !isNaN(v));
 const money = n => '¥' + n.toLocaleString('zh-CN',{maximumFractionDigits:0});
 const pct = n => n.toFixed(1) + '%';
 const rnd = (a,b) => Math.random()*(b-a)+a;
@@ -1402,7 +1414,7 @@ function toast(msg, type){
 }
 
 /* ---------- 模拟数据 ---------- */
-const CATS = ['折叠屏壳','小折叠壳','三折壳','透明壳','真皮壳','磁吸支架壳'];
+const CATS = ['折叠屏壳','小折叠壳','三折壳','透明壳','真皮壳','磁吸支架壳','其他品类'];
 const TAGS = ['强钩子','痛点','测评','剧情','价格暴击','反常识','素人口播','对比实验','清单体','悬念'];
 
 const RIVAL_AUTHORS = ['壳厂老周','折叠屏研究所','数码配件阿凯','壳子姐','铰链实验室','手机壳测评局','数码小卖部','折叠玩家'];
@@ -1452,57 +1464,285 @@ const EMO_CURVES = ['好奇→认同→行动','惊讶→怀疑→信服','共�
 const ARG_STYLES = ['个人经历+具体数据','对比实验+量化结论','场景还原+细节描述','权威转述+实测验证'];
 const CTA_MODELS = ['稀缺性+时间压力','精准筛选（适合谁/不适合谁）','降低门槛（算长期账）','直接指路（链接在下面）'];
 
-/* 从文案中推断结构（模拟 AI 解析） */
-function inferStruct(text, tags){
-  const hasNum = /\d/.test(text);
-  const hook = tags.includes('反常识') ? '反常识开场'
-    : tags.includes('价格暴击') ? '价格锚点'
-    : tags.includes('悬念') ? '悬念提问'
-    : tags.includes('强钩子') ? '结果前置'
-    : tags.includes('痛点') ? '身份代入' : '冲突对比';
-  const arg = hasNum && tags.includes('测评') ? '对比实验+量化结论'
-    : tags.includes('素人口播') ? '场景还原+细节描述'
-    : hasNum ? '个人经历+具体数据' : '权威转述+实测验证';
-  const cta = tags.includes('价格暴击') ? '降低门槛（算长期账）'
-    : tags.includes('测评') ? '精准筛选（适合谁/不适合谁）'
-    : tags.includes('清单体') ? '直接指路（链接在下面）' : '稀缺性+时间压力';
+/* =========================================================
+   文案结构判定 + 爆款原因分析
+   全部基于文案文本本身，不引入随机数、不依赖标签、不猜任何平台指标。
+   每条判定都必须能指回原文里的那一句 —— 指不回去的就不算判定。
+   ========================================================= */
+const SCENE_WORDS = ['飞机','酒店','厨房','口袋','牛仔裤','包里','桌上','床头','地铁','办公室','工位','通勤','出差','地上','电梯','车里','手边','阳台'];
+/* 这个品类最有力的证据不是形容词，是「点得出是哪个部位」：
+   说「护住铰链」比说「保护很好」可信，因为前者能被对照检查 */
+const PART_WORDS = ['铰链','中轴','转轴','内衬','边框','镜头位','开孔','磁环','气囊','支架','背板','边角','外屏','内屏','笔槽','缝','卡槽'];
+/* 可验证的即时效果：不是「手感好」而是「不发黄」「不顶屏」，能被观众事后核对 */
+const EFFECT_WORDS = ['不显指纹','防滑','不留痕','不发黄','不掉毛','不顶屏','不卡','不起皮','不翘边','不磨','不刮','不脱壳','严丝合缝','不松动'];
+
+function splitSent(text){
+  return String(text || '').split(/[。！？!?；;\n]/).map(x=>x.trim()).filter(Boolean);
+}
+function firstSentence(text){
+  const ss = splitSent(text);
+  return ss[0] || String(text || '').slice(0, 42);
+}
+/* 强引导词：单字「买」「点」命中率太高（"买壳""点烟"都会误判），只认明确动作 */
+const CTA_STRONG = /(链接|下面|主页|点进|点开|拍下|下单|带走|入手|橱窗|去拍|小黄车|评论区)/;
+
+function numbersIn(text){
+  return (String(text || '').match(/\d+(?:\.\d+)?/g) || []).map(Number);
+}
+function countOcc(text, re){
+  const m = String(text || '').match(re);
+  return m ? m.length : 0;
+}
+
+/* 结构推断：看「标题 + 正文」。抖音的标题本身就是前 3 秒字幕，
+   只读正文会漏掉最关键的钩子 —— 很多条正文第一句是铺垫，拦人的话在标题里。
+   全程不引入随机数、不看链接长度、不看标签。 */
+function inferStruct(text, title){
+  const body = String(text || '');
+  const t = (title && body.indexOf(String(title)) < 0) ? (String(title) + '。' + body) : body;
+  const first = firstSentence(t);
+  const nums = numbersIn(t);
+  const ss = splitSent(t);
+  const tail = ss.length ? ss[ss.length - 1] : '';
+
+  /* ① 钩子：看开头 42 字（约前 3 秒口播）在做什么 */
+  const head = t.slice(0, 42);
+  let hook = '冲突对比';
+  if (/别|不要|劝你|千万别|退掉|避坑|白买|被骗|别再/.test(head)) hook = '反常识开场';
+  else if (/[？?]|为什么|怎么|知道吗|敢吗/.test(head)) hook = '悬念提问';
+  else if (/\d{3,}/.test(head) && /(元|块|万|算|账|价|便宜|贵|省)/.test(head)) hook = '价格锚点';
+  else if (/[一二三四五六七八九十\d]+\s*(个|种|样|步|招|款|件|条)[^。]{0,6}(一起|全部|备齐|整理|盘点)/.test(head)
+        || /^(这|这几个|这几样)/.test(head)) hook = '结果前置';
+  else if (/^(我|我们|朋友|同事|有人|他|她)/.test(first)) hook = '身份代入';
+  else if (/就是|根本|其实|只认|一定|才发现|真相/.test(head)) hook = '结果前置';
+
+  /* ② 论证：证据是哪一类 */
+  const hasCompare = /比|vs|VS|不如|还是|换成|对比/.test(t);
+  const hasSource = /问了|查了|官方|维修|师傅|客服|说明书|实测|测过/.test(t);
+  let argument = '场景还原+细节描述';
+  if (nums.length >= 2 && hasCompare) argument = '对比实验+量化结论';
+  else if (nums.length >= 2) argument = '个人经历+具体数据';
+  else if (hasSource) argument = '权威转述+实测验证';
+
+  /* ③ 情绪：开场制造什么 → 中段怎么解 → 末句推向哪 */
+  const openEmo = hook === '反常识开场' ? '惊讶' : hook === '悬念提问' ? '好奇'
+    : hook === '价格锚点' ? '惊讶' : hook === '结果前置' ? '好奇' : '共鸣';
+  const midEmo = argument.indexOf('对比') === 0 ? '怀疑'
+    : argument.indexOf('个人经历') === 0 ? '认同' : '信服';
+  const endEmo = CTA_STRONG.test(t) ? '行动' : '信服';
+
+  /* ④ 植入位置：品牌机型第一次出现的字数位置，按 5.5 字/秒折算 */
+  const brand = (t.match(/(iPhone|华为|Mate\s?[X697]|nova|三星|Z\s?Fold|Z\s?Flip|小米|MIX|OPPO|Find|Pura|Pocket)/i) || [])[0] || '';
+  const at = brand ? t.indexOf(brand) : Math.floor(t.length * 0.2);
+  const sec = Math.max(0, Math.round(at / 5.5));
+  const placement = '第 ' + sec + ' 秒（' + (sec <= 3 ? '开场即植入' : sec <= 12 ? '前段' : '中段') + '）';
+
+  /* ⑤ CTA：最后一句在让人做什么 */
+  let cta = '直接指路（链接在下面）';
+  if (/算|账|便宜|值|划算|省/.test(tail)) cta = '降低门槛（算长期账）';
+  else if (/适合|不适合|如果你|看你要/.test(t)) cta = '精准筛选（适合谁/不适合谁）';
+  else if (/开售|这周|明天|前|最后|限量|抢/.test(t)) cta = '稀缺性+时间压力';
+  else if (!CTA_STRONG.test(t)) cta = '无明确引导（靠内容自传播）';
+
   return {
-    hook,
-    emotion: EMO_CURVES[Math.abs(text.length + tags.length) % EMO_CURVES.length],
-    argument: arg,
-    placement: '第' + (10 + (text.length % 18)) + '秒（中段）',
-    cta,
-    // 前3秒抽象成"话术模板"，不保留原句
+    hook, argument, emotion: openEmo + '→' + midEmo + '→' + endEmo,
+    placement, cta,
     hookTemplate: hook === '反常识开场' ? '【否定常识】+【自我暴露】'
       : hook === '价格锚点' ? '【预期高价】+【实际低价】'
       : hook === '悬念提问' ? '【设置悬念】+【承诺揭晓】'
       : hook === '结果前置' ? '【直接给结论】+【引发好奇】'
       : hook === '身份代入' ? '【指出普遍困境】+【建立同类感】'
-      : '【对比两个选项】+【制造反差】'
+      : '【对比两个选项】+【制造反差】',
+    evidence: { first: first, brand: brand, tail: tail }
   };
 }
 
-/* 同行文案：只带「结构」，不带任何数字。
-   抖音前台对所有人公开的互动数据只有 赞 / 评 / 藏 / 转 四项，其余（播放量、完播率、点赞率）
-   都属于平台不公开数据。本站只留这四项，未录入就是 null —— 不生成、不推算、不用 0 冒充。 */
+/* 爆款原因：不给分数。分数是自拟公式，没有对照物；
+   给的是「这句话具体做了什么、凭什么可能留住人」，每条都附原文证据。
+   这些是文本层面的归因假设，不是平台后台验证过的因果。 */
+function analyzeHit(text, title){
+  const body = String(text || '');
+  const t = (title && body.indexOf(String(title)) < 0) ? (String(title) + '。' + body) : body;
+  const first = firstSentence(t);
+  const nums = numbersIn(t);
+  const hit = [], risk = [];
+
+  if (/别|不要|劝你|千万别|退掉|避坑|白买|被骗|别再/.test(first))
+    hit.push({k:'首句用否定指令拦截', ev:first,
+      why:'刷到的人本来在划走，一句「别急着买」把他从「我没需求」拽到「我是不是买错了」，停留的理由先有了'});
+  if (/[？?]|为什么|怎么|知道吗|敢吗/.test(first))
+    hit.push({k:'首句留下信息缺口', ev:first,
+      why:'只抛问题不给答案，观众想知道答案就得往下看，这是成本最低的留存手段'});
+
+  if (nums.length >= 3)
+    hit.push({k:'全文 ' + nums.length + ' 处具体数值', ev:nums.slice(0,6).join(' / '),
+      why:'数值是这条的内容可信度来源：不说「很贵」说「3200」，不说「很薄」说「1.2 毫米」，观众能自己核对'});
+
+  /* 量级反差只在同量纲之间成立：金额和金额比、规格和规格比。
+     跨量纲（价格 vs 尺寸）比值再大也不是反差 —— 那样算出来的结论是假的。
+     难点是口播常裸写价格（「修屏3200，壳才39」不带「元」），
+     所以先把带量词的数字（23号 / 7.6寸 / 3次）剔除，剩下的裸数字才当价格候选。 */
+  const unitNums = new Set((t.match(/\d+(?:\.\d+)?\s*(?:号|日|月|年|天|次|个|款|周|秒|分钟|米|克|毫米|mm|寸|英寸|层|倍|台|条|种|步|人|字)/g) || [])
+    .map(x=>parseFloat(x)));
+  const bare = nums.filter(n=>!unitNums.has(n) && n > 0);
+  let money = (t.match(/\d+(?:\.\d+)?\s*(?:元|块|万|块钱)/g) || [])
+    .map(x=>parseFloat(x)).filter(x=>x > 0);
+  if (money.length < 2 && /修|换|壳|价|贵|便宜|才|成本|花|省|赔|账/.test(t))
+    money = bare.filter(n=>n >= 1);
+  if (money.length >= 2){
+    const hi = Math.max.apply(null, money), lo = Math.min.apply(null, money);
+    if (hi / lo >= 8 && hi >= 100 && lo <= 200)
+      hit.push({k:'把 ' + hi + ' 和 ' + lo + ' 摆在一起', ev:hi + '  vs  ' + lo + '（同为价格）',
+        why:'两个差距悬殊的价格并排放，结论由观众自己算出来，比你说服他更有力'});
+  } else {
+    /* 只出现一个高价时，它的作用不是对比而是「定锚」：
+       先把心理价位框到这个数，后面任何一个小数字都会显得便宜 */
+    const anchor = bare.filter(n=>n >= 1000).sort((a,b)=>b-a)[0];
+    if (anchor && /开售|起步|价|买|卖|花|才|元|块|省|贵/.test(t))
+      hit.push({k:'用 ' + anchor + ' 这个数字先定锚', ev:'「' + anchor + '」',
+        why:'先甩出一个具体的高价，观众的心里价位就被框住了，后面再报便宜的数字才有效果'});
+  }
+
+  const specs = (t.match(/\d+(?:\.\d+)?\s*(?:毫米|mm|克|寸|英寸|层)/g) || [])
+    .map(x=>parseFloat(x)).filter(x=>x > 0);
+  if (specs.length >= 2){
+    const hs = Math.max.apply(null, specs), ls = Math.min.apply(null, specs);
+    if (hs / ls >= 2 && ls > 0)
+      hit.push({k:'用 ' + hs + ' 对比 ' + ls + ' 讲差异', ev:hs + '  vs  ' + ls + '（同为规格）',
+        why:'同一个维度上的两档参数，观众立刻能感觉到差距在哪，不用你额外解释'});
+  }
+
+  if (specs.length && /毫米|mm|克|寸|英寸|层/.test(t)){
+    const m = t.match(/\d+(?:\.\d+)?\s*(?:毫米|mm|克|寸|英寸|层)[^。，,.!?]{0,8}/);
+    hit.push({k:'给了可核对的规格参数', ev:m ? m[0].trim() : specs.join(' / '),
+      why:'精确到小数点的参数会让人觉得「他真上手量过」，比一堆形容词更能压住质疑'});
+  }
+
+  /* 中文数量词：「五款里只有两款」这种口播表述同样是量化证据，
+     阿拉伯数字抓不到，但它往往是整条内容最硬的支撑 */
+  const cnNums = (t.match(/[一二三四五六七八九十两]+(?:款|种|个|次|步|条|招|台|家|遍|件|样)/g) || []);
+  if (cnNums.length >= 2)
+    hit.push({k:'用了可数的量化表达', ev:cnNums.slice(0, 6).join(' / '),
+      why:'「测过五款只有两款行」比「大部分都不行」有力得多，数量本身就是证据，也天然带筛选感'});
+
+  const meN = countOcc(t, /我/g), youN = countOcc(t, /你/g);
+  if (meN >= 2)
+    hit.push({k:'第一人称出现 ' + meN + ' 次', ev:'「我」× ' + meN,
+      why:'亲历视角把「推荐」变成「经验」，观众防备心先降一半，这是素人口播能跑赢精剪片的原因'});
+  if (youN >= 2)
+    hit.push({k:'直接对话「你」' + youN + ' 次', ev:'「你」× ' + youN,
+      why:'把独白变成对话，观众代入的是「被说的那个人」，而不是旁观者'});
+
+  const scenes = SCENE_WORDS.filter(w=>t.indexOf(w) >= 0);
+  if (scenes.length)
+    hit.push({k: scenes.length >= 2 ? '落到 ' + scenes.length + ' 个具体场景' : '落到具体场景',
+      ev: scenes.slice(0, 4).join(' / '),
+      why:'具体场景会让人自动想起自己用时的那一下，抽象卖点做不到这件事'});
+
+  if (/第[一二三][，,、]|[①②③]/.test(t))
+    hit.push({k:'用了清单结构', ev:(t.match(/第[一二三][，,、][^。]{0,16}/) || [''])[0],
+      why:'编号让内容可扫读，观众知道「还有几条」，愿意听完而不是听一半就走'});
+
+  /* 点出具体部位：说清「哪一处」，观众才能对照自己的机器去核 */
+  const parts = PART_WORDS.filter(w=>t.indexOf(w) >= 0);
+  if (parts.length >= 2)
+    hit.push({k:'点出了 ' + parts.length + ' 个具体部位', ev:parts.slice(0, 5).join(' / '),
+      why:'说「中轴做了全包」比说「保护很好」可信，因为前者能被拆开对照；观众能拿自己的机器去核这句话'});
+
+  /* 可验证的即时效果：把好处落到能当场看见的那一下 */
+  const effects = EFFECT_WORDS.filter(w=>t.indexOf(w) >= 0);
+  if (effects.length)
+    hit.push({k:'把好处落成 ' + effects.length + ' 个可当场验证的效果', ev:effects.slice(0, 4).join(' / '),
+      why:'「用三个月不发黄」比「材质好」强，因为观众买回来就能验证，验证过一次就信这个号'});
+
+  /* 比较句直接取舍：不需要数字也很硬的判断 */
+  const cmp = t.match(/比[^。，]{0,14}(还|更|好|强|薄|轻|厚|贵|便宜)/g);
+  if (cmp && cmp.length)
+    hit.push({k:'用比较句直接给取舍', ev:cmp.slice(0, 2).join(' / '),
+      why:'「比不少安卓大折叠还重」这种横向比较省掉了论证步骤，观众不用自己想参照物'});
+
+  const social = ['同事','朋友','很多人','有人','大家','客户','评论区'].filter(w=>t.indexOf(w) >= 0);
+  if (social.length)
+    hit.push({k:'引入第三方作见证', ev:social.join(' / '),
+      why:'「别人也这样」比「我推荐」推销感低，是社交证明最常见的用法'});
+
+  const acts = ['拆','摔','测','买过','退了','问了','查了','试了','用了','换'].filter(w=>t.indexOf(w) >= 0);
+  if (acts.length >= 2)
+    hit.push({k:'给出 ' + acts.length + ' 个可复述的动作', ev:acts.join(' / '),
+      why:'具体动作让内容「像真发生过」，也给评论区留了追问的抓手'});
+
+  /* 一条都命不中时给兜底判断，而不是显示"分析失败"。
+     宁可说清"这条能复用的只有钩子"，也不硬凑一条理由。 */
+  if (!hit.length){
+    const st = inferStruct(body, title);
+    hit.push({k:'能复用的只有「' + st.hook + '」这个钩子写法', ev:first,
+      why:'这条文案里没有数值、没有具体场景、也没有亲历证据，论证部分靠的是内容本身，拆不出可迁移的证据结构'});
+  }
+
+  /* 风险：指出这条哪里可能塌 */
+  const hasNum = nums.length > 0 || cnNums.length > 0;
+  if (!hasNum)
+    risk.push({k:'全文没有一个数字', ev:'—',
+      why:'缺可核对的信息，观众无法判断可信度，也少了一个评论区话题'});
+  if (first.length > 30)
+    risk.push({k:'首句 ' + first.length + ' 字，偏长', ev:first.slice(0, 30) + '…',
+      why:'前 3 秒大约只能说 16 个字，这么长的钩子很可能说不完就有人划走'});
+  if (!CTA_STRONG.test(t))
+    risk.push({k:'没有转化引导', ev:(splitSent(t).slice(-1)[0] || '').slice(0, 26),
+      why:'看完没有下一步动作，只能等观众自己去搜，中间会漏掉一截'});
+  if (!/iPhone|华为|Mate|nova|三星|Fold|Flip|小米|MIX|OPPO|Find|Pura|Pocket/i.test(t))
+    risk.push({k:'没点明具体机型', ev:'—',
+      why:'对象模糊时，观众判断不了「这是不是说我要买的那台」'});
+  if (body.length && body.length < 60)
+    risk.push({k:'全文仅 ' + body.length + ' 字', ev:body.slice(0, 40),
+      why:'信息量偏少，容易被判定为低质重复内容，也很难撑住完播'});
+
+  return { hit: hit, risk: risk,
+    stat: { chars: body.length, nums: nums.length, me: meN, you: youN, scenes: scenes.length } };
+}
+
+/* 标签与品类：按文本判，替代原来「按链接长度取模」的假分配 */
+function tagsFromText(text){
+  const t = String(text || ''), out = [];
+  if (/别|不要|劝你|千万别|退掉|避坑|被骗/.test(t)) out.push('反常识');
+  if (/最脆|难受|麻烦|灰|磨|划|摔|掉地上|纠结/.test(t)) out.push('痛点');
+  if (/测|实测|用了|试了|对比/.test(t)) out.push('测评');
+  if (/同事|朋友|那天|后来|当场/.test(t)) out.push('剧情');
+  if (/\d+\s*(元|块|万)|不到.*一半|便宜/.test(t)) out.push('价格暴击');
+  if (/第[一二三][，,、]|[①②③]/.test(t)) out.push('清单体');
+  if (/拆开|才发现|结果|没想到|才知道/.test(t)) out.push('悬念');
+  if (/比|vs|VS|不如|还是/.test(t)) out.push('对比实验');
+  if (/我|我们/.test(t) && out.indexOf('剧情') < 0) out.push('素人口播');
+  if (!out.length) out.push('强钩子');
+  return out.slice(0, 3);
+}
+function catFromText(text){
+  const t = String(text || '');
+  if (/三折|Mate\s?XT/i.test(t)) return '三折壳';
+  if (/小折叠|Flip|Pocket|Pura\s?X/i.test(t)) return '小折叠壳';
+  if (/透明/.test(t)) return '透明壳';
+  if (/真皮|牛皮/.test(t)) return '真皮壳';
+  if (/磁吸|支架/.test(t)) return '磁吸支架壳';
+  if (/折叠|Fold|Duo|Mate|MIX/i.test(t)) return '折叠屏壳';
+  return '其他品类';
+}
+
+/* 同行文案：纯结构库 —— 只存可复用的结构，不存任何表现数字。
+   互动数、播放量、完播率一律不记录：抖音不公开互动数、完播率是作者后台私有数据、
+   也没有合法接口。与其存一个来源不明的数字，不如不存 —— 结构拆解不依赖任何数字。 */
 let RIVAL = RIVAL_COPIES.map((c,i)=>({
   id:'R'+String(i+1).padStart(3,'0'),
-  title:c.t, text:c.x, tags:c.tags, cat:c.cat,
+  title:c.t, text:c.x, link:'', tags:c.tags, cat:c.cat,
   /* 合规：作者名脱敏，不展示真实昵称 */
   author: '同行账号 ' + String.fromCharCode(65 + (i % 8)) + (Math.floor(i/8)+1),
-  struct: inferStruct(c.x, c.tags),
-  date: `2026-10-${String(Math.max(1,10 - (i%10))).padStart(2,'0')}`,
-  likes:null, comments:null, collects:null, shares:null,
-  source:'pending'
+  struct: inferStruct(c.x, c.t),
+  date: `2026-10-${String(Math.max(1,10 - (i%10))).padStart(2,'0')}`
 }));
 
-/* 合规：把原文转成"节选+省略"，不提供全文 */
-function maskedText(text){
-  text = String(text || '');
-  const keep = Math.ceil(text.length * 0.35);
-  const head = text.slice(0, Math.min(14, keep));
-  const tail = text.slice(-Math.min(8, Math.ceil(keep/2)));
-  return head + '<span style="background:#eef0f4;color:transparent;border-radius:3px;user-select:none">████████████</span>' + tail;
+/* 卡片上只做视觉截断（不是打码）——完整文案在详情页，一条不删 */
+function truncText(text, n){
+  const t = String(text || '').replace(/\s+/g, ' ').trim();
+  return t.length > n ? t.slice(0, n) + '…' : t;
 }
 
 /* 我的文案 */
@@ -1772,7 +2012,7 @@ function renderRivalTags(){
 
 function renderRival(){
   /* 防御：任何一条缺少结构的数据都在渲染前补齐，避免整页崩掉 */
-  state.rival.forEach(r=>{ if(!r.struct) r.struct = inferStruct(r.text || r.title || '', r.tags || []); });
+  state.rival.forEach(r=>{ if(!r.struct) r.struct = inferStruct(r.text || '', r.title || ''); });
   let list = state.rival.filter(r=>{
     if(state.rTag!=='全部' && !(r.tags||[]).includes(state.rTag)) return false;
     if(state.rSearch && !((r.text||'').includes(state.rSearch)||(r.title||'').includes(state.rSearch)||(r.author||'').includes(state.rSearch))) return false;
@@ -1789,7 +2029,6 @@ function renderRival(){
       <div class="cc-top">
         <div class="cc-ava">${r.author[0]}</div>
         <div class="cc-src">${r.author}</div>
-        ${hasStat(r)?'<span class="pill pill-hot" style="font-size:9.5px">已录数据</span>':'<span class="pill pill-mid" style="font-size:9.5px">未录数据</span>'}
         <div class="cc-time">${r.date}</div>
       </div>
       <div style="font-weight:700;font-size:12.5px;margin-bottom:8px">${r.title}</div>
@@ -1801,15 +2040,9 @@ function renderRival(){
         <div style="display:flex;justify-content:space-between"><span style="color:var(--text-3)">钩子类型</span><b>${r.struct.hook}</b></div>
         <div style="display:flex;justify-content:space-between"><span style="color:var(--text-3)">情绪曲线</span><b>${r.struct.emotion}</b></div>
         <div style="display:flex;justify-content:space-between"><span style="color:var(--text-3)">植入位置</span><b>${r.struct.placement}</b></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-3)">爆款原因</span><b style="color:var(--ok)">${(r.text && r.text.length>=12) ? analyzeHit(r.text, r.title).hit.length + ' 条' : '待补文案'}</b></div>
       </div>
-      <div class="cc-text" style="font-size:11.5px;color:var(--text-3);margin-bottom:9px">${maskedText(r.text)}</div>
-      <div class="cc-metrics">
-        ${hasStat(r) ? `<span title="抖音前台公开可见">赞 <b>${fmtN(r.likes)}</b></span>
-        <span title="抖音前台公开可见">评 <b>${fmtN(r.comments)}</b></span>
-        <span title="抖音前台公开可见">藏 <b>${fmtN(r.collects)}</b></span>
-        <span title="抖音前台公开可见">转 <b>${fmtN(r.shares)}</b></span>`
-        : `<span style="color:var(--text-3)">互动数据未录入</span>`}
-      </div>
+      <div class="cc-text" style="font-size:11.5px;color:var(--text-3);margin-bottom:9px">${truncText(r.text, 76)}</div>
       <div style="display:flex;gap:6px;margin-top:10px">
         <button class="btn btn-sm btn-ai" style="flex:1;justify-content:center" data-extract="${r.id}">提取爆款基因</button>
         <button class="btn btn-sm" data-rival="${r.id}">拆解</button>
@@ -4174,21 +4407,19 @@ function dsRunSync(){
 /* 同行种子只提供"结构"，不提供原文（合规） */
 function rivalSeed(r){
   /* 防御：结构缺失时即时补算，避免单条脏数据导致整个生成页渲染失败 */
-  if(!r.struct) r.struct = inferStruct(r.text || r.title || '', r.tags || []);
+  if(!r.struct) r.struct = inferStruct(r.text || '', r.title || '');
   const st = r.struct;
   return {
     id:r.id, src:'同行', owner:r.author || '同行账号',
     text:`【${st.hook}】${st.hookTemplate}`,
     isStruct:true,
     tags:r.tags || [],
-    data: hasStat(r)
-      ? `赞 ${fmtN(r.likes)} · 评 ${fmtN(r.comments)} · 藏 ${fmtN(r.collects)} · 转 ${fmtN(r.shares)}`
-      : '互动数据未录入'
+    data: st.hook + ' · ' + st.argument
   };
 }
 function seedPool(){
-  /* 有真实互动数据的排前面，没有的排后面 —— 不再用任何"爆款值"判定 */
-  const ranked = [...state.rival].sort((a,b)=> (hasStat(b)?1:0) - (hasStat(a)?1:0));
+  /* 纯结构库：按收录时间倒序，不按任何表现指标排序 */
+  const ranked = [...state.rival].sort((a,b)=> String(b.date||'').localeCompare(String(a.date||'')));
   if(state.seedTab==='rival') return ranked.slice(0,8).map(rivalSeed);
   if(state.seedTab==='mine') return state.mine.slice(0,8).map((r,i)=>({id:r.id,src:'我的',owner:'我的账号',text:r.text,tags:r.tags||[],score:88-i*2,data:r.source}));
   /* 混合 */
@@ -4477,12 +4708,12 @@ function renderInsight(){
     return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line-2)">
       <div class="avatar" style="width:26px;height:26px;font-size:11px;background:linear-gradient(135deg,#ffb199,#ff6b6b)">${a[0]}</div>
       <div style="flex:1"><div style="font-size:12.5px;font-weight:600">${a}</div>
-        <div style="font-size:10.5px;color:var(--text-3)">收录 ${cnt} 条 · 已录互动数据 ${state.rival.filter(r=>r.author===a&&hasStat(r)).length} 条</div></div>
+        <div style="font-size:10.5px;color:var(--text-3)">收录 ${cnt} 条 · 覆盖 ${new Set(state.rival.filter(r=>r.author===a).map(r=>(r.struct||{}).hook)).size} 种钩子</div></div>
       <span class="tag tag-ok">监控中</span>
     </div>`;
   }).join('');
 
-  const feed = [...state.rival].sort((a,b)=> (hasStat(b)?1:0)-(hasStat(a)?1:0) || (b.likes||0)-(a.likes||0)).slice(0,6);
+  const feed = [...state.rival].sort((a,b)=> String(b.date||'').localeCompare(String(a.date||''))).slice(0,6);
   $('#intelFeed').innerHTML = feed.map(r=>`
     <div style="display:flex;gap:13px;padding:12px 0;border-bottom:1px solid var(--line-2)">
       <div style="width:34px;height:34px;border-radius:9px;flex-shrink:0;background:linear-gradient(135deg,#ffd6a5,#ff8f6b);
@@ -4490,7 +4721,6 @@ function renderInsight(){
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
           <b style="font-size:12.5px">${r.author}</b>
-          ${hasStat(r)?'<span class="pill pill-hot" style="font-size:9.5px">已录数据</span>':''}
           <span style="font-size:10.5px;color:var(--text-3);margin-left:auto">${r.date}</span>
         </div>
         <div style="font-size:12.5px;color:var(--text-2);line-height:1.6;margin-bottom:6px">
@@ -4498,11 +4728,7 @@ function renderInsight(){
           <span style="margin-left:6px">${r.struct.hookTemplate}</span>
         </div>
         <div style="display:flex;gap:14px;font-size:11px;color:var(--text-3)">
-          ${hasStat(r) ? `<span title="抖音前台公开可见">赞 <b style="color:var(--text)">${fmtN(r.likes)}</b></span>
-          <span>评 <b style="color:var(--text)">${fmtN(r.comments)}</b></span>
-          <span>藏 <b style="color:var(--text)">${fmtN(r.collects)}</b></span>
-          <span>转 <b style="color:var(--text)">${fmtN(r.shares)}</b></span>`
-          : `<span style="color:var(--text-3)">互动数据未录入</span>`}
+          <span style="color:var(--text-3)">结构：${r.struct.hook} · ${r.struct.emotion}</span>
           <span style="margin-left:auto;display:flex;gap:4px">${r.tags.slice(0,2).map(t=>`<span class="tag">${t}</span>`).join('')}</span>
         </div>
       </div>
@@ -4608,70 +4834,105 @@ function videoDrawer(id){
 
 function rivalDrawer(id){
   const r = state.rival.find(x=>x.id===id); if(!r) return;
+  const st = r.struct || inferStruct(r.text || '', r.title || '');
+  const an = analyzeHit(r.text || '', r.title || '');
+  const hasText = !!(r.text && r.text.length >= 12);
+
+  const structCard = (lbl, val)=>`
+      <div style="background:var(--panel-2);border:1px solid var(--line-2);border-radius:10px;padding:11px 12px">
+        <div style="font-size:10.5px;color:var(--text-3);font-weight:700;margin-bottom:4px">${lbl}</div>
+        <div style="font-size:12.5px;font-weight:700">${val}</div>
+      </div>`;
+
+  const hitHtml = an.hit.length ? an.hit.map(h=>`
+    <div style="background:var(--panel-2);border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;margin-bottom:7px">
+      <div style="display:flex;gap:7px;align-items:baseline;margin-bottom:4px">
+        <span style="flex-shrink:0;width:5px;height:5px;border-radius:50%;background:var(--ok);margin-top:6px"></span>
+        <b style="font-size:12px">${h.k}</b>
+      </div>
+      <div style="font-size:11px;color:var(--text-2);line-height:1.7;padding-left:12px">${h.why}</div>
+      <div style="font-size:10.5px;color:var(--text-3);line-height:1.6;padding-left:12px;margin-top:5px;
+        border-left:2px solid var(--line-2);padding-top:1px;padding-bottom:1px">原文证据：${h.ev}</div>
+    </div>`).join('') : `<div style="font-size:11.5px;color:var(--text-3)">这条文案没有命中任何可解释的结构点。</div>`;
+
+  const riskHtml = an.risk.length ? an.risk.map(h=>`
+    <div style="background:var(--warn-soft);border:1px solid #ffe6c7;border-radius:10px;padding:10px 12px;margin-bottom:7px">
+      <div style="display:flex;gap:7px;align-items:baseline;margin-bottom:3px">
+        <span style="flex-shrink:0;width:5px;height:5px;border-radius:50%;background:#f5a623;margin-top:6px"></span>
+        <b style="font-size:12px;color:#8a5a00">${h.k}</b>
+      </div>
+      <div style="font-size:11px;color:#8a5a00;opacity:.85;line-height:1.7;padding-left:12px">${h.why}</div>
+      <div style="font-size:10.5px;color:#a5771f;line-height:1.6;padding-left:12px;margin-top:4px">出现在：${h.ev}</div>
+    </div>`).join('') : `<div style="font-size:11.5px;color:var(--ok)">没发现明显短板。</div>`;
+
+  const bodyHtml = hasText
+    ? `<div class="ai-script" style="color:var(--text-2);white-space:pre-wrap;line-height:1.95">${r.text.replace(/</g,'&lt;')}</div>`
+    : `<div style="background:var(--panel-2);border:1px dashed var(--line);border-radius:10px;padding:12px 14px">
+         <div style="font-size:11.5px;color:var(--text-3);line-height:1.75;margin-bottom:9px">
+           这一条只存了链接，还没有文案。补上完整文案，就能拆结构、给它做爆款原因分析。</div>
+         <textarea class="input" id="rivalTextFix" rows="6"
+           placeholder="把这条视频的完整文案粘进来（口播稿或屏幕上的字都行）"
+           style="width:100%;resize:vertical;padding:9px 11px;line-height:1.7;font-size:12px;font-family:inherit"></textarea>
+         <div style="display:flex;gap:8px;align-items:center;margin-top:9px;flex-wrap:wrap">
+           <button class="btn btn-sm btn-ai" data-savetext="${r.id}">保存文案并分析</button>
+           ${r.link ? `<a href="${r.link}" target="_blank" rel="noopener" style="font-size:11px;color:var(--brand-2)">打开原视频 ›</a>` : ''}
+         </div>
+       </div>`;
+
   const html = `
     <div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:12px">
-      <span class="tag ${hasStat(r)?'tag-ok':'tag-ai'}">${hasStat(r)?'互动数据已录入':'互动数据未录入'}</span>
-      ${r.tags.map(t=>`<span class="tag">${t}</span>`).join('')}
+      <span class="tag tag-ai">结构已拆解</span>
+      ${(r.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}
       <span class="tag">${r.cat}</span>
     </div>
 
     <div style="background:var(--ok-soft);border:1px solid #c9f0e2;border-radius:10px;padding:10px 12px;
       font-size:11.5px;color:var(--ok);line-height:1.6;margin-bottom:4px;display:flex;gap:8px">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0;margin-top:1px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      <span><b>合规提示</b>：本页仅展示对公开内容的<b>结构分析</b>，不提供原文复制。生成的脚本为原创产出，请勿直接搬运第三方原文。</span>
+      <span><b>用途</b>：这条文案是你自己摘录的公开内容，<b>只存在这个页面的本地数据里</b>，不会上传。分析结果用于理解结构，直接照搬原句发出去不算你的内容。</span>
+    </div>
+
+    <div class="sec-title" style="display:flex;align-items:center;justify-content:space-between">
+      <span>完整文案${hasText ? ` <span style="font-weight:600;color:var(--text-3);font-size:11px">${an.stat.chars} 字</span>` : ''}</span>
+      ${hasText ? `<button class="btn btn-sm" data-copyrival="${r.id}" style="padding:3px 10px;font-size:11px">复制全文</button>` : ''}
+    </div>
+    ${bodyHtml}
+
+    <div class="sec-title">这条为什么能火 <span style="font-weight:600;color:var(--text-3);font-size:11px">依据文案本身，命中 ${an.hit.length} 条</span></div>
+    ${hitHtml}
+
+    <div class="sec-title">可能拖后腿的地方 <span style="font-weight:600;color:var(--text-3);font-size:11px">${an.risk.length} 条</span></div>
+    ${riskHtml}
+    <div style="font-size:10.5px;color:var(--text-3);line-height:1.75;margin-top:6px">
+      以上是对文案本身的归因判断（哪句话用了什么手法），<b style="background:none;color:inherit;padding:0;color:var(--text-2)">不是平台后台验证过的因果</b>。
+      真实播放与完播数据只有原作者能看到，本库不猜、不补。
     </div>
 
     <div class="sec-title">爆款结构拆解</div>
     <div class="grid g2" style="gap:9px">
-      <div style="background:var(--panel-2);border:1px solid var(--line-2);border-radius:10px;padding:11px 12px">
-        <div style="font-size:10.5px;color:var(--text-3);font-weight:700;margin-bottom:4px">钩子类型</div>
-        <div style="font-size:12.5px;font-weight:700">${r.struct.hook}</div>
-      </div>
-      <div style="background:var(--panel-2);border:1px solid var(--line-2);border-radius:10px;padding:11px 12px">
-        <div style="font-size:10.5px;color:var(--text-3);font-weight:700;margin-bottom:4px">论证方式</div>
-        <div style="font-size:12.5px;font-weight:700">${r.struct.argument}</div>
-      </div>
-      <div style="background:var(--panel-2);border:1px solid var(--line-2);border-radius:10px;padding:11px 12px">
-        <div style="font-size:10.5px;color:var(--text-3);font-weight:700;margin-bottom:4px">情绪曲线</div>
-        <div style="font-size:12.5px;font-weight:700">${r.struct.emotion}</div>
-      </div>
-      <div style="background:var(--panel-2);border:1px solid var(--line-2);border-radius:10px;padding:11px 12px">
-        <div style="font-size:10.5px;color:var(--text-3);font-weight:700;margin-bottom:4px">CTA 模型</div>
-        <div style="font-size:12.5px;font-weight:700">${r.struct.cta}</div>
-      </div>
+      ${structCard('钩子类型', st.hook)}
+      ${structCard('论证方式', st.argument)}
+      ${structCard('情绪曲线', st.emotion)}
+      ${structCard('植入位置', st.placement)}
     </div>
 
     <div class="sec-title">可复用钩子模板</div>
     <div style="background:linear-gradient(135deg,#faf9ff,#fff);border:1px solid #e0daff;border-radius:10px;
       padding:13px 15px;font-size:13px;font-weight:700;color:var(--brand-2);letter-spacing:.2px">
-      ${r.struct.hookTemplate}
+      ${st.hookTemplate}
     </div>
-
-    <div class="sec-title">内容节选（仅供结构对照）</div>
-    <div class="ai-script" style="color:var(--text-2)">${maskedText(r.text)}</div>
     <div style="font-size:10.5px;color:var(--text-3);margin-top:6px">
-      为保护原作者权益，此处仅展示部分内容。完整原文不对外提供。
+      判定依据：首句「${(st.evidence && st.evidence.first || '').slice(0,26)}…」${st.evidence && st.evidence.brand ? '；机型首次出现在' + st.placement : ''}
     </div>
 
-    <div class="sec-title">互动数据（本页唯一的数据来源）</div>
-    ${hasStat(r) ? `
-    <div class="kv"><span class="k">点赞数 <span style="color:var(--ok);font-size:10px">前台公开</span></span><span class="v">${fmtN(r.likes)}</span></div>
-    <div class="kv"><span class="k">评论数 <span style="color:var(--ok);font-size:10px">前台公开</span></span><span class="v">${fmtN(r.comments)}</span></div>
-    <div class="kv"><span class="k">收藏数 <span style="color:var(--ok);font-size:10px">前台公开</span></span><span class="v">${fmtN(r.collects)}</span></div>
-    <div class="kv"><span class="k">转发数 <span style="color:var(--ok);font-size:10px">前台公开</span></span><span class="v">${fmtN(r.shares)}</span></div>`
-    : `<div style="font-size:12px;color:var(--text-3);padding:6px 0 10px">这一条还没抄互动数据。回到列表，在采集条里填一下赞 / 评 / 藏 / 转就行。</div>`}
-    <div style="font-size:10.5px;color:var(--text-3);line-height:1.75;margin-top:6px;background:var(--panel-2);border-radius:8px;padding:9px 11px">
-      这四项是抖音前台对所有人公开的，可以逐个核对。播放量、完播率、点赞率属于作者后台私有或平台不公开数据——任何第三方工具给出的「同行播放量 / 完播率」都是估算，本站不展示、不推算、不推测，宁可留空。
-    </div>
+    <div class="sec-title">CTA 模型</div>
+    <div style="font-size:12px;font-weight:600;color:var(--text-2);background:var(--panel-2);border-radius:9px;padding:10px 12px">${st.cta}</div>
 
-    <div class="sec-title">AI 拆解：这条为什么能爆</div>
-    <div class="ai-box">
-      <ul>
-        <li><b>钩子：</b>采用「${r.struct.hook}」结构，第一句就制造信息缺口</li>
-        <li><b>结构：</b>${r.struct.hookTemplate} → 给理由（${r.struct.argument}）→ 行动引导</li>
-        <li><b>信任：</b>用第一人称真实体验替代产品说明，降低戒备</li>
-        <li><b>可复制点：</b>把「${r.struct.hook}」套用到你的品类，替换成你自己的使用场景</li>
-      </ul>
+    <div class="sec-title">本库不记录的东西</div>
+    <div style="font-size:11px;color:var(--text-3);line-height:1.8;background:var(--panel-2);border-radius:8px;padding:10px 12px">
+      点赞 / 评论 / 收藏 / 转发 / 播放量 / 完播率 —— 这六项<b style="background:none;color:inherit;padding:0;color:var(--text-2)">本库一律不存</b>。
+      前四项抖音没有对外接口，后两项是作者后台私有数据，任何第三方工具显示的「同行播放量 / 完播率」都是估算。
+      原因分析读的是文案本身，不需要这些数字。
     </div>
 
     <div style="display:flex;gap:7px;margin-top:14px;flex-wrap:wrap">
@@ -4681,9 +4942,7 @@ function rivalDrawer(id){
       </button>
       <button class="btn btn-sm" data-goto="generator">用这套结构生成我的脚本</button>
     </div>`;
-  openDrawer(html, r.title, hasStat(r)
-    ? `${r.author} · ${r.date} · 赞 ${fmtN(r.likes)} · 评 ${fmtN(r.comments)} · 藏 ${fmtN(r.collects)} · 转 ${fmtN(r.shares)}`
-    : `${r.author} · ${r.date} · 互动数据未录入`);
+  openDrawer(html, r.title, `${r.author} · ${r.date} · ${hasText ? '完整文案 ' + an.stat.chars + ' 字' : '待补文案'}`);
 }
 
 function mineDrawer(id){
@@ -4948,6 +5207,36 @@ document.addEventListener('click', e=>{
     renderSeeds(); return;
   }
 
+  /* 复制完整文案 */
+  const cr = t.closest('[data-copyrival]');
+  if(cr){
+    const r = state.rival.find(x=>x.id===cr.dataset.copyrival);
+    if(!r || !r.text) return;
+    navigator.clipboard && navigator.clipboard.writeText(r.text)
+      .then(()=>toast('完整文案已复制'))
+      .catch(()=>toast('复制失败，请手动选择'));
+    return;
+  }
+
+  /* 补录文案并重新分析 */
+  const svt = t.closest('[data-savetext]');
+  if(svt){
+    const r = state.rival.find(x=>x.id===svt.dataset.savetext);
+    if(!r) return;
+    const el = document.getElementById('rivalTextFix');
+    const v = el ? String(el.value || '').trim() : '';
+    if(v.length < 12){ toast('文案太短，至少 12 个字'); return; }
+    r.text = v;
+    r.struct = inferStruct(v, r.title || '');
+    r.tags = tagsFromText(v);
+    r.cat = catFromText(v);
+    if(!r.title || /^https?:/.test(r.title)) r.title = firstSentence(v).slice(0, 28);
+    renderRival();
+    rivalDrawer(r.id);
+    toast('文案已保存，结构已重新拆解，命中 ' + analyzeHit(v, r.title).hit.length + ' 条原因');
+    return;
+  }
+
   /* 提取爆款基因（合规：只存结构，不存原文） */
   const sf = t.closest('[data-extract]');
   if(sf){
@@ -4959,7 +5248,7 @@ document.addEventListener('click', e=>{
       title:'【基因】' + r.struct.hook + ' · ' + r.cat,
       source:'爆款基因',
       gene:true,
-      text:`钩子模板：${r.struct.hookTemplate}\n论证方式：${r.struct.argument}\n情绪曲线：${r.struct.emotion}\n植入位置：${r.struct.placement}\nCTA模型：${r.struct.cta}`,
+      text:`钩子模板：${r.struct.hookTemplate}\n论证方式：${r.struct.argument}\n情绪曲线：${r.struct.emotion}\n植入位置：${r.struct.placement}\nCTA模型：${r.struct.cta}` + (r.text ? `\n\n原条命中：\n` + analyzeHit(r.text, r.title).hit.slice(0,5).map(h=>'- ' + h.k).join('\n') : ''),
       tags:[...new Set([r.struct.hook, ...r.tags])].slice(0,3),
       date:new Date().toISOString().slice(0,10)
     });
@@ -5119,39 +5408,65 @@ document.addEventListener('click', e=>{
 });
 
 /* 采集同行 */
+/* 采集同行：贴链接入库；链接 + 文案一起贴时，文案完整保存并用于原因分析。
+   一行一条链接，文案按空行分段，按顺序对应。不解析、不生成任何表现数字。 */
 $('#doCollect').addEventListener('click', ()=>{
-  const val = $('#rivalLink').value.trim();
-  if(!val){ toast('请先粘贴抖音视频链接'); return; }
-  /* 只收用户从抖音前台抄来的四个数；没填就是 null，绝不用 0 或随机数顶上 */
-  const readNum = sel => {
-    const el = $(sel); if(!el) return null;
-    const raw = String(el.value || '').replace(/[^\d]/g, '');
-    return raw === '' ? null : parseInt(raw, 10);
-  };
-  const likes    = readNum('#rivalLikes');
-  const comments = readNum('#rivalComments');
-  const collects = readNum('#rivalCollects');
-  const shares   = readNum('#rivalShares');
-  const nid = 'R' + String(state.rival.length+1).padStart(3,'0');
-  const tg = [TAGS[val.length % TAGS.length]];
-  const newItem = {
-    id:nid, title: val.length>26 ? val.slice(0,26)+'…' : val, text: val,
-    tags:tg, cat: CATS[val.length % CATS.length], author:'新建采集',
-    /* 合规：采集即完成结构拆解，保证下游只依赖结构、不依赖原文 */
-    struct: inferStruct(val, tg),
-    date: new Date().toISOString().slice(0,10),
-    likes, comments, collects, shares,
-    source: hasStat({likes,comments,collects,shares}) ? 'manual' : 'pending'
-  };
-  state.rival.unshift(newItem);
-  $('#rivalLink').value = '';
-  ['#rivalLikes','#rivalComments','#rivalCollects','#rivalShares'].forEach(sel=>{
-    const el = $(sel); if(el) el.value = '';
+  const raw = String($('#rivalLink').value || '').trim();
+  if(!raw){ toast('请先粘贴抖音视频链接'); return; }
+  const txtRaw = String(($('#rivalText') && $('#rivalText').value) || '').trim();
+
+  const rows = raw.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  const blocks = txtRaw ? txtRaw.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean) : [];
+
+  let maxId = state.rival.reduce((m, x)=>{
+    const n = parseInt(String(x.id || '').replace(/^R/i, ''), 10);
+    return isNaN(n) ? m : Math.max(m, n);
+  }, 0);
+
+  const added = [];
+  let skipped = 0;
+
+  rows.forEach((line, idx)=>{
+    const um = line.match(/https?:\/\/[^\s，,；;、）)】]+/);
+    if(!um){ skipped++; return; }
+    const link = um[0];
+    /* 配对文案：1 段配 1 条；N 段配 N 条；其余情况全给第一条 */
+    let body = '';
+    if(blocks.length === 1) body = idx === 0 ? blocks[0] : '';
+    else if(blocks.length === rows.length) body = blocks[idx] || '';
+    else if(blocks.length > 1) body = idx === 0 ? blocks.join('\n\n') : '';
+    const hasBody = body.length >= 12;
+
+    added.push({
+      id: 'R' + String(++maxId).padStart(3, '0'),
+      title: hasBody ? firstSentence(body).slice(0, 28) : (link.length > 28 ? link.slice(0, 28) + '…' : link),
+      text: hasBody ? body : '',
+      link: link,
+      tags: hasBody ? tagsFromText(body) : ['强钩子'],
+      cat: hasBody ? catFromText(body) : '其他品类',
+      author: '新建采集',
+      struct: inferStruct(hasBody ? body : '', hasBody ? firstSentence(body).slice(0, 28) : ''),
+      date: new Date().toISOString().slice(0, 10)
+    });
   });
+
+  if(!added.length){ toast('没识别到链接，把抖音分享出来的整段文字粘进来即可'); return; }
+
+  state.rival.unshift.apply(state.rival, added);
+  $('#rivalLink').value = '';
+  if($('#rivalText')) $('#rivalText').value = '';
   renderRivalTags(); renderRival();
-  toast(hasStat(newItem)
-    ? '已入库：赞 ' + fmtN(likes) + ' · 评 ' + fmtN(comments) + ' · 藏 ' + fmtN(collects) + ' · 转 ' + fmtN(shares)
-    : '已入库结构；互动数空着就显示「未录入」，随时可以补');
+
+  const withText = added.filter(x=>x.text).length;
+  if(added.length === 1){
+    const a = added[0];
+    toast(a.text
+      ? '已入库：' + a.struct.hook + ' · 命中 ' + analyzeHit(a.text, a.title).hit.length + ' 条可解释点'
+      : '已入库，但还没有文案 —— 点开这一条补上，就能分析它为什么火');
+  } else {
+    toast('已入库 ' + added.length + ' 条' + (withText ? '（' + withText + ' 条带文案已分析）' : '') +
+          (skipped ? '；另有 ' + skipped + ' 行没识别到链接' : ''));
+  }
 });
 
 /* 保存我的文案 */
