@@ -30,6 +30,14 @@ const { execFile } = require('child_process');
 const ROOT = path.resolve(__dirname, '..');
 const CACHE = path.join(__dirname, 'cache');
 const PORT = Number(process.env.PORT) || 7801;
+/* 云上部署时绑 127.0.0.1，让 Caddy / Nginx 反代进来；
+   本机双击 bat 时保持 0.0.0.0 不变（局域网手机也能连） */
+const HOST = process.env.HOST || '0.0.0.0';
+/* 同时开几个浏览器页。云服务器内存小（2G 那台），开 2 个 1440x900 页面就接近 OOM，
+   所以做成可配：本机默认 2，云上按内存给 1 */
+const MAX_PAGES = Math.max(1, Number(process.env.MAX_PAGES) || 2);
+/* 缓存的 mp4/jpg/json 多久清一次。云盘不清理会被视频吃满 —— 本机无所谓，云上必须清 */
+const CACHE_TTL_DAYS = Number(process.env.CACHE_TTL_DAYS) || 3;
 fs.mkdirSync(CACHE, { recursive: true });
 
 /* ---------------------------------------------------------------- 工具 */
@@ -96,6 +104,36 @@ const readBody = (req) => new Promise((resolve) => {
 
 const log = (...a) => console.log('[' + new Date().toISOString().slice(11, 19) + ']', ...a);
 
+/* 缓存清理。一台视频分析服务最容易被吃满的不是内存而是磁盘：
+   每条片子落地一个 10~30MB 的 mp4，用几天就是几个 G。
+   过期时间按文件 mtime 算，正在被读的文件 mtime 新，不会被误删。 */
+function sweepCache() {
+  const cutoff = Date.now() - CACHE_TTL_DAYS * 86400000;
+  let n = 0, bytes = 0, names = [];
+  try { names = fs.readdirSync(CACHE); } catch (e) { return; }
+  for (const name of names) {
+    const f = path.join(CACHE, name);
+    try {
+      const st = fs.statSync(f);
+      if (st.isFile() && st.mtimeMs < cutoff) { bytes += st.size; fs.unlinkSync(f); n++; }
+    } catch (e) { /* 单个删不掉不影响其它 */ }
+  }
+  if (n) log('清理缓存 ' + n + ' 个文件，释放 ' + (bytes / 1048576).toFixed(1) + ' MB');
+}
+
+/* 缓存用量，给 /api/health 用 —— 云上要能一眼看出磁盘快满了 */
+function cacheUsage() {
+  let files = 0, bytes = 0, names = [];
+  try { names = fs.readdirSync(CACHE); } catch (e) { return { files: 0, mb: 0 }; }
+  for (const name of names) {
+    try {
+      const st = fs.statSync(path.join(CACHE, name));
+      if (st.isFile()) { files++; bytes += st.size; }
+    } catch (e) { /* 忽略 */ }
+  }
+  return { files, mb: Number((bytes / 1048576).toFixed(1)) };
+}
+
 /* ------------------------------------------------------- 浏览器（复用） */
 
 let browser = null;
@@ -116,7 +154,7 @@ async function getBrowser() {
   try { return await launching; } finally { launching = null; }
 }
 
-/* 并发闸门：同时最多 2 个页面，避免一次贴 20 条把机器打满 */
+/* 并发闸门：同时最多 MAX_PAGES 个页面，避免一次贴 20 条把机器打满 */
 let running = 0;
 const queue = [];
 function gate(fn) {
@@ -126,7 +164,7 @@ function gate(fn) {
   });
 }
 function pump() {
-  while (running < 2 && queue.length) {
+  while (running < MAX_PAGES && queue.length) {
     const job = queue.shift();
     running++;
     job.fn().then(job.resolve, job.reject).finally(() => { running--; pump(); });
@@ -583,6 +621,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (p === '/api/health') {
+    const cu = cacheUsage();
     return json(res, 200, {
       ok: true,
       service: 'douyin-resolver',
@@ -592,6 +631,9 @@ const server = http.createServer(async (req, res) => {
       browserReady: !!(browser && browser.isConnected && browser.isConnected()),
       queue: queue.length,
       running,
+      maxPages: MAX_PAGES,
+      cacheFiles: cu.files,
+      cacheMb: cu.mb,
       uptimeSec: Math.round(process.uptime())
     });
   }
@@ -722,9 +764,12 @@ const server = http.createServer(async (req, res) => {
   json(res, 404, { ok: false, error: '没有这个接口：' + p });
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-  log('解析服务已启动  http://127.0.0.1:' + PORT + '/');
+server.listen(PORT, HOST, () => {
+  log('解析服务已启动  http://' + (HOST === '0.0.0.0' ? '127.0.0.1' : HOST) + ':' + PORT + '/');
   log('ffmpeg: ' + (FFMPEG || '未找到（视频仍可解析，指标算不了）'));
+  log('并发页数 ' + MAX_PAGES + '   缓存保留 ' + CACHE_TTL_DAYS + ' 天');
+  sweepCache();
+  setInterval(sweepCache, 6 * 3600 * 1000).unref();
   log('等待请求…');
 });
 
