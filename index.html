@@ -2288,6 +2288,9 @@ function analysisToItem(a, link){
     author: a.author || '',
     publishTime: a.publishTime || '',
     metrics: a.metrics || null,
+    /* 运镜实测轨迹：逐镜的机位类型 + 位移/缩放量。和旧的手写 camera 字段分开存，
+       一个是算出来的，一个是人读帧写的，不能混。 */
+    camTrack: (m.camera && m.camera.ok) ? m.camera : null,
     missing: a.missing || [],
     factors: (a.factors || []).map(f=>({ dim: f.dim, claim: f.claim, evidence: f.evidence, src: f.src || 'measured' })),
     risks: []
@@ -2442,6 +2445,46 @@ function analysisBlocks(r){
     ${mt.silences && mt.silences.length ? `<div style="font-size:10.5px;color:var(--text-3);line-height:1.75;margin-top:5px">检测到 ${mt.silences.length} 段静音（超过 1 秒低于 -35dB），最长 ${Math.max.apply(null, mt.silences.map(s=>s.len))} 秒</div>` : ''}
   ` : '';
 
+  /* 运镜实测轨迹：逐镜看机位怎么动。和上面「运镜」那栏手写描述不是一回事 —— 
+     这一块是算出来的，每镜都有类型和量。 */
+  const ct = a.camTrack;
+  const CM = {
+    fixed:    { c:'#5b6472', bg:'#f3f4f6', t:'固定' },
+    pan:      { c:'#e0771a', bg:'#fff4e5', t:'摇镜' },
+    zoom:     { c:'#c92a63', bg:'#ffeaf2', t:'推拉' },
+    handheld: { c:'#2b7fff', bg:'#eaf2ff', t:'手持' },
+    unknown:  { c:'#9ca3af', bg:'#f9fafb', t:'未测出' }
+  };
+  const camTrackHtml = (ct && ct.shots && ct.shots.length) ? (()=>{
+    const s = ct.summary || {};
+    const bits = [];
+    if(s.fixed) bits.push(s.fixed + ' 镜固定');
+    if(s.pan) bits.push(s.pan + ' 镜摇镜');
+    if(s.zoom) bits.push(s.zoom + ' 镜推拉');
+    if(s.handheld) bits.push(s.handheld + ' 镜手持');
+    if(s.unknown) bits.push(s.unknown + ' 镜未测出');
+    return `
+    <div class="sec-title">运镜轨迹 <span style="font-weight:600;color:var(--text-3);font-size:11px">逐镜看背景位移算的</span></div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">
+      ${ct.shots.map(x=>{
+        const m = CM[x.type] || CM.unknown;
+        let extra = '';
+        if(x.type === 'pan') extra = Math.max(Math.abs(x.panXPct||0), Math.abs(x.panYPct||0)) + '%';
+        else if(x.type === 'zoom') extra = (x.zoomPct>0?'+':'') + x.zoomPct + '%';
+        return `<div title="${x.from}-${x.to} 秒 · ${x.label}${x.note?' · '+x.note:''}"
+          style="display:flex;align-items:center;gap:5px;background:${m.bg};border:1px solid ${m.c}22;border-radius:8px;padding:4px 8px">
+          <span style="font-size:10px;font-weight:700;color:${m.c};opacity:.75">镜${x.index}</span>
+          <span style="font-size:10.5px;font-weight:800;color:${m.c}">${m.t}</span>
+          ${extra ? `<span style="font-size:10px;font-weight:700;color:${m.c};opacity:.85;font-variant-numeric:tabular-nums">${extra}</span>` : ''}
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="font-size:11px;color:var(--text-2);line-height:1.85;background:var(--panel-2);border-radius:8px;padding:9px 12px">
+      全片 ${s.shotCount} 镜：${bits.join(' / ')}${s.maxShotMovePct !== null && s.maxShotMovePct !== undefined ? '，单镜最大机位位移 ' + s.maxShotMovePct + '% 画幅' : ''}。<br>
+      <span style="color:var(--text-3);font-size:10.5px">算法：按 ${ct.fps}fps 取 ${ct.frames} 帧灰度图，相邻帧做由粗到细的平移搜索并插值到亚像素；比对时只统计匹配最好的 70% 像素，所以「手在转手机」这类主体运动不会被算成机位在动。共 ${ct.pairsUsed} 个可比帧对，切点附近 ${ct.droppedCut} 对已剔除。</span>
+    </div>`;
+  })() : '';
+
   /* 算不出来的，直接说算不出来，不拿推断填空 */
   const missHtml = (a.missing && a.missing.length) ? `
     <div class="sec-title">这里没有的 <span style="font-weight:600;color:var(--text-3);font-size:11px">算不出来就说算不出来</span></div>
@@ -2486,7 +2529,7 @@ function analysisBlocks(r){
   ` : '';
 
   /* 有实测指标时用实测那套，避免和旧的 shots 块重复显示「平均镜头」 */
-  return visHtml + camHtml + (metHtml || shotHtml) + audHtml + facHtml + missHtml + rkHtml;
+  return visHtml + camHtml + (metHtml || shotHtml) + camTrackHtml + audHtml + facHtml + missHtml + rkHtml;
 }
 
 function mineTagStats(){
@@ -6199,6 +6242,7 @@ function applyAnalysisList(list){
         shots: item.shots || null,
         audio: item.audio || null,
         metrics: item.metrics || null,
+        camTrack: item.camTrack || null,
         missing: Array.isArray(item.missing) ? item.missing : [],
         factors: Array.isArray(item.factors) ? item.factors.filter(x=>x && (x.k || x.claim)).map(x=>({
           dim: x.dim || '其他',
