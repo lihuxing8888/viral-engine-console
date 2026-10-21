@@ -838,15 +838,18 @@ body{
 
       <!-- ---------- 同行爆款库 ---------- -->
       <section class="view" id="view-copyrival">
-        <div class="demo-bar"><b>数据口径</b><span>赞 / 评 / 藏 是手动录入的公开互动数据（抖音前台对所有人可见）；播放量按行业平均点赞率 5.5% 反推，<b style="background:none;color:inherit;padding:0">是估算值，不是平台真实值</b>；完播率与播放完成数属于作者后台私有数据，任何外部工具都拿不到，本页不展示。</span></div>
+        <div class="demo-bar"><b>数据口径</b><span>本页<b style="background:none;color:inherit;padding:0">只有赞 / 评 / 藏 / 转 四个数</b>，全部由你从抖音前台抄录，没抄就显示「未录入」，不做任何补值。播放量、完播率、点赞率属于作者后台私有或平台不公开数据，<b style="background:none;color:inherit;padding:0">本站不展示、不推算、不推测</b>。</span></div>
         <div class="card" style="margin-bottom:14px">
           <div class="card-body" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
             <div style="flex:1;min-width:230px">
               <div style="font-size:13px;font-weight:700;margin-bottom:3px">采集同行爆款文案</div>
-              <div style="font-size:11.5px;color:var(--text-3)">粘贴抖音分享链接或文案，系统自动解析入库并打标签</div>
+              <div style="font-size:11.5px;color:var(--text-3)">粘贴链接 + 抄一下前台的赞 / 评 / 藏 / 转，就是全部数据来源</div>
             </div>
-            <input class="input" id="rivalLink" placeholder="粘贴抖音视频链接…" style="flex:2;min-width:200px">
-            <input class="input" id="rivalLikes" placeholder="点赞数" inputmode="numeric" style="width:108px">
+            <input class="input" id="rivalLink" placeholder="粘贴抖音视频链接…" style="flex:2;min-width:170px">
+            <input class="input" id="rivalLikes" placeholder="赞" title="抖音前台公开的点赞数" inputmode="numeric" style="width:78px">
+            <input class="input" id="rivalComments" placeholder="评" title="抖音前台公开的评论数" inputmode="numeric" style="width:78px">
+            <input class="input" id="rivalCollects" placeholder="藏" title="抖音前台公开的收藏数" inputmode="numeric" style="width:78px">
+            <input class="input" id="rivalShares" placeholder="转" title="抖音前台公开的转发数" inputmode="numeric" style="width:78px">
             <button class="btn btn-primary" id="doCollect">采集入库</button>
           </div>
         </div>
@@ -1302,19 +1305,15 @@ body{
 
       <!-- ---------- 整体复盘 ---------- -->
       <section class="view" id="view-review">
-        <div class="demo-bar"><b>演示数据</b><span>本页指标为界面演示用，不代表真实经营情况。真实数据只来自「数据接入」导入的复盘表或抖店 / 千川授权。</span></div>
+        <div class="demo-bar"><b>数据口径</b><span>本页只复盘<b style="background:none;color:inherit;padding:0">千川计划报表里的真实字段</b>（消耗 / 成交 / 订单 / ROI / 退款 / 净成交）。播放量、完播率、点赞率属于内容侧指标，千川与抖店都不提供，本页不展示、不估算。</span></div>
         <div class="card" style="margin-bottom:14px">
-          <div class="card-head"><h3>复盘选择</h3><span class="desc">选择视频或时间范围，关联文案 / 素材 / 投放数据统一复盘</span></div>
+          <div class="card-head"><h3>复盘范围</h3><span class="desc">选一条计划看单条复盘，或直接看全店综合</span></div>
           <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-            <select class="select" id="revVideo" style="max-width:320px"></select>
-            <div class="tabs" id="revRange">
-              <div class="tab" data-r="7">近7天</div>
-              <div class="tab active" data-r="30">近30天</div>
-              <div class="tab" data-r="all">全部</div>
-            </div>
+            <select class="select" id="revVideo" style="max-width:360px"></select>
+            <span class="tag tag-ok" id="revWeekTag">—</span>
             <button class="btn btn-ai" id="doReview" style="margin-left:auto">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l1.9 5.1L19 9l-5.1 1.9L12 16l-1.9-5.1L5 9l5.1-1.9L12 2z"/></svg>
-              生成 AI 复盘报告
+              生成复盘报告
             </button>
           </div>
         </div>
@@ -1323,17 +1322,17 @@ body{
 
       <!-- ---------- 竞品情报 ---------- -->
       <section class="view" id="view-insight">
-        <div class="demo-bar"><b>演示数据</b><span>本页指标为界面演示用，不代表真实经营情况。真实数据只来自「数据接入」导入的复盘表或抖店 / 千川授权。</span></div>
+        <div class="demo-bar"><b>数据口径</b><span>本页所有数字都是<b style="background:none;color:inherit;padding:0">你本地库里的真实统计</b>（收录了几条、各账号几条、标签各几条），不做平台数据估算。本站不抓取抖音页面，同行数据只能靠你手动录入。</span></div>
         <div class="grid g3" style="margin-bottom:14px">
-          <div class="card"><div class="card-head"><h3>监控同行</h3><div class="right"><span class="tag tag-ok">8 个</span></div></div>
+          <div class="card"><div class="card-head"><h3>同行账号</h3><div class="right"><span class="tag tag-ok" id="monitorCount">—</span><span class="desc" style="margin-left:6px">列表显示前 8</span></div></div>
             <div class="card-body" id="monitorList" style="max-height:300px;overflow:auto"></div></div>
-          <div class="card"><div class="card-head"><h3>同行爆款频次</h3><span class="desc">近30天</span></div>
+          <div class="card"><div class="card-head"><h3>各钩子类型收录条数</h3><span class="desc">本地库 · 手动收录</span></div>
             <div class="card-body"><div id="chartRival" style="height:250px"></div></div></div>
-          <div class="card"><div class="card-head"><h3>热门选题分布</h3></div>
+          <div class="card"><div class="card-head"><h3>结构标签分布</h3><span class="desc">本地库统计</span></div>
             <div class="card-body"><div id="chartTopic" style="height:250px"></div></div></div>
         </div>
         <div class="card">
-          <div class="card-head"><h3>竞品爆款监控流</h3><span class="desc">实时抓取 · 自动打标签</span>
+          <div class="card-head"><h3>同行内容库</h3><span class="desc">手动收录 · 只含前台公开的赞 / 评 / 藏 / 转</span>
             <div class="right"><button class="btn btn-sm" id="refreshIntel">刷新</button></div></div>
           <div class="card-body" style="padding:14px 18px" id="intelFeed"></div>
         </div>
@@ -1383,6 +1382,10 @@ body{
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const fmt = n => n >= 10000 ? (n/10000).toFixed(1)+'万' : n.toLocaleString('zh-CN');
+/* 未录入一律显示「—」，绝不拿 0 冒充真值 */
+const fmtN = n => (n === null || n === undefined || isNaN(n)) ? '—' : fmt(n);
+/* 四项里有任意一项录过就算「有数」 */
+const hasStat = r => !!r && [r.likes, r.comments, r.collects, r.shares].some(v => v !== null && v !== undefined && !isNaN(v));
 const money = n => '¥' + n.toLocaleString('zh-CN',{maximumFractionDigits:0});
 const pct = n => n.toFixed(1) + '%';
 const rnd = (a,b) => Math.random()*(b-a)+a;
@@ -1479,39 +1482,19 @@ function inferStruct(text, tags){
   };
 }
 
-/* 生成带指标的同行文案 */
-/* 行业平均点赞率锚点：用于由点赞数反推播放量，是公开可见的唯一可靠锚点 */
-const RIVAL_LIKE_BASIS = 0.055;
-
-/* 确定性伪随机：同一索引每次刷新结果一致。数据可以"不确定来源"，但不能"刷新就变" */
-function detRand(i, salt, a, b){
-  const x = Math.sin((i + 1) * salt) * 10000;
-  return a + (x - Math.floor(x)) * (b - a);
-}
-
-let RIVAL = RIVAL_COPIES.map((c,i)=>{
-  /* 可确证字段：抖音前台对所有人公开的只有 赞 / 评 / 藏 / 转 */
-  const likes    = Math.round(detRand(i, 12.9898, 3200, 98000));
-  const comments = Math.round(likes * detRand(i, 78.233, 0.008, 0.030));
-  const collects = Math.round(likes * detRand(i, 37.719, 0.030, 0.120));
-  const shares   = Math.round(likes * detRand(i, 43.531, 0.006, 0.025));
-  /* 推算字段：播放量 = 点赞数 ÷ 行业平均点赞率。不是平台真实值，UI 上必须带 ≈ */
-  const playsEst = Math.round(likes / RIVAL_LIKE_BASIS);
-  return {
-    id:'R'+String(i+1).padStart(3,'0'),
-    title:c.t, text:c.x, tags:c.tags, cat:c.cat,
-    /* 合规：作者名脱敏，不展示真实昵称 */
-    author: '同行账号 ' + String.fromCharCode(65 + (i % 8)) + (Math.floor(i/8)+1),
-    struct: inferStruct(c.x, c.tags),
-    date: `2026-10-${String(Math.max(1,10 - (i%10))).padStart(2,'0')}`,
-    likes, comments, collects, shares,
-    playsEst, playsBasis: RIVAL_LIKE_BASIS,
-    plays: playsEst,                       /* 兼容旧引用，语义同 playsEst */
-    score: Math.round(60 + (c.x.length % 25) + (c.tags.length * 3)),
-    source: 'manual',
-    isHot: likes > 60000
-  };
-});
+/* 同行文案：只带「结构」，不带任何数字。
+   抖音前台对所有人公开的互动数据只有 赞 / 评 / 藏 / 转 四项，其余（播放量、完播率、点赞率）
+   都属于平台不公开数据。本站只留这四项，未录入就是 null —— 不生成、不推算、不用 0 冒充。 */
+let RIVAL = RIVAL_COPIES.map((c,i)=>({
+  id:'R'+String(i+1).padStart(3,'0'),
+  title:c.t, text:c.x, tags:c.tags, cat:c.cat,
+  /* 合规：作者名脱敏，不展示真实昵称 */
+  author: '同行账号 ' + String.fromCharCode(65 + (i % 8)) + (Math.floor(i/8)+1),
+  struct: inferStruct(c.x, c.tags),
+  date: `2026-10-${String(Math.max(1,10 - (i%10))).padStart(2,'0')}`,
+  likes:null, comments:null, collects:null, shares:null,
+  source:'pending'
+}));
 
 /* 合规：把原文转成"节选+省略"，不提供全文 */
 function maskedText(text){
@@ -1538,47 +1521,8 @@ let MINE = [
   {id:'M012',title:'对比实验版 · 1毫米vs3毫米',source:'待拍',text:'1 毫米和 3 毫米的壳，我用了半年才想明白。厚的那款护得住，但你天天想摘；薄的那款手感好，你也愿意一直戴着。装得住的壳才是好壳。',tags:['对比实验','痛点'],date:'2026-10-11'}
 ];
 
-/* 我的视频 + 数据 */
-const VIDEO_TITLES = [
-  ['iPhone Duo 开售前，我先把壳备好了','M001',7],
-  ['折叠屏换屏3200，这个壳39','M002',5],
-  ['39块的全包壳，敢用在两万的机器上吗','M003',4],
-  ['折叠屏最脆的不是屏，是中轴','M004',3],
-  ['同事笑我花两百买壳，直到他屏摔了','M006',6],
-  ['5个品牌的壳全买了，只留2个','M007',9],
-  ['我把壳拆了，中轴里藏着东西','M008',8],
-  ['透明壳用三个月，到底会不会黄','M009',11],
-  ['真皮壳没那么贵，别被官网价吓到','M010',2],
-  ['冬天手机冰手？毛绒壳实测','M011',1],
-  ['1毫米和3毫米的壳，差在哪','M012',10],
-  ['MateX7别乱买壳，中轴会进灰','',12]
-];
-
-let VIDEOS = VIDEO_TITLES.map((v,i)=>{
-  const plays = Math.round(rnd(28000, 3800000));
-  const complete = +rnd(16, 58).toFixed(1);
-  const likeRate = +rnd(1.2, 9.8).toFixed(1);
-  const orders = Math.round(plays * rnd(0.0004, 0.0075));
-  const price = pick([39,69,99,129,199,299,399,599]);
-  const gmv = orders * price;
-  const spend = Math.round(gmv * rnd(0.08, 0.42));
-  const roi = spend > 0 ? +(gmv/spend).toFixed(2) : +(rnd(1.2,6.5)).toFixed(2);
-  let grade = 'poor', gradeTxt='待优化';
-  if (complete>=42 && orders>plays*0.0025) { grade='hot'; gradeTxt='爆款'; }
-  else if (complete>=30 || orders>plays*0.0012) { grade='normal'; gradeTxt='一般'; }
-  return {
-    id:'V'+String(i+1).padStart(3,'0'),
-    title:v[0], copyId:v[1], daysAgo:v[2],
-    date:`2026-10-${String(Math.max(1,11-v[2])).padStart(2,'0')}`,
-    plays, complete, likeRate,
-    comments: Math.round(plays*rnd(0.0006,0.005)),
-    shares: Math.round(plays*rnd(0.0003,0.003)),
-    collect: Math.round(plays*rnd(0.0004,0.004)),
-    orders, price, gmv, spend, roi, grade, gradeTxt,
-    asset:'实拍素材 ' + Math.round(rnd(12,48)) + ' 条',
-    target:'精准投放 · ' + money(spend)
-  };
-});
+/* 视频级数据：千川与抖店都不提供，这里不再生成任何占位数字 */
+const VIDEOS = [];
 
 /* ---------- 状态 ---------- */
 const state = {
@@ -1845,7 +1789,7 @@ function renderRival(){
       <div class="cc-top">
         <div class="cc-ava">${r.author[0]}</div>
         <div class="cc-src">${r.author}</div>
-        ${r.isHot?'<span class="pill pill-hot" style="font-size:9.5px">爆款</span>':''}
+        ${hasStat(r)?'<span class="pill pill-hot" style="font-size:9.5px">已录数据</span>':'<span class="pill pill-mid" style="font-size:9.5px">未录数据</span>'}
         <div class="cc-time">${r.date}</div>
       </div>
       <div style="font-weight:700;font-size:12.5px;margin-bottom:8px">${r.title}</div>
@@ -1860,12 +1804,11 @@ function renderRival(){
       </div>
       <div class="cc-text" style="font-size:11.5px;color:var(--text-3);margin-bottom:9px">${maskedText(r.text)}</div>
       <div class="cc-metrics">
-        ${r.likes ? `<span title="手动录入的公开互动数据">赞 <b>${fmt(r.likes)}</b></span>
-        <span title="手动录入的公开互动数据">评 <b>${fmt(r.comments)}</b></span>
-        <span title="手动录入的公开互动数据">藏 <b>${fmt(r.collects)}</b></span>
-        <span title="按行业平均点赞率 ${(r.playsBasis*100).toFixed(1)}% 反推，非平台真实值">播 <b>≈${fmt(r.playsEst)}</b></span>
-        <span title="本站按结构完整度与互动量自算，非平台指标" style="margin-left:auto">结构分 <b style="color:var(--brand-2)">${r.score}</b></span>`
-        : `<span style="color:var(--text-3)">互动数据待补录 —— 填点赞数后自动推算播放量</span>`}
+        ${hasStat(r) ? `<span title="抖音前台公开可见">赞 <b>${fmtN(r.likes)}</b></span>
+        <span title="抖音前台公开可见">评 <b>${fmtN(r.comments)}</b></span>
+        <span title="抖音前台公开可见">藏 <b>${fmtN(r.collects)}</b></span>
+        <span title="抖音前台公开可见">转 <b>${fmtN(r.shares)}</b></span>`
+        : `<span style="color:var(--text-3)">互动数据未录入</span>`}
       </div>
       <div style="display:flex;gap:6px;margin-top:10px">
         <button class="btn btn-sm btn-ai" style="flex:1;justify-content:center" data-extract="${r.id}">提取爆款基因</button>
@@ -4237,15 +4180,19 @@ function rivalSeed(r){
     id:r.id, src:'同行', owner:r.author || '同行账号',
     text:`【${st.hook}】${st.hookTemplate}`,
     isStruct:true,
-    tags:r.tags || [], score:r.score || 80,
-    data:`赞 ${fmt(r.likes || 0)} · 播放 ≈${fmt(r.playsEst || 0)}（按 ${((r.playsBasis || 0.055) * 100).toFixed(1)}% 点赞率推算）`
+    tags:r.tags || [],
+    data: hasStat(r)
+      ? `赞 ${fmtN(r.likes)} · 评 ${fmtN(r.comments)} · 藏 ${fmtN(r.collects)} · 转 ${fmtN(r.shares)}`
+      : '互动数据未录入'
   };
 }
 function seedPool(){
-  if(state.seedTab==='rival') return state.rival.filter(r=>r.isHot).slice(0,8).map(rivalSeed);
+  /* 有真实互动数据的排前面，没有的排后面 —— 不再用任何"爆款值"判定 */
+  const ranked = [...state.rival].sort((a,b)=> (hasStat(b)?1:0) - (hasStat(a)?1:0));
+  if(state.seedTab==='rival') return ranked.slice(0,8).map(rivalSeed);
   if(state.seedTab==='mine') return state.mine.slice(0,8).map((r,i)=>({id:r.id,src:'我的',owner:'我的账号',text:r.text,tags:r.tags||[],score:88-i*2,data:r.source}));
   /* 混合 */
-  const a = state.rival.filter(r=>r.isHot).slice(0,4).map(rivalSeed);
+  const a = ranked.slice(0,4).map(rivalSeed);
   const b = state.mine.slice(0,4).map((r,i)=>({id:r.id,src:'我的',owner:'我的账号',text:r.text,tags:r.tags||[],score:88-i*2,data:r.source}));
   return [...a,...b];
 }
@@ -4398,155 +4345,144 @@ function renderGenResult(){
    渲染：复盘
    ========================================================= */
 function renderReviewSelect(){
-  $('#revVideo').innerHTML = `<option value="">全部视频（综合复盘）</option>`
-    + state.videos.map(v=>`<option value="${v.id}">${v.title}</option>`).join('');
+  const plans = (REAL && REAL.plans) || [];
+  $('#revVideo').innerHTML = `<option value="">全部计划（综合复盘）</option>`
+    + plans.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  const wk = $('#revWeekTag');
+  if(wk) wk.textContent = REAL ? ((REAL.meta||{}).curWeek || '—') : '未接入数据';
 }
 
-function revReport(videoId){
-  const v = videoId ? state.videos.find(x=>x.id===videoId) : null;
-  const copy = v && v.copyId ? state.mine.find(m=>m.id===v.copyId) : null;
+/* 只复盘真实计划数据。播放量 / 完播率 / 点赞率千川与抖店都不提供，这里不展示、不估算。 */
+function revReport(planId){
+  const c = (REAL && REAL.cur) || {}, p0 = (REAL && REAL.prev) || {};
+  const plans = (REAL && REAL.plans) || [];
+  if(!REAL) return `<div class="empty"><p>尚未接入经营数据</p><span>去「数据接入」导入复盘表</span></div>`;
 
-  if(!v){
-    const totalGmv = state.videos.reduce((a,x)=>a+x.gmv,0);
-    const totalSpend = state.videos.reduce((a,x)=>a+x.spend,0);
-    const hot = state.videos.filter(x=>x.grade==='hot');
-    const poor = state.videos.filter(x=>x.grade==='poor');
+  const delta = (a, b) => (a == null || b == null || b === 0) ? null : (a - b) / b * 100;
+
+  /* ---------- 单计划 ---------- */
+  if(planId){
+    const v = plans.find(x => x.id === planId);
+    if(!v) return `<div class="empty"><p>找不到这条计划</p><span>请重新选择</span></div>`;
+    const dRoi = delta(v.roi, c.roi);
+    const dRef = (v.refund1h == null || c.refundRate == null) ? null : (v.refund1h - c.refundRate) * 100;
+    const better = (v.roi || 0) >= (c.roi || 0);
     return `
-    <div class="grid g2" style="grid-template-columns:1fr 1fr;margin-bottom:14px">
-      <div class="card"><div class="card-head"><h3>整体表现</h3></div><div class="card-body">
-        <div class="kv"><span class="k">复盘范围</span><span class="v">近30天 · ${state.videos.length} 条视频</span></div>
-        <div class="kv"><span class="k">总成交额</span><span class="v">${money(totalGmv)}</span></div>
-        <div class="kv"><span class="k">总投放</span><span class="v">${money(totalSpend)}</span></div>
-        <div class="kv"><span class="k">整体 ROI</span><span class="v up">${(totalGmv/totalSpend).toFixed(2)}</span></div>
-        <div class="kv"><span class="k">爆款率</span><span class="v">${pct(hot.length/state.videos.length*100)}</span></div>
-        <div class="kv"><span class="k">待优化占比</span><span class="v down">${pct(poor.length/state.videos.length*100)}</span></div>
-      </div></div>
-      <div class="card"><div class="card-head"><h3>投放分布</h3></div><div class="card-body"><div id="chartRev" style="height:210px"></div></div></div>
+    <div class="grid g4" style="margin-bottom:14px">
+      ${[['消耗', money(v.spend), '占全店 ' + ((v.spendShare||0)*100).toFixed(1) + '%'],
+         ['成交金额', money(v.gmv), '占全店 ' + ((v.gmvShare||0)*100).toFixed(1) + '%'],
+         ['出单数', Math.round(v.orders||0) + ' 单', '订单成本 ' + money(v.cpa)],
+         ['ROI', (v.roi||0).toFixed(2), '净 ROI ' + (v.netRoi||0).toFixed(2)]].map(([k,val,sub])=>`
+        <div class="stat"><div class="lbl">${k}</div><div class="val">${val}</div>
+          <div class="lbl" style="margin-top:2px">${sub}</div></div>`).join('')}
     </div>
     <div class="card" style="margin-bottom:14px">
-      <div class="card-head"><h3>AI 综合复盘结论</h3><div class="right"><span class="tag tag-ai">智能生成</span></div></div>
+      <div class="card-head"><h3>计划复盘</h3><div class="right">${videoGradePill(v.verdict)}</div></div>
       <div class="card-body">
-        <div class="ai-box">
-          <h4>一句话总结</h4>
-          <p>本期账号<b>流量结构健康但转化上限未打满</b>：完播率已达行业中上水平（均值 ${(state.videos.reduce((a,x)=>a+x.complete,0)/state.videos.length).toFixed(1)}%），但 ROI 表现分化明显——头部 ${hot.length} 条视频贡献了主要 GMV，其余视频仍在"有流量没转化"区间。</p>
+        <div class="kv"><span class="k">与本店整体 ROI 对比</span>
+          <span class="v" style="color:${better?'#0aa06e':'#ff2c55'}">
+            ${(v.roi||0).toFixed(2)} : ${(c.roi||0).toFixed(2)}（${dRoi==null?'—':fmtChg(dRoi)}）</span></div>
+        <div class="kv"><span class="k">1 小时退款率</span>
+          <span class="v" style="color:${dRef==null?'var(--text-3)':(dRef<0?'#0aa06e':'#ff2c55')}">
+            ${((v.refund1h||0)*100).toFixed(1)}%${dRef==null?'':'（全店 ' + ((c.refundRate||0)*100).toFixed(1) + '%，差 ' + fmtChg(dRef,'pp') + '）'}</span></div>
+        <div class="kv"><span class="k">结算率</span><span class="v">${((v.settleRate||0)*100).toFixed(1)}%</span></div>
+        <div class="kv"><span class="k">净成交金额</span><span class="v">${money(v.netGmv)}</span></div>
+        <div class="kv"><span class="k">支付成交</span><span class="v">${money(v.payGmv)}</span></div>
+        <div style="font-size:10.5px;color:var(--text-3);line-height:1.75;margin-top:8px;background:var(--panel-2);border-radius:8px;padding:9px 11px">
+          以上字段全部来自千川计划报表。播放量、完播率、点赞率属于内容侧指标，千川与抖店都不提供，这里既不展示也不估算。
         </div>
-        <div class="sec-title">成功因子（可复制）</div>
-        <ul style="margin-left:16px;font-size:12.5px;line-height:1.9">
-          <li><b>强钩子 + 具体数据</b>：爆款视频开头普遍在前3秒抛出结论或冲突，配合实测数字</li>
-          <li><b>素人口播感</b>：非精致拍摄的互动率更高，用户信任成本低</li>
-          <li><b>价格锚点前置</b>：先给预期价再给实价，转化路径更短</li>
-        </ul>
-        <div class="sec-title">失败因子（要规避）</div>
-        <ul style="margin-left:16px;font-size:12.5px;line-height:1.9">
-          <li>开头铺垫超过5秒 → 3秒留存直接掉到 30% 以下</li>
-          <li>商品露出过晚（>25秒）→ 流量来了但没承接</li>
-          <li>投放与转化不匹配：部分视频投了钱但出单低，ROI 低于 1.5</li>
-        </ul>
-        <div class="sec-title">行动清单</div>
-        <div class="timeline">
-          <div class="tl-item ok"><div class="tl-t">立即（本周）</div><div class="tl-h">复制爆款结构，批量生产</div>
-            <div class="tl-d">从 ${hot.length} 条爆款中提取3套脚本结构，各产出2条变体，用同样钩子降低试错成本。</div></div>
-          <div class="tl-item"><div class="tl-t">短期（2周内）</div><div class="tl-h">清理低效投放</div>
-            <div class="tl-d">ROI < 1.5 的视频暂停投放，把预算集中到 ROI > 3 的视频上，或改用自然流测试。</div></div>
-          <div class="tl-item ai"><div class="tl-t">持续</div><div class="tl-h">建立"文案-素材-投放"对照组</div>
-            <div class="tl-d">同素材配不同钩子，同钩子配不同素材，跑 A/B 测试，沉淀出你自己的爆款公式库。</div></div>
-        </div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-head"><h3>单条视频复盘明细</h3><span class="desc">点击查看每条视频的完整链路</span></div>
-      <div class="card-body" style="padding:0">
-        <table class="tbl"><thead><tr><th>视频</th><th class="num">完播率</th><th class="num">出单</th><th class="num">ROI</th><th>结论</th></tr></thead>
-        <tbody>${[...state.videos].sort((a,b)=>b.gmv-a.gmv).slice(0,8).map(x=>`
-          <tr data-video="${x.id}">
-            <td><div class="vtitle">${x.title}</div></td>
-            <td class="num">${pct(x.complete)}</td>
-            <td class="num"><b>${x.orders}</b></td>
-            <td class="num"><span class="${x.roi>=2?'up':'down'}" style="font-weight:700">${x.roi.toFixed(2)}</span></td>
-            <td style="font-size:12px;color:var(--text-2)">${x.grade==='hot'?'钩子强、转化好，建议复制':x.grade==='normal'?'中规中矩，改开头有望突破':'开头偏弱，商品露出太晚'}</td>
-          </tr>`).join('')}</tbody></table>
       </div>
     </div>`;
   }
 
-  /* 单条复盘 */
-  const typeGood = v.grade!=='poor';
+  /* ---------- 全店综合 ---------- */
+  const dGmv = delta(c.gmv, p0.gmv), dSpend = delta(c.spend, p0.spend), dRoi = delta(c.roi, p0.roi);
+  const dRef = (c.refundRate == null || p0.refundRate == null) ? null : (c.refundRate - p0.refundRate) * 100;
+  const byGmv = [...plans].sort((a,b)=>(b.gmv||0)-(a.gmv||0));
+  const zero = plans.filter(x=>(x.gmv||0) <= 0 && (x.spend||0) > 0);
+  const weak = plans.filter(x=>(x.roi||0) > 0 && (x.roi||0) < 2);
+  const cons = (REAL.conclusion || []);
+
   return `
-  <div class="grid g4" style="margin-bottom:14px">
-    ${[['播放量',fmt(v.plays),''],['完播率',pct(v.complete),''],['出单数',v.orders,''],['成交额',money(v.gmv),'']].map(([k,val])=>`
-      <div class="stat"><div class="lbl">${k}</div><div class="val">${val}</div></div>`).join('')}
+  <div class="grid g2" style="grid-template-columns:1fr 1fr;margin-bottom:14px">
+    <div class="card"><div class="card-head"><h3>本周 vs 上周</h3><span class="desc">${(REAL.meta||{}).curWeek||''}</span></div>
+      <div class="card-body">
+        <div class="kv"><span class="k">成交金额</span>
+          <span class="v" style="color:${dGmv<0?'#ff2c55':'#0aa06e'}">${money(c.gmv)}（${dGmv==null?'—':fmtChg(dGmv)}）</span></div>
+        <div class="kv"><span class="k">成交订单</span><span class="v">${(c.orders||0).toLocaleString('zh-CN')} 单</span></div>
+        <div class="kv"><span class="k">投放消耗</span>
+          <span class="v" style="color:var(--text-3)">${money(c.spend)}（${dSpend==null?'—':fmtChg(dSpend)}）</span></div>
+        <div class="kv"><span class="k">整体 ROI</span>
+          <span class="v" style="color:${dRoi<0?'#ff2c55':'#0aa06e'}">${(c.roi||0).toFixed(2)}（${dRoi==null?'—':fmtChg(dRoi)}）</span></div>
+        <div class="kv"><span class="k">退款率</span>
+          <span class="v" style="color:${dRef>0?'#ff2c55':'#0aa06e'}">${((c.refundRate||0)*100).toFixed(2)}%（${dRef==null?'—':fmtChg(dRef,'pp')}）</span></div>
+        <div class="kv"><span class="k">净成交金额</span><span class="v">${money(c.netGmv)}</span></div>
+        <div class="kv"><span class="k">出单计划 / 商品</span><span class="v">${Math.round(c.plans||0)} 个 / ${Math.round(c.products||0)} 个</span></div>
+      </div></div>
+    <div class="card"><div class="card-head"><h3>投放分布</h3><span class="desc">按计消耗占比</span></div>
+      <div class="card-body"><div id="chartRev" style="height:250px"></div></div></div>
   </div>
+
   <div class="card" style="margin-bottom:14px">
-    <div class="card-head"><h3>《${v.title}》全链路复盘</h3>
-      <div class="right">${videoGradePill(v.grade,v.gradeTxt)}</div></div>
+    <div class="card-head"><h3>本期结论</h3><span class="desc">由复盘表数据直接得出，非模型编造</span></div>
     <div class="card-body">
-      <div class="vs">
-        <div class="vs-col ${typeGood?'good':'bad'}">
-          <h5>${typeGood?'✅ 有效做法':'⚠️ 问题定位'}</h5>
-          ${typeGood?`<ul style="margin-left:15px;font-size:12.5px;line-height:1.85">
-            <li>开头3秒直接给结论</li><li>商品在第${Math.round(rnd(6,12))}秒出现，及时承接</li>
-            <li>评论区主动引导下单，转化率高</li></ul>`
-          :`<ul style="margin-left:15px;font-size:12.5px;line-height:1.85">
-            <li>开头铺垫${Math.round(rnd(5,9))}秒才进入主题，3秒留存偏低</li>
-            <li>商品露出在第${Math.round(rnd(22,35))}秒，流量浪费</li>
-            <li>结尾无明确行动指令</li></ul>`}
+      ${cons.map(x=>`
+      <div style="padding:11px 0;border-bottom:1px solid var(--line-2)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+          <b style="font-size:12.5px">${x.module}</b>
+          <span class="pill ${x.priority==='高'?'pill-poor':x.priority==='中'?'pill-mid':'pill-hot'}" style="font-size:9.5px">${x.priority}优先</span>
         </div>
-        <div style="font-size:22px;color:var(--text-3)">→</div>
-        <div class="vs-col ${typeGood?'good':'bad'}">
-          <h5>AI 改造方案</h5>
-          <ul style="margin-left:15px;font-size:12.5px;line-height:1.85">
-            <li>把"${pick(['这个价格我怀疑标错了','我劝你先别买','用了3年才发现'])}"提到第0秒</li>
-            <li>商品露出提前到第8秒</li>
-            <li>结尾补一句明确指令</li>
-            <li>同素材再出2条不同钩子做A/B</li>
-          </ul>
-        </div>
-      </div>
-      <div class="sec-title">数据链路</div>
-      <div class="timeline">
-        <div class="tl-item ok"><div class="tl-t">① 文案</div><div class="tl-h">${copy?copy.title:'未关联文案'}</div>
-          <div class="tl-d">${copy?copy.text.slice(0,90)+'…':'这条视频没有关联文案，建议补充以便归因'}</div></div>
-        <div class="tl-item"><div class="tl-t">② 视频素材</div><div class="tl-h">${v.asset}</div>
-          <div class="tl-d">拍摄素材 ${v.asset.replace(/\D/g,'')} 条，成片时长约 ${Math.round(rnd(25,70))} 秒，出镜方式：口播 + 产品特写</div></div>
-        <div class="tl-item"><div class="tl-t">③ 投放数据</div><div class="tl-h">${v.target}</div>
-          <div class="tl-d">消耗 ${money(v.spend)}，成交 ${money(v.gmv)}，ROI <b class="${v.roi>=2?'up':'down'}">${v.roi.toFixed(2)}</b>，
-            ${v.roi>=2?'投放效率良好，可加预算':'投放效率偏低，建议优化素材或降低出价'}</div></div>
-        <div class="tl-item ai"><div class="tl-t">④ 结果归因</div><div class="tl-h">${v.gradeTxt}</div>
-          <div class="tl-d">完播率 ${pct(v.complete)}（行业参考 35%），点赞率 ${pct(v.likeRate)}，评论 ${fmt(v.comments)} 条。
-            ${v.complete>=42?'流量承接能力强，是内容与投放匹配的典型。':'内容本身留存不足，导致投放成本被抬高。'}</div></div>
-      </div>
+        <div style="font-size:12px;color:var(--text-2);line-height:1.75;margin-bottom:5px">${x.finding}</div>
+        <div style="font-size:12px;color:var(--text);line-height:1.75;background:var(--panel-2);border-radius:8px;padding:8px 10px">
+          <b>建议：</b>${x.action}</div>
+      </div>`).join('') || '<div class="empty"><p>暂无可复用的结论文本</p></div>'}
     </div>
   </div>
+
   <div class="card">
-    <div class="card-head"><h3>AI 复盘结论</h3><div class="right"><span class="tag tag-ai">智能</span></div></div>
-    <div class="card-body">
-      <div class="ai-box">
-        <h4>核心判断</h4>
-        <p>这条视频${v.grade==='hot'?'的<b>投产比已经跑通</b>，属于可复制的模板。':'的<b>主要瓶颈在内容留存</b>，投放效率被内容拖累。'}
-        ${v.grade==='hot'?`建议：把这套"钩子+素材+投放"组合固化下来，至少再产 3 条同结构视频，同时逐步提高投放预算。`
-        :`建议：先不要加投放，优先重剪开头 5 秒，用同样的素材和文案结构做 A/B 测试，完播率过 35% 再谈放量。`}</p>
-      </div>
+    <div class="card-head"><h3>计划明细</h3><span class="desc">按成交额排序，点击查看单计划复盘</span></div>
+    <div class="card-body" style="padding:0">
+      <table class="tbl"><thead><tr>
+        <th>计划</th><th class="num">消耗</th><th class="num">成交</th>
+        <th class="num">ROI</th><th class="num">1h退款</th><th>结论</th>
+      </tr></thead>
+      <tbody>${byGmv.slice(0,8).map(x=>`
+        <tr data-plan="${x.id}" style="cursor:pointer">
+          <td><div class="vtitle">${x.name}</div></td>
+          <td class="num">${money(x.spend)}</td>
+          <td class="num" style="font-weight:700">${money(x.gmv)}</td>
+          <td class="num"><span style="font-weight:700;color:${(x.roi||0)>=2?'#0aa06e':'#ff2c55'}">${(x.roi||0).toFixed(2)}</span></td>
+          <td class="num">${((x.refund1h||0)*100).toFixed(1)}%</td>
+          <td>${videoGradePill(x.verdict)}</td>
+        </tr>`).join('')}</tbody></table>
     </div>
+  </div>
+
+  <div style="font-size:10.5px;color:var(--text-3);line-height:1.75;margin-top:12px">
+    数据口径：${(REAL.meta||{}).source||'复盘表'}；${(REAL.meta||{}).caliber||''}。全部字段来自你的复盘表，
+    本页不含任何估算或占位数字。零成交计划 ${zero.length} 个、ROI 低于 2 的计划 ${weak.length} 个。
   </div>`;
 }
+
 
 /* =========================================================
    渲染：竞品情报
    ========================================================= */
 function renderInsight(){
   /* 合规：监控账号也用脱敏代号 */
-  const accounts = [...new Set(state.rival.map(r=>r.author))].slice(0,8);
+  const allAccounts = [...new Set(state.rival.map(r=>r.author))];
+  const accounts = allAccounts.slice(0,8);
   $('#monitorList').innerHTML = accounts.map(a=>{
     const cnt = state.rival.filter(r=>r.author===a).length;
     return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line-2)">
       <div class="avatar" style="width:26px;height:26px;font-size:11px;background:linear-gradient(135deg,#ffb199,#ff6b6b)">${a[0]}</div>
       <div style="flex:1"><div style="font-size:12.5px;font-weight:600">${a}</div>
-        <div style="font-size:10.5px;color:var(--text-3)">收录 ${cnt} 条 · 爆款 ${state.rival.filter(r=>r.author===a&&r.isHot).length} 条</div></div>
+        <div style="font-size:10.5px;color:var(--text-3)">收录 ${cnt} 条 · 已录互动数据 ${state.rival.filter(r=>r.author===a&&hasStat(r)).length} 条</div></div>
       <span class="tag tag-ok">监控中</span>
     </div>`;
   }).join('');
 
-  const feed = [...state.rival].sort((a,b)=>b.plays-a.plays).slice(0,6);
+  const feed = [...state.rival].sort((a,b)=> (hasStat(b)?1:0)-(hasStat(a)?1:0) || (b.likes||0)-(a.likes||0)).slice(0,6);
   $('#intelFeed').innerHTML = feed.map(r=>`
     <div style="display:flex;gap:13px;padding:12px 0;border-bottom:1px solid var(--line-2)">
       <div style="width:34px;height:34px;border-radius:9px;flex-shrink:0;background:linear-gradient(135deg,#ffd6a5,#ff8f6b);
@@ -4554,7 +4490,7 @@ function renderInsight(){
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
           <b style="font-size:12.5px">${r.author}</b>
-          ${r.isHot?'<span class="pill pill-hot" style="font-size:9.5px">爆款</span>':''}
+          ${hasStat(r)?'<span class="pill pill-hot" style="font-size:9.5px">已录数据</span>':''}
           <span style="font-size:10.5px;color:var(--text-3);margin-left:auto">${r.date}</span>
         </div>
         <div style="font-size:12.5px;color:var(--text-2);line-height:1.6;margin-bottom:6px">
@@ -4562,15 +4498,44 @@ function renderInsight(){
           <span style="margin-left:6px">${r.struct.hookTemplate}</span>
         </div>
         <div style="display:flex;gap:14px;font-size:11px;color:var(--text-3)">
-          <span title="手动录入的公开互动数据">赞 <b style="color:var(--text)">${fmt(r.likes || 0)}</b></span>
-          <span>评 <b style="color:var(--text)">${fmt(r.comments || 0)}</b></span>
-          <span>藏 <b style="color:var(--text)">${fmt(r.collects || 0)}</b></span>
-          <span title="按行业平均点赞率反推的估算值">播 <b style="color:var(--text)">≈${fmt(r.playsEst || 0)}</b></span>
-          <span title="本站自算的结构完整度分，非平台指标">结构分 <b style="color:var(--brand-2)">${r.score}</b></span>
+          ${hasStat(r) ? `<span title="抖音前台公开可见">赞 <b style="color:var(--text)">${fmtN(r.likes)}</b></span>
+          <span>评 <b style="color:var(--text)">${fmtN(r.comments)}</b></span>
+          <span>藏 <b style="color:var(--text)">${fmtN(r.collects)}</b></span>
+          <span>转 <b style="color:var(--text)">${fmtN(r.shares)}</b></span>`
+          : `<span style="color:var(--text-3)">互动数据未录入</span>`}
           <span style="margin-left:auto;display:flex;gap:4px">${r.tags.slice(0,2).map(t=>`<span class="tag">${t}</span>`).join('')}</span>
         </div>
       </div>
     </div>`).join('');
+
+  const mc = $('#monitorCount'); if(mc) mc.textContent = allAccounts.length + ' 个';
+  updateIntelCharts();
+}
+
+/* 竞品情报的图表只用本地库真实计数，不引用任何平台数据 */
+function updateIntelCharts(){
+  if(typeof charts === 'undefined' || !charts) return;
+  /* 按钩子类型统计本地库收录条数 —— 这是本库真实的结构分类计数 */
+  const byHook = {};
+  state.rival.forEach(r => {
+    const h = (r.struct && r.struct.hook) || '未分类';
+    byHook[h] = (byHook[h] || 0) + 1;
+  });
+  const hookArr = Object.entries(byHook).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const tagArr = rivalTagStats().slice(0,5);
+  const PALETTE = ['#ff2c55','#ff7a45','#7b5cff','#4aa8ff','#ffc53d'];
+
+  if(charts.rival && hookArr.length){
+    charts.rival.setOption({
+      yAxis:{ type:'category', data:hookArr.map(x=>x[0]) },
+      series:[{ type:'bar', data:hookArr.map(x=>x[1]) }]
+    });
+  }
+  if(charts.topic && tagArr.length){
+    charts.topic.setOption({
+      series:[{ type:'pie', data: tagArr.map((x,i)=>({ value:x[1], name:x[0], itemStyle:{ color:PALETTE[i % PALETTE.length] } })) }]
+    });
+  }
 }
 
 /* =========================================================
@@ -4645,7 +4610,7 @@ function rivalDrawer(id){
   const r = state.rival.find(x=>x.id===id); if(!r) return;
   const html = `
     <div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:12px">
-      <span class="tag tag-ai">爆款值 ${r.score}</span>
+      <span class="tag ${hasStat(r)?'tag-ok':'tag-ai'}">${hasStat(r)?'互动数据已录入':'互动数据未录入'}</span>
       ${r.tags.map(t=>`<span class="tag">${t}</span>`).join('')}
       <span class="tag">${r.cat}</span>
     </div>
@@ -4688,16 +4653,15 @@ function rivalDrawer(id){
       为保护原作者权益，此处仅展示部分内容。完整原文不对外提供。
     </div>
 
-    <div class="sec-title">数据表现</div>
-    <div class="kv"><span class="k">点赞数 <span style="color:var(--ok);font-size:10px">可确证</span></span><span class="v">${fmt(r.likes || 0)}</span></div>
-    <div class="kv"><span class="k">评论数 <span style="color:var(--ok);font-size:10px">可确证</span></span><span class="v">${fmt(r.comments || 0)}</span></div>
-    <div class="kv"><span class="k">收藏数 <span style="color:var(--ok);font-size:10px">可确证</span></span><span class="v">${fmt(r.collects || 0)}</span></div>
-    <div class="kv"><span class="k">分享数 <span style="color:var(--ok);font-size:10px">可确证</span></span><span class="v">${fmt(r.shares || 0)}</span></div>
-    <div class="kv"><span class="k">播放量 <span style="color:var(--warn);font-size:10px">推算</span></span><span class="v">≈${fmt(r.playsEst || 0)}</span></div>
-    <div class="kv"><span class="k">完播率</span><span class="v" style="color:var(--text-3)">不可得</span></div>
-    <div style="font-size:10.5px;color:var(--text-3);line-height:1.7;margin-top:2px">
-      播放量 = 点赞数 ÷ 行业平均点赞率 ${((r.playsBasis || 0.055) * 100).toFixed(1)}%，仅为区间估算，误差可能达数倍。
-      完播率属于作者后台私有数据，抖音不对外公开，任何第三方工具给出的「同行完播率」都是模型猜测，本站不做这种展示。
+    <div class="sec-title">互动数据（本页唯一的数据来源）</div>
+    ${hasStat(r) ? `
+    <div class="kv"><span class="k">点赞数 <span style="color:var(--ok);font-size:10px">前台公开</span></span><span class="v">${fmtN(r.likes)}</span></div>
+    <div class="kv"><span class="k">评论数 <span style="color:var(--ok);font-size:10px">前台公开</span></span><span class="v">${fmtN(r.comments)}</span></div>
+    <div class="kv"><span class="k">收藏数 <span style="color:var(--ok);font-size:10px">前台公开</span></span><span class="v">${fmtN(r.collects)}</span></div>
+    <div class="kv"><span class="k">转发数 <span style="color:var(--ok);font-size:10px">前台公开</span></span><span class="v">${fmtN(r.shares)}</span></div>`
+    : `<div style="font-size:12px;color:var(--text-3);padding:6px 0 10px">这一条还没抄互动数据。回到列表，在采集条里填一下赞 / 评 / 藏 / 转就行。</div>`}
+    <div style="font-size:10.5px;color:var(--text-3);line-height:1.75;margin-top:6px;background:var(--panel-2);border-radius:8px;padding:9px 11px">
+      这四项是抖音前台对所有人公开的，可以逐个核对。播放量、完播率、点赞率属于作者后台私有或平台不公开数据——任何第三方工具给出的「同行播放量 / 完播率」都是估算，本站不展示、不推算、不推测，宁可留空。
     </div>
 
     <div class="sec-title">AI 拆解：这条为什么能爆</div>
@@ -4717,7 +4681,9 @@ function rivalDrawer(id){
       </button>
       <button class="btn btn-sm" data-goto="generator">用这套结构生成我的脚本</button>
     </div>`;
-  openDrawer(html, r.title, `${r.author} · ${r.date} · 赞 ${fmt(r.likes || 0)} · 播放 ≈${fmt(r.playsEst || 0)}`);
+  openDrawer(html, r.title, hasStat(r)
+    ? `${r.author} · ${r.date} · 赞 ${fmtN(r.likes)} · 评 ${fmtN(r.comments)} · 藏 ${fmtN(r.collects)} · 转 ${fmtN(r.shares)}`
+    : `${r.author} · ${r.date} · 互动数据未录入`);
 }
 
 function mineDrawer(id){
@@ -4812,7 +4778,7 @@ function initCharts(){
     tooltip:{trigger:'axis',axisPointer:{type:'shadow'},backgroundColor:'#fff',borderColor:'#e8eaee',textStyle:{color:'#1a1d24',fontSize:12}},
     xAxis:{type:'value',splitLine:{lineStyle:{color:'#f0f2f5'}},axisLabel:{color:'#9aa1ad',fontSize:10.5}},
     yAxis:{type:'category',data:[...new Set(state.rival.map(r=>r.author))].slice(0,6),axisLine:{show:false},axisTick:{show:false},axisLabel:{color:'#5b6270',fontSize:11}},
-    series:[{type:'bar',data:[7,6,5,4,3,3],barWidth:13,
+    series:[{type:'bar',data:[],barWidth:13,
       itemStyle:{borderRadius:[0,6,6,0],color:{type:'linear',x:0,y:0,x2:1,y2:0,colorStops:[{offset:0,color:'#ffd0dc'},{offset:1,color:'#ff2c55'}]}}}]
   });
 
@@ -4822,13 +4788,7 @@ function initCharts(){
     legend:{orient:'vertical',right:0,top:'center',itemWidth:9,itemHeight:9,textStyle:{color:'#5b6270',fontSize:11}},
     series:[{type:'pie',radius:['46%','70%'],center:['36%','50%'],avoidLabelOverlap:true,
       itemStyle:{borderColor:'#fff',borderWidth:2},label:{show:false},
-      data:[
-        {value:28,name:'价格对比',itemStyle:{color:'#ff2c55'}},
-        {value:22,name:'痛点场景',itemStyle:{color:'#ff7a45'}},
-        {value:18,name:'实测测评',itemStyle:{color:'#7b5cff'}},
-        {value:16,name:'反常识',itemStyle:{color:'#4aa8ff'}},
-        {value:16,name:'剧情种草',itemStyle:{color:'#ffc53d'}}
-      ]}]
+      data:[]}]
   });
 
   let _rz;
@@ -5074,12 +5034,7 @@ document.addEventListener('click', e=>{
   renderSeeds();
 });
 
-/* 复盘范围 */
-$('#revRange').addEventListener('click', e=>{
-  const tab = e.target.closest('.tab'); if(!tab) return;
-  $$('#revRange .tab').forEach(x=>x.classList.remove('active'));
-  tab.classList.add('active');
-});
+/* 复盘范围（快照为固定的两个自然周，不再提供无实际作用的范围切换） */
 
 /* 复盘选择视频 */
 $('#revVideo').addEventListener('change', ()=>{
@@ -5091,32 +5046,42 @@ $('#doReview').addEventListener('click', ()=>{
   const id = $('#revVideo').value;
   toast('正在生成复盘报告…','ai');
   $('#reviewResult').innerHTML = `<div class="gen-status" style="margin-bottom:14px">
-    <span class="spinner spinner-dark"></span>AI 正在归因：文案 → 素材 → 投放 → 转化…</div>`;
+    <span class="spinner spinner-dark"></span>AI 正在归因：投放消耗 → 成交 → 退款 → 净成交…</div>`;
   setTimeout(()=>{
     renderReviewResult(id);
     toast('复盘报告已生成');
-  }, 1500);
+  }, 1200);
+});
+
+/* 点击计划行 → 直接看单计划复盘 */
+document.addEventListener('click', e=>{
+  const tr = e.target.closest('#reviewResult tr[data-plan]');
+  if(!tr) return;
+  const id = tr.dataset.plan;
+  const sel = $('#revVideo');
+  if(sel) sel.value = id;
+  renderReviewResult(id);
 });
 
 function renderReviewResult(id){
   $('#reviewResult').innerHTML = revReport(id);
-  setTimeout(()=>{
-    if(!id && $('#chartRev')){
-      const c = echarts.init($('#chartRev'));
-      c.setOption({
-        tooltip:{trigger:'item',backgroundColor:'#fff',borderColor:'#e8eaee',textStyle:{color:'#1a1d24',fontSize:12}},
-        legend:{bottom:0,itemWidth:9,itemHeight:9,textStyle:{color:'#5b6270',fontSize:11}},
-        series:[{type:'pie',radius:['48%','72%'],center:['50%','44%'],
-          itemStyle:{borderColor:'#fff',borderWidth:2},label:{show:false},
-          data:[
-            {value:38,name:'爆款视频',itemStyle:{color:'#ff2c55'}},
-            {value:34,name:'常规视频',itemStyle:{color:'#7b5cff'}},
-            {value:16,name:'待优化',itemStyle:{color:'#ffc53d'}},
-            {value:12,name:'未投放',itemStyle:{color:'#4aa8ff'}}
-          ]}]
-      });
-    }
-  },30);
+  if(!id && $('#chartRev') && REAL){
+    const plans = [...REAL.plans].sort((a,b)=>(b.spend||0)-(a.spend||0));
+    const top5 = plans.slice(0,5);
+    const rest = plans.slice(5).reduce((a,x)=>a+(x.spend||0),0);
+    const P = ['#ff2c55','#ff7a45','#7b5cff','#4aa8ff','#ffc53d','#cfd4dd'];
+    const data = top5.map((x,i)=>({ value:+(x.spend||0).toFixed(2), name:String(x.name).slice(0,12), itemStyle:{color:P[i]}}));
+    if(rest > 0) data.push({ value:+rest.toFixed(2), name:'其余 ' + Math.max(0,plans.length-5) + ' 个计划', itemStyle:{color:P[5]}});
+    const c = echarts.getInstanceByDom($('#chartRev')) || echarts.init($('#chartRev'));
+    c.setOption({
+      tooltip:{trigger:'item',backgroundColor:'#fff',borderColor:'#e8eaee',textStyle:{color:'#1a1d24',fontSize:12},
+        formatter: p => p.name + '<br/>' + Math.round(p.value).toLocaleString('zh-CN') + ' 元 · ' + p.percent + '%'},
+      legend:{bottom:0,itemWidth:9,itemHeight:9,itemGap:9,textStyle:{color:'#5b6270',fontSize:10.5}},
+      series:[{type:'pie',radius:['45%','68%'],center:['50%','42%'],avoidLabelOverlap:true,
+        itemStyle:{borderColor:'#fff',borderWidth:2},label:{show:false},data}]
+    }, true);
+    c.resize();
+  }
 }
 
 /* 生成脚本 */
@@ -5157,8 +5122,16 @@ document.addEventListener('click', e=>{
 $('#doCollect').addEventListener('click', ()=>{
   const val = $('#rivalLink').value.trim();
   if(!val){ toast('请先粘贴抖音视频链接'); return; }
-  const likesRaw = (($('#rivalLikes') && $('#rivalLikes').value) || '').replace(/[^\d]/g, '');
-  const likes = likesRaw ? parseInt(likesRaw, 10) : 0;
+  /* 只收用户从抖音前台抄来的四个数；没填就是 null，绝不用 0 或随机数顶上 */
+  const readNum = sel => {
+    const el = $(sel); if(!el) return null;
+    const raw = String(el.value || '').replace(/[^\d]/g, '');
+    return raw === '' ? null : parseInt(raw, 10);
+  };
+  const likes    = readNum('#rivalLikes');
+  const comments = readNum('#rivalComments');
+  const collects = readNum('#rivalCollects');
+  const shares   = readNum('#rivalShares');
   const nid = 'R' + String(state.rival.length+1).padStart(3,'0');
   const tg = [TAGS[val.length % TAGS.length]];
   const newItem = {
@@ -5167,22 +5140,18 @@ $('#doCollect').addEventListener('click', ()=>{
     /* 合规：采集即完成结构拆解，保证下游只依赖结构、不依赖原文 */
     struct: inferStruct(val, tg),
     date: new Date().toISOString().slice(0,10),
-    /* 只接受用户自己填的公开互动数，不猜、不造 */
-    likes, comments: 0, collects: 0, shares: 0,
-    playsEst: likes ? Math.round(likes / RIVAL_LIKE_BASIS) : 0,
-    plays: likes ? Math.round(likes / RIVAL_LIKE_BASIS) : 0,
-    playsBasis: RIVAL_LIKE_BASIS,
-    score: Math.round(60 + (val.length % 25) + (tg.length * 3)),
-    source: 'manual',
-    isHot: likes > 60000
+    likes, comments, collects, shares,
+    source: hasStat({likes,comments,collects,shares}) ? 'manual' : 'pending'
   };
   state.rival.unshift(newItem);
   $('#rivalLink').value = '';
-  if($('#rivalLikes')) $('#rivalLikes').value = '';
+  ['#rivalLikes','#rivalComments','#rivalCollects','#rivalShares'].forEach(sel=>{
+    const el = $(sel); if(el) el.value = '';
+  });
   renderRivalTags(); renderRival();
-  toast(likes
-    ? '已入库：播放量 ' + fmt(newItem.playsEst) + ' 为按点赞数推算的估值'
-    : '已入库结构；补录点赞数后会自动推算播放量');
+  toast(hasStat(newItem)
+    ? '已入库：赞 ' + fmtN(likes) + ' · 评 ' + fmtN(comments) + ' · 藏 ' + fmtN(collects) + ' · 转 ' + fmtN(shares)
+    : '已入库结构；互动数空着就显示「未录入」，随时可以补');
 });
 
 /* 保存我的文案 */
