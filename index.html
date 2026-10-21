@@ -2291,6 +2291,9 @@ function analysisToItem(a, link){
     /* 运镜实测轨迹：逐镜的机位类型 + 位移/缩放量。和旧的手写 camera 字段分开存，
        一个是算出来的，一个是人读帧写的，不能混。 */
     camTrack: (m.camera && m.camera.ok) ? m.camera : null,
+    /* 视频里的文案：画面字幕（OCR）+ 口播（语音识别）。这是从视频本身提的，
+       和 item.desc（作者写的标题）完全是两码事 —— 分开存，绝不能互相顶替。 */
+    scriptTrack: (m.script && m.script.ok) ? m.script : null,
     missing: a.missing || [],
     factors: (a.factors || []).map(f=>({ dim: f.dim, claim: f.claim, evidence: f.evidence, src: f.src || 'measured' })),
     risks: []
@@ -2393,6 +2396,71 @@ function analysisBlocks(r){
   const cam = a.camera || {};
   const aud = a.audio || {};
   const sho = a.shots || {};
+
+  /* 视频里的文案 —— 这才是「文案」。上面 factors 里的「标题」是作者写的描述，
+     两者分开显示，绝不能让人误以为标题就是视频里说的话。 */
+  const escT = (s)=> String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const st = a.scriptTrack;
+  const scriptHtml = (st && (st.subtitle || st.voice)) ? (()=>{
+    const sub = st.subtitle;
+    const v = st.voice;
+    const badge = (txt, c, bg)=>`<span style="font-size:9.5px;font-weight:800;color:${c};background:${bg};border-radius:5px;padding:1.5px 6px;white-space:nowrap">${txt}</span>`;
+    const fullTxt = sub ? sub.text : (v ? v.text : '');
+    const copyBtn = `<button class="btn btn-sm" data-t="${encodeURIComponent(fullTxt)}"
+      onclick="try{navigator.clipboard.writeText(decodeURIComponent(this.dataset.t));this.textContent='已复制'}catch(e){}"
+      style="margin-left:auto;flex-shrink:0">复制全文</button>`;
+
+    let subBlock = '';
+    if (sub) {
+      subBlock = `
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px">
+          ${badge('画面字幕', '#0aa06e', '#e6f7f1')}
+          <span style="font-size:11.5px;font-weight:700">${sub.lines.length} 句 · ${sub.chars} 字</span>
+          <span style="font-size:10.5px;color:var(--text-3)">逐帧 OCR 认出来的</span>
+          ${copyBtn}
+        </div>
+        <div style="background:var(--panel-2);border:1px solid var(--line-2);border-radius:9px;padding:9px 12px;max-height:340px;overflow:auto">
+          ${sub.lines.map(l=>`<div style="display:flex;gap:8px;align-items:baseline;padding:2.5px 0">
+            <span style="flex-shrink:0;width:32px;font-size:10px;color:var(--text-3);font-variant-numeric:tabular-nums;text-align:right">${l.t0}s</span>
+            <span style="font-size:12.5px;line-height:1.65">${escT(l.text)}</span>
+          </div>`).join('')}
+        </div>`;
+    }
+
+    let voiceLine = '';
+    if (v) {
+      const m = (st.match !== null && st.match !== undefined) ? st.match : null;
+      if (sub && m !== null && m >= 0.7) {
+        /* 字幕与口播高度重合 = 字幕就是逐字稿，没必要把识别结果再抄一遍 */
+        voiceLine = `<div style="font-size:10.5px;color:var(--text-3);line-height:1.75;margin-top:7px">
+          口播另转出 ${v.chars} 字，与字幕用字重合 <b style="color:var(--text-2)">${Math.round(m*100)}%</b> —— 字幕就是口播的逐字稿，以上面的字幕为准（语音识别会把人名、型号听错字）。</div>`;
+      } else if (sub) {
+        voiceLine = `<div style="font-size:10.5px;color:var(--text-3);line-height:1.75;margin-top:7px">
+          口播另转出 ${v.chars} 字，与字幕只重合 <b style="color:var(--text-2)">${Math.round(m*100)}%</b> —— 字幕不是照念的，两边内容不一样，都值得看。<br>
+          <span style="color:var(--text-2)">口播原话：${escT(v.text.slice(0,120))}${v.text.length>120?'…':''}</span></div>`;
+      } else {
+        /* 没有字幕，只有人声：这时候口播就是唯一的文案 */
+        voiceLine = `
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px">
+            ${badge('口播转写', '#2b7fff', '#eaf2ff')}
+            <span style="font-size:11.5px;font-weight:700">${v.chars} 字</span>
+            <span style="font-size:10.5px;color:var(--text-3)">音轨转的文字，可能有错字</span>
+            ${copyBtn}
+          </div>
+          <div style="background:var(--panel-2);border:1px solid var(--line-2);border-radius:9px;padding:9px 12px;font-size:12.5px;line-height:1.85">${escT(v.text)}</div>
+          <div style="font-size:10.5px;color:var(--text-3);line-height:1.75;margin-top:6px">
+            这条画面里没有稳定字幕，文案来自语音识别。人名、型号、专有名词可能有听错，建议对着视频核一遍。</div>`;
+      }
+    }
+
+    const noteHtml = (!sub && !v && st.notes && st.notes.length)
+      ? `<div style="font-size:10.5px;color:var(--text-3);line-height:1.75">${st.notes.map(escT).join('<br>')}</div>` : '';
+
+    return `
+    <div class="sec-title">视频里的文案 <span style="font-weight:600;color:var(--text-3);font-size:11px">从画面和音轨里提的，不是标题</span></div>
+    ${subBlock}${voiceLine}${noteHtml}
+  `;
+  })() : '';
 
   const visHtml = (vis.framing || vis.subject || vis.lighting || vis.subtitles || (vis.scenes && vis.scenes.length)) ? `
     <div class="sec-title">画面 <span style="font-weight:600;color:var(--text-3);font-size:11px">抽帧逐段看出来的</span></div>
@@ -2529,7 +2597,7 @@ function analysisBlocks(r){
   ` : '';
 
   /* 有实测指标时用实测那套，避免和旧的 shots 块重复显示「平均镜头」 */
-  return visHtml + camHtml + (metHtml || shotHtml) + camTrackHtml + audHtml + facHtml + missHtml + rkHtml;
+  return scriptHtml + visHtml + camHtml + (metHtml || shotHtml) + camTrackHtml + audHtml + facHtml + missHtml + rkHtml;
 }
 
 function mineTagStats(){
@@ -6243,6 +6311,7 @@ function applyAnalysisList(list){
         audio: item.audio || null,
         metrics: item.metrics || null,
         camTrack: item.camTrack || null,
+        scriptTrack: item.scriptTrack || null,
         missing: Array.isArray(item.missing) ? item.missing : [],
         factors: Array.isArray(item.factors) ? item.factors.filter(x=>x && (x.k || x.claim)).map(x=>({
           dim: x.dim || '其他',
