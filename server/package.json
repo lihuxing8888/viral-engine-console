@@ -1,0 +1,13 @@
+{
+  "name": "douyin-resolver",
+  "version": "1.0.0",
+  "private": true,
+  "description": "抖音视频解析服务：文案 / BGM / 互动数 / 无水印视频 / 切点节奏指标",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0"
+  }
+}
