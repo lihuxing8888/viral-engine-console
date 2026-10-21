@@ -21,7 +21,12 @@ const { chromium } = require('playwright');
 
 const ID = process.argv[2] || '7562511783883164979';
 
-const PC_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+/* 默认用「和运行环境一致」的 UA。UA_OVERRIDE 用来做变量分离实验：
+   单改版本、单改平台，看究竟是哪一项在起作用。 */
+const PC_UA = process.env.UA_OVERRIDE
+  || (process.platform === 'win32'
+    ? 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+    : 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36');
 const MB_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
 
 /* 每个策略：先用它自己的 UA 和视口建 context，再按步骤走 */
