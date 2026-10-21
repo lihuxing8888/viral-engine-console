@@ -25,6 +25,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { analyzeCamera } = require('./camera');
+const { analyzeScript } = require('./script');
 const { execFile } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..');
@@ -379,7 +380,30 @@ async function ensureMp4(id, info) {
 
 /* ------------------------------------------------- ffmpeg 客观指标计算 */
 
+/* 指标结果缓存：抽帧比对、OCR、语音识别都是几十秒的重活，
+   同一个视频没必要每次刷新都重跑一遍。视频本身不变，结论也不会变。 */
+const METRICS_TTL_MS = 12 * 3600 * 1000;
+
 async function computeMetrics(id) {
+  const cacheFile = path.join(CACHE, id + '.metrics.json');
+  try {
+    const st = await fs.promises.stat(cacheFile);
+    if (Date.now() - st.mtimeMs < METRICS_TTL_MS) {
+      const hit = JSON.parse(await fs.promises.readFile(cacheFile, 'utf8'));
+      hit.cached = true;
+      return hit;
+    }
+  } catch (e) { /* 没有缓存就走完整计算 */ }
+
+  const out = await computeMetricsRaw(id);
+  try {
+    await fs.promises.writeFile(cacheFile + '.tmp', JSON.stringify(out));
+    await fs.promises.rename(cacheFile + '.tmp', cacheFile);
+  } catch (e) { /* 写缓存失败不影响本次结果 */ }
+  return out;
+}
+
+async function computeMetricsRaw(id) {
   const info = cachedInfo(id);
   if (!info) throw new Error('还没解析过这条视频');
   if (!FFMPEG) throw new Error('本机没找到 ffmpeg，指标算不了（视频仍可解析）');
@@ -443,14 +467,22 @@ async function computeMetrics(id) {
   const avgMotion = motion.length ? +(motion.reduce((a, b) => a + b, 0) / motion.length).toFixed(2) : null;
 
   /* ⑤ 运镜：看背景位移判断机位怎么动。单独一个模块，因为「主体在动」和「机位在动」
-     必须分开 —— 逐像素平均差会把手上转手机当成机位在晃。 */
+     必须分开 —— 逐像素平均差会把手上转手机当成机位在晃。
+     ⑥ 文案：从画面字幕和音轨里抠真正的内容。同样单独成模块。
+     这两件都是重活（运镜逐帧比对、文案跑 OCR+ASR），并发跑，
+     总时长接近较慢的那个，而不是相加。 */
   let camera = null;
   let cameraError = null;
-  try {
-    camera = await analyzeCamera(FFMPEG, mp4, cuts, dur);
-  } catch (e) {
-    cameraError = String(e.message || e);
-  }
+  let script = null;
+  let scriptError = null;
+  await Promise.all([
+    analyzeCamera(FFMPEG, mp4, cuts, dur).then((r) => { camera = r; }).catch((e) => {
+      cameraError = String(e.message || e);
+    }),
+    analyzeScript(FFMPEG, mp4, { duration: dur }).then((r) => { script = r; }).catch((e) => {
+      scriptError = String(e.message || e);
+    })
+  ]);
 
   /* 音量判口播：口播有持续的音节起伏，BGM 铺底则比较平 */
   let hasVoice = null;
@@ -487,6 +519,8 @@ async function computeMetrics(id) {
     avgMotion,
     camera,
     cameraError,
+    script,
+    scriptError,
     computedAt: new Date().toISOString()
   };
 }
@@ -499,13 +533,54 @@ function buildFactors(info, mt) {
   const f = [];
   const desc = String(info.desc || '').replace(/\s+/g, ' ').trim();
 
-  /* 文案：只描述能数出来的事实，不做语义猜测 */
+  /* 文案分两层：视频里真正呈现的字（画面字幕 / 口播），和作者写的标题。
+     desc 只是标题，不是视频里的内容 —— 早先把它标成「口播全文」是错的，
+     这里拨回来：视频里的文案来自 OCR + 语音识别，标题单独一条如实标注。 */
+  const sc = mt && mt.script;
+  if (sc && sc.ok) {
+    if (sc.subtitle) {
+      const sub = sc.subtitle;
+      f.push({
+        dim: '文案', src: 'measured',
+        claim: '画面字幕 ' + sub.lines.length + ' 句、共 ' + sub.chars + ' 字',
+        evidence: sub.lines.slice(0, 3).map((l) => l.text).join(' → ') +
+          (sub.lines.length > 3 ? ' …（共 ' + sub.lines.length + ' 句）' : '')
+      });
+    }
+    if (sc.voice) {
+      const v = sc.voice;
+      const same = (sc.match !== null && sc.match !== undefined)
+        ? '，与字幕用字重合 ' + Math.round(sc.match * 100) + '%'
+        : '';
+      f.push({
+        dim: '文案', src: 'measured',
+        claim: '口播 ' + v.chars + ' 字（语音识别转写' + same + '）',
+        evidence: v.text.slice(0, 42) + (v.text.length > 42 ? '…' : '')
+      });
+    }
+    if (!sc.subtitle && !sc.voice) {
+      f.push({
+        dim: '文案', src: 'measured',
+        claim: '视频里没有文字：既没有画面字幕，音轨里也没有人声',
+        evidence: '这条靠画面和音乐打，不靠字' +
+          (sc.notes && sc.notes.length ? '；' + sc.notes.join('；') : '')
+      });
+    }
+  } else if (sc && !sc.ok) {
+    const why = sc.error || (sc.notes || []).join('；') || '没提取到';
+    f.push({
+      dim: '文案', src: 'missing',
+      claim: '视频里的文案没提出来：' + why,
+      evidence: '下面这条只是作者写的标题，不等于视频里说的话'
+    });
+  }
+
+  /* 标题：作者自己写的公开内容，可以当真，但要说清它是标题级 */
   if (desc.length >= 8) {
     const cn = (desc.match(/[\u4e00-\u9fa5]/g) || []).length;
-    const nums = (desc.match(/\d+/g) || []).length;
     f.push({
       dim: '文案', src: 'measured',
-      claim: '口播/文案全文可提取，共 ' + desc.length + ' 字（中文 ' + cn + '，阿拉伯数字出现 ' + nums + ' 次）',
+      claim: '标题 ' + desc.length + ' 字（作者写的描述，不是视频里的口播）',
       evidence: desc.slice(0, 40) + (desc.length > 40 ? '…' : '')
     });
     if (info.hashtags && info.hashtags.length) {
@@ -515,12 +590,6 @@ function buildFactors(info, mt) {
         evidence: info.hashtags.slice(0, 6).map((t) => '#' + t).join(' ')
       });
     }
-  } else {
-    f.push({
-      dim: '文案', src: 'measured',
-      claim: '没有文字文案，文案维度不构成爆款因素',
-      evidence: 'desc 为空或过短 —— 这条靠画面和音乐打，不靠字'
-    });
   }
 
   /* 音乐 */
@@ -625,6 +694,22 @@ function missingDims(factors, mt) {
   const cam = mt && mt.camera;
   if (cam && cam.summary && cam.summary.unknown > 0) {
     out.push('运镜里的 ' + cam.summary.unknown + ' 个镜头没算出结论（可比帧对不足或首末帧对不上），这几镜的机位运动未知');
+  }
+
+  /* 文案提了一半也要说清是哪一半 —— 「有字幕没口播」和「都提不出来」是两回事 */
+  const sc = mt && mt.script;
+  if (sc) {
+    if (sc.ocrError) {
+      out.push('画面字幕没提出来（' + sc.ocrError + '），这条的文案只有口播转写');
+    }
+    if (sc.asrError) {
+      out.push('口播没转出来（' + sc.asrError + '），这条的文案只有画面字幕');
+    }
+    if (sc.ok && !sc.subtitle && !sc.voice && !sc.ocrError && !sc.asrError) {
+      out.push('视频里没有可提取的文字：画面没有稳定字幕，音轨里也没有人声。文案维度只能看作者写的标题');
+    }
+  } else if (!mt || !mt.scriptError) {
+    if (mt) out.push('视频里的文案没提：本机没有可用的文字提取环境（python / OCR 模型）');
   }
   return out;
 }
