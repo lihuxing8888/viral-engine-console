@@ -631,6 +631,41 @@ function missingDims(factors, mt) {
 
 /* ---------------------------------------------------------------- 路由 */
 
+/**
+ * 限流。本机用不着，但把服务放到公网后 80 端口是全世界都能扫到的：
+ * 一次解析要起 Chromium、一次分析要跑 ffmpeg，敞开就等于送人一台免费算力。
+ *
+ * 按 IP 做一分钟滑动窗口。IP 取 X-Forwarded-For 的第一段 —— Caddy 在默认配置下
+ * 会用它自己的真实客户端 IP 覆盖这个头，所以不会被前端伪造值绕过。
+ */
+const RATE_WINDOW_MS = 60 * 1000;
+const RATE_MAX = 40;
+const rateMap = new Map();
+
+function clientIp(req) {
+  const xff = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  return xff || (req.socket && req.socket.remoteAddress) || 'unknown';
+}
+
+function rateLimited(req) {
+  const ip = clientIp(req);
+  const now = Date.now();
+  const arr = (rateMap.get(ip) || []).filter((t) => now - t < RATE_WINDOW_MS);
+  if (arr.length >= RATE_MAX) {
+    rateMap.set(ip, arr);
+    return true;
+  }
+  arr.push(now);
+  rateMap.set(ip, arr);
+  /* 顺手清理过期条目，别让这个 Map 长成内存泄漏 */
+  if (rateMap.size > 2000) {
+    for (const [k, v] of rateMap) {
+      if (!v.length || now - v[v.length - 1] > RATE_WINDOW_MS) rateMap.delete(k);
+    }
+  }
+  return false;
+}
+
 const server = http.createServer(async (req, res) => {
   const u = new URL(req.url, 'http://' + (req.headers.host || 'localhost'));
   const p = u.pathname;
@@ -638,6 +673,11 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'OPTIONS') {
     res.writeHead(204, CORS);
     return res.end();
+  }
+
+  /* 健康检查不限流 —— 监控和前端探测都靠它，被限了会误判成服务挂了 */
+  if (p.startsWith('/api/') && p !== '/api/health' && rateLimited(req)) {
+    return json(res, 429, { ok: false, error: '请求太频繁了，等一分钟再来（每分钟 ' + RATE_MAX + ' 次上限）' });
   }
 
   /* 界面：和服务同源，前端不用配置任何地址 */
