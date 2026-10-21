@@ -148,7 +148,9 @@ async function getBrowser() {
       headless: true,
       args: ['--disable-blink-features=AutomationControlled', '--no-sandbox', '--disable-dev-shm-usage']
     });
-    log('浏览器已启动');
+    /* 记下真实版本，UA 要用它 —— 见 uaOf() 上面的说明 */
+    try { UA_CHROME_VERSION.v = browser.version(); } catch (e) { /* 拿不到就退回兜底值 */ }
+    log('浏览器已启动  Chrome/' + (UA_CHROME_VERSION.v || '?'));
     return browser;
   })();
   try { return await launching; } finally { launching = null; }
@@ -173,7 +175,31 @@ function pump() {
 
 /* -------------------------------------------------------------- 解析核心 */
 
-const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+/**
+ * UA 必须和真实浏览器对得上。
+ *
+ * 踩过的坑（在云服务器上排查了很久）：原来 UA 硬编码成
+ * 「Windows NT 10.0 / Chrome 131」，但服务器实际跑的是 Linux 上的 Chrome 156。
+ * 抖音不会回 403，也不报错 —— 它让 aweme/detail 返回 200 加一个空 body。
+ * 看起来像「IP 被封」或「视频被删」，把方向带偏了。
+ *
+ * 证据：同一份代码、同一个视频、同一台服务器，只把 UA 的系统和版本改成真实值，
+ * detail 就从 0 字节变成 5 万多字节。反过来，移动端 UA 配桌面浏览器同样拿不到 ——
+ * 拦的不是 IP，是「UA 自称的身份」和「浏览器实际指纹」矛盾。
+ *
+ * 所以不写死版本号，直接从 browser.version() 取真实版本，平台按 process.platform 走，
+ * 浏览器一升级 UA 自动跟着变，不会再出现错位。
+ */
+const UA_CHROME_VERSION = { v: '' };
+
+function uaOf() {
+  /* 拿不到真实版本时退回一个保守值，但正常路径一定会拿到 */
+  const ver = UA_CHROME_VERSION.v || '131.0.0.0';
+  const base = 'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/' + ver + ' Safari/537.36';
+  if (process.platform === 'win32') return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ' + base;
+  if (process.platform === 'darwin') return 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) ' + base;
+  return 'Mozilla/5.0 (X11; Linux x86_64) ' + base;
+}
 
 /**
  * 选播放源。
@@ -283,7 +309,7 @@ async function parseUrl(input) {
   const b = await getBrowser();
   const ctx = await b.newContext({
     viewport: { width: 1440, height: 900 },
-    userAgent: UA,
+    userAgent: uaOf(),
     locale: 'zh-CN'
   });
   const page = await ctx.newPage();
@@ -342,7 +368,7 @@ async function ensureMp4(id, info) {
   const src = (info && info.playUrl) || (cachedInfo(id) || {}).playUrl;
   if (!src) throw new Error('没有可用的视频地址');
   const resp = await fetch(src, {
-    headers: { 'User-Agent': UA, Referer: 'https://www.douyin.com/' }
+    headers: { 'User-Agent': uaOf(), Referer: 'https://www.douyin.com/' }
   });
   if (!resp.ok) throw new Error('视频源返回 ' + resp.status);
   const buf = Buffer.from(await resp.arrayBuffer());
