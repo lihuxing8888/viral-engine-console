@@ -838,7 +838,7 @@ body{
 
       <!-- ---------- 同行爆款库 ---------- -->
       <section class="view" id="view-copyrival">
-        <div class="demo-bar"><b>结构 + 完整文案</b><span>文案原文<b style="background:none;color:inherit;padding:0">完整保留，不截断、不打码，可复制</b>；下面的「为什么能火」只读文案本身，每条都带原文证据。<b style="background:none;color:inherit;padding:0">互动数字一个都不存</b>——赞 / 评 / 藏 / 转没有公开接口，播放量平台不公开，完播率是作者后台私有数据，与其存一个来路不明的数，不如不存。</span></div>
+        <div class="demo-bar"><b>链接进，全维度出</b><span>只贴链接。文案、BGM、时长、赞评藏转由后台打开视频取回；<b style="background:none;color:inherit;padding:0">画面靠抽帧、运镜看机位、剪辑节奏逐帧算切点</b>，汇成「文案 / 画面 / 音乐 / 运镜 / 剪辑 / 节奏」六类爆款因素，每条带证据。<b style="background:none;color:inherit;padding:0">纯展示无口播的视频照样能解析</b>，文案一栏会如实写「无口播」。<b style="background:none;color:inherit;padding:0">播放量、完播率、成交数据平台不公开，这里没有、也不猜。</b></span></div>
         <div class="card" style="margin-bottom:14px">
           <div class="card-head">
             <h3>贴一条同行视频链接</h3>
@@ -2109,8 +2109,11 @@ function renderRival(){
              <span style="margin-left:auto;font-size:10.5px;font-weight:700;color:var(--ok)">${(r.analysis.factors||[]).length} 项</span>
            </div>`
         : `<div style="background:var(--panel-2);border:1px dashed var(--line);border-radius:9px;padding:10px 11px;margin-bottom:9px">
-             <div style="font-size:10px;color:var(--text-3);font-weight:700;margin-bottom:4px;letter-spacing:.3px">待解析</div>
-             <div style="font-size:11px;color:var(--text-3);line-height:1.7">只存了链接。文案、BGM、画面、运镜要后台真跑一次才知道 —— 这里不猜。</div>
+             <div style="font-size:10px;color:var(--text-3);font-weight:700;margin-bottom:4px;letter-spacing:.3px">${r.text ? '已有文案 · 待解析' : '待解析'}</div>
+             <div style="font-size:11px;color:var(--text-3);line-height:1.7">${
+               r.text
+                 ? '文案在库里，点开能看文本层面的归因。画面、运镜、BGM 要后台真跑一次才有 —— 这里不猜。'
+                 : '只存了链接。文案、BGM、画面、运镜要后台真跑一次才知道 —— 这里不猜。'}</div>
            </div>`}
       ${(r.text && r.title && r.text.indexOf(r.title) === 0)
         ? (r.text.length > r.title.length + 4
@@ -5086,18 +5089,22 @@ function rivalDrawer(id){
       <span><b>用途</b>：这条文案是你自己摘录的公开内容，<b>只存在这个页面的本地数据里</b>，不会上传。分析结果用于理解结构，直接照搬原句发出去不算你的内容。</span>
     </div>
 
+    ${r.analysis ? '' : `
     <div class="sec-title" style="display:flex;align-items:center;justify-content:space-between">
       <span>完整文案${hasText ? ` <span style="font-weight:600;color:var(--text-3);font-size:11px">${an.stat.chars} 字</span>` : ''}</span>
       ${hasText ? `<button class="btn btn-sm" data-copyrival="${r.id}" style="padding:3px 10px;font-size:11px">复制全文</button>` : ''}
     </div>
-    ${bodyHtml}
+    ${bodyHtml}`}
 
     ${r.video ? `<div class="sec-title">视频概览 <span style="font-weight:600;color:var(--text-3);font-size:11px">页面公开数据</span></div>
       <div style="display:flex;gap:5px;flex-wrap:wrap">${videoMetaRow(r)}</div>
       ${statRow(r)}` : ''}
 
     ${r.analysis ? `
-      <div class="sec-title">文案 <span style="font-weight:600;color:var(--text-3);font-size:11px">${hasText ? an.stat.chars + ' 字' : ((r.analysis.audio && r.analysis.audio.hasVoice === false) ? '无口播' : '未取到')}</span></div>
+      <div class="sec-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>文案 <span style="font-weight:600;color:var(--text-3);font-size:11px">${hasText ? an.stat.chars + ' 字' : ((r.analysis.audio && r.analysis.audio.hasVoice === false) ? '无口播' : '未取到')}</span></span>
+        ${hasText ? `<button class="btn btn-sm" data-copyrival="${r.id}" style="padding:3px 10px;font-size:11px">复制全文</button>` : ''}
+      </div>
       ${hasText
         ? `<div class="ai-script" style="color:var(--text-2);white-space:pre-wrap;line-height:1.95">${r.text.replace(/</g,'&lt;')}</div>`
         : `<div style="background:var(--panel-2);border:1px dashed var(--line);border-radius:10px;padding:11px 13px;font-size:11.5px;color:var(--text-3);line-height:1.8">
