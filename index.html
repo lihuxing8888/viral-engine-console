@@ -843,6 +843,10 @@ body{
           <div class="card-head">
             <h3>贴一条同行视频链接</h3>
             <span class="desc">文案、BGM、画面、运镜、剪辑节奏都由后台解析 —— 你不用手抄任何东西</span>
+            <span id="apiStatus" style="margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--text-3);background:var(--panel-2);border:1px solid var(--line-2);border-radius:20px;padding:4px 11px;white-space:nowrap;cursor:pointer" title="点一下重新检测">
+              <span id="apiDot" style="width:6px;height:6px;border-radius:50%;background:#c9cdd4;display:inline-block;flex-shrink:0"></span>
+              <span id="apiText">检测解析服务…</span>
+            </span>
           </div>
           <div class="card-body">
             <div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap">
@@ -852,12 +856,15 @@ body{
               <button class="btn btn-primary" id="doCollect" style="align-self:stretch;padding:0 22px;white-space:nowrap">采集入库</button>
               <button class="btn" id="importAnalysis" style="align-self:stretch;padding:0 16px;white-space:nowrap">导入解析结果</button>
             </div>
+            <div id="parseLog" style="display:none;margin-top:10px;font-size:11px;line-height:1.85;color:var(--text-2);background:var(--panel-2);border:1px solid var(--line-2);border-radius:9px;padding:9px 12px"></div>
             <div style="font-size:10.5px;color:var(--text-3);line-height:1.85;margin-top:9px;display:flex;gap:6px;align-items:flex-start">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:3px"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
               <span>
-                入库后状态是<b style="background:none;color:inherit;padding:0;color:var(--text-2)">「待解析」</b>。解析要真的打开这个视频、读它的文案、听它的 BGM、抽帧看画面和运镜，<b style="background:none;color:inherit;padding:0;color:var(--text-2)">单文件静态页做不到</b>，所以由后台跑完后用「导入解析结果」回填。<br>
+                <b style="background:none;color:inherit;padding:0;color:var(--text-2)">右上角显示「解析服务已连接」时</b>，点「采集入库」会自动打开视频、取回文案与 BGM、抽帧算切点，几秒后卡片直接是解析好的样子 —— 你只贴链接，别的不用管。<br>
+                <b style="background:none;color:inherit;padding:0;color:var(--text-2)">没连上服务时</b>入库照样能记链接，状态是「待解析」；启动服务后在右上角点一下即可重连，或继续用「导入解析结果」手工回填。<br>
+                <b style="background:none;color:inherit;padding:0;color:var(--text-2)">为什么解析必须有个服务在跑</b>：浏览器不允许页面直接请求抖音接口（跨域），抖音接口带签名页面也算不出来，判断画面/运镜/切点还得把视频下下来用 ffmpeg 逐帧跑 —— 这三件事静态页都做不了。微信小程序里那些「解析文案、无水印存视频」的工具同样靠自己的服务器做这件事，前端没有特权。<br>
                 <b style="background:none;color:inherit;padding:0;color:var(--text-2)">纯展示类视频（全程 BGM、没有一句口播）也能解析</b> —— 这种情况下画面、运镜、剪辑节奏、音乐就是它的全部爆款因素，文案一栏会如实写「无口播」。<br>
-                解析拿到的是<b style="background:none;color:inherit;padding:0;color:var(--text-2)">页面公开数据</b>：文案、BGM 曲名、时长、分辨率、赞 / 评 / 藏 / 转。<b style="background:none;color:inherit;padding:0">播放量、完播率、成交数据拿不到</b>，不猜。
+                拿到的是<b style="background:none;color:inherit;padding:0;color:var(--text-2)">页面公开数据</b>：文案、BGM 曲名、时长、分辨率、赞 / 评 / 藏 / 转，以及可下载的无水印 mp4。<b style="background:none;color:inherit;padding:0">播放量、完播率、成交数据拿不到</b>，不猜。
               </span>
             </div>
           </div>
@@ -1558,6 +1565,12 @@ function countOcc(text, re){
    全程不引入随机数、不看链接长度、不看标签。 */
 function inferStruct(text, title){
   const body = String(text || '');
+  /* 没有文案就没有结构可拆。以前这里对空串照样跑正则，会吐出一个像模像样的
+     「钩子类型」，实际是凭空产物。直接返回全空，让界面如实显示「待解析」。 */
+  if(body.trim().length < 8 && String(title || '').trim().length < 8){
+    return { hook:'', argument:'', emotion:'', placement:'', cta:'',
+             hookTemplate:'', evidence:{ first:'', brand:'', tail:'' } };
+  }
   const t = (title && body.indexOf(String(title)) < 0) ? (String(title) + '。' + body) : body;
   const first = firstSentence(t);
   const nums = numbersIn(t);
@@ -2127,6 +2140,175 @@ function renderRival(){
     </div>`).join('');
 }
 
+/* ═════════════════ 解析服务对接 ═════════════════
+   为什么必须有它：纯静态页里做不了这件事，三条硬约束。
+   · 跨域：浏览器不允许页面直接请求 douyin.com 的接口
+   · 签名：抖音接口带 a_bogus 等签名参数，页面算不出来
+   · 抽帧：判断画面/运镜/切点要先把视频下下来，再用 ffmpeg 逐帧跑
+   微信小程序里那些「解析文案、无水印保存视频」的工具走的也是同一条路：
+   用户贴链接 → 它自己的服务器去请求抖音 → 结果回给前端。前端本身没有特权。
+   服务在 server/server.js，起在本机。用 node server/server.js 打开页面时同源，不用配地址。
+   服务没起时全站照常可用，只是卡片停在「待解析」。 */
+const RIVAL_API = {
+  base: '',
+  online: false,
+  version: '',
+  hasFfmpeg: false,
+  checking: false,
+
+  /* 候选地址：URL 参数 > 同源 > 用户手填 > 本地默认端口。
+     ?api=http://192.168.1.8:7801   指定服务地址（服务不在本机、或换了端口时用）
+     ?api=none                      关掉自动探测，纯离线演示 / 离线测试用 */
+  candidates(){
+    const out = [];
+    const push = u => { if(u && out.indexOf(u) < 0) out.push(u); };
+    let qApi = '';
+    try{ qApi = (new URLSearchParams(location.search).get('api') || '').trim(); }catch(e){}
+    if(qApi === 'none' || qApi === 'off') return out;
+    if(qApi){ push(qApi.replace(/\/+$/, '')); return out; }
+    if(location.protocol === 'http:' || location.protocol === 'https:') push(location.origin);
+    try{
+      const saved = localStorage.getItem('rival.apiBase');
+      if(saved) push(String(saved).replace(/\/+$/, ''));
+    }catch(e){}
+    push('http://127.0.0.1:7801');
+    push('http://localhost:7801');
+    return out;
+  },
+
+  async fetchJson(url, opt, timeoutMs){
+    const ctl = new AbortController();
+    const timer = setTimeout(()=>ctl.abort(), timeoutMs || 10000);
+    try{
+      const r = await fetch(url, Object.assign({ signal: ctl.signal }, opt || {}));
+      const txt = await r.text();
+      let j = null;
+      try{ j = JSON.parse(txt); }catch(e){ throw new Error('返回不是 JSON：' + txt.slice(0, 80)); }
+      return j;
+    } finally { clearTimeout(timer); }
+  },
+
+  async probe(){
+    if(this.checking) return this.online;
+    this.checking = true;
+    try{
+      for(const b of this.candidates()){
+        try{
+          const h = await this.fetchJson(b + '/api/health', { cache:'no-store' }, 3000);
+          if(h && h.ok){
+            this.base = b; this.online = true;
+            this.version = h.version || '';
+            this.hasFfmpeg = !!h.ffmpeg;
+            return true;
+          }
+        }catch(e){ /* 这个地址没起服务，试下一个 */ }
+      }
+      this.online = false; this.base = '';
+      return false;
+    } finally { this.checking = false; }
+  },
+
+  async parse(urls){
+    return await this.fetchJson(this.base + '/api/parse', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ urls: urls })
+    }, 120000);
+  },
+
+  async analysis(id){
+    return await this.fetchJson(this.base + '/api/analysis?id=' + encodeURIComponent(id), { cache:'no-store' }, 180000);
+  },
+
+  videoUrl(id){ return this.base + '/api/video?id=' + encodeURIComponent(id); },
+  framesUrl(id){ return this.base + '/api/frames?id=' + encodeURIComponent(id); }
+};
+
+function setApiStatus(state, text){
+  const dot = $('#apiDot'), lab = $('#apiText'), box = $('#apiStatus');
+  if(!dot || !lab) return;
+  const map = {
+    on:   { c:'#0aa06e', t: text || '解析服务已连接' },
+    off:  { c:'#c9cdd4', t: text || '解析服务未连接' },
+    busy: { c:'#f5a623', t: text || '解析中…' },
+    err:  { c:'#e5484d', t: text || '解析服务异常' }
+  };
+  const m = map[state] || map.off;
+  dot.style.background = m.c;
+  lab.textContent = m.t;
+  if(box) box.style.color = (state === 'on') ? '#0aa06e' : (state === 'err' ? '#e5484d' : 'var(--text-3)');
+}
+
+async function refreshApiStatus(){
+  setApiStatus('busy', '检测解析服务…');
+  const ok = await RIVAL_API.probe();
+  setApiStatus(ok ? 'on' : 'off', ok
+    ? ('解析服务已连接' + (RIVAL_API.hasFfmpeg ? '' : ' · 缺 ffmpeg'))
+    : '解析服务未连接');
+  return ok;
+}
+
+function parseLogLine(txt, tone){
+  const box = $('#parseLog'); if(!box) return;
+  box.style.display = 'block';
+  const color = tone === 'err' ? '#e5484d' : (tone === 'ok' ? '#0aa06e' : 'var(--text-2)');
+  const line = document.createElement('div');
+  line.style.color = color;
+  line.textContent = txt;
+  box.appendChild(line);
+}
+
+function clearParseLog(){
+  const box = $('#parseLog');
+  if(box){ box.innerHTML = ''; box.style.display = 'none'; }
+}
+
+/* 把 /api/analysis 的返回翻译成 applyAnalysisList 认识的结构 */
+function analysisToItem(a, link){
+  const v = a.video || {};
+  const m = a.metrics || {};
+  const item = {
+    awemeId: String(a.awemeId || ''),
+    link: link || ('https://www.douyin.com/video/' + a.awemeId),
+    desc: a.desc || '',
+    durationSec: v.durationSec || null,
+    width: v.metaWidth || null,
+    height: v.metaHeight || null,
+    ratio: v.ratio || '',
+    /* 实际能下载到的最高画质，和元数据尺寸不是一回事 */
+    playWidth: v.playWidth || 0,
+    playHeight: v.playHeight || 0,
+    playGear: v.playGear || '',
+    music: a.music || null,
+    stats: a.stats || null,
+    author: a.author || '',
+    publishTime: a.publishTime || '',
+    metrics: a.metrics || null,
+    missing: a.missing || [],
+    factors: (a.factors || []).map(f=>({ dim: f.dim, claim: f.claim, evidence: f.evidence, src: f.src || 'measured' })),
+    risks: []
+  };
+  /* shots / audio 是渲染层的旧字段，从实测指标里对齐过去 */
+  if(m.cutCount !== undefined){
+    item.shots = {
+      count: m.cutCount,
+      avgSec: m.avgShotSec,
+      rhythm: m.firstCutAt !== null && m.firstCutAt !== undefined
+        ? ('首刀在 ' + m.firstCutAt + ' 秒，' + (m.firstCutAt <= 3 ? '开场不留空等，直接给信息' : '开场先立住画面再推进'))
+        : ''
+    };
+  }
+  if(m.hasVoice !== undefined && m.hasVoice !== null){
+    item.audio = {
+      hasVoice: !!m.hasVoice,
+      note: m.hasVoice
+        ? ('音量起伏明显（标准差 ' + m.volStd + ' dB），有口播叠加')
+        : ('音量曲线平稳（标准差 ' + m.volStd + ' dB），判定全程 BGM 铺底、无口播')
+    };
+  }
+  return item;
+}
+
 /* ───────────────── 解析结果渲染 ─────────────────
    一条视频的爆款因素可能全在画面 / 音乐 / 运镜上（纯展示类没有口播），
    所以这里不按「文案优先」排，而是按导入时给的维度分组。 */
@@ -2153,9 +2335,36 @@ function videoMetaRow(r){
   const v = r.video; if(!v) return '';
   const bits = [];
   if(v.durationSec) bits.push(v.durationSec + ' 秒');
-  if(v.width && v.height) bits.push(v.width + '×' + v.height);
+  /* 平台标的 1080×1920 是封面/逻辑尺寸，实际能下到的往往是 720×1280。
+     两个数字必须分开写，混着说就是夸大画质。 */
+  if(v.playWidth && v.playHeight){
+    const same = (v.width === v.playWidth && v.height === v.playHeight);
+    bits.push(same
+      ? (v.playWidth + '×' + v.playHeight)
+      : ((v.width && v.height ? v.width + '×' + v.height + ' · ' : '') + '可下 ' + v.playWidth + '×' + v.playHeight));
+  } else if(v.width && v.height){
+    bits.push(v.width + '×' + v.height);
+  }
   if(v.music && v.music.title) bits.push('BGM《' + v.music.title + '》' + (v.music.author ? ' · ' + v.music.author : ''));
   return bits.map(x=>`<span style="background:var(--panel-2);border:1px solid var(--line-2);border-radius:7px;padding:3px 8px;font-size:10.5px;color:var(--text-2)">${x}</span>`).join('');
+}
+
+/* 关键帧 + 无水印下载：只有解析服务在线时才给，离线时不画假按钮 */
+function framesBlock(r){
+  if(!r || !r.awemeId || !RIVAL_API.online) return '';
+  return `
+    <div class="sec-title">关键帧与原始视频 <span style="font-weight:600;color:var(--text-3);font-size:11px">服务端抽的，不是截图</span></div>
+    <div style="border:1px solid var(--line-2);border-radius:10px;overflow:hidden;background:var(--panel-2)">
+      <img src="${RIVAL_API.framesUrl(r.awemeId)}" alt="九宫格关键帧" style="display:block;width:100%;height:auto"
+           onerror="this.parentNode.innerHTML='<div style=&quot;padding:14px;font-size:11.5px;color:var(--text-3);line-height:1.8&quot;>抽帧失败（可能本机没装 ffmpeg，或视频源已失效）。文案和 BGM 不受影响。</div>'">
+    </div>
+    <div style="display:flex;gap:7px;margin-top:8px;flex-wrap:wrap">
+      <a class="btn btn-sm" href="${RIVAL_API.videoUrl(r.awemeId)}" download style="text-decoration:none;display:inline-flex;align-items:center;gap:5px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+        下载无水印 mp4
+      </a>
+      <span style="font-size:10.5px;color:var(--text-3);line-height:1.9">取的是播放源（play_addr），不是带水印的分享下载源</span>
+    </div>`;
 }
 
 function statRow(r){
@@ -2208,6 +2417,35 @@ function analysisBlocks(r){
     ${aud.note ? `<div style="font-size:11.5px;color:var(--text-2);line-height:1.85;margin-top:4px">${aud.note}</div>` : ''}
   ` : '';
 
+  /* 实测指标：ffmpeg 算出来的硬数字，和「AI 读图写的描述」分开放，不混为一谈 */
+  const mt = a.metrics;
+  const cell = (label, val)=> (val === null || val === undefined || val === '') ? '' :
+    `<div style="flex:1;min-width:76px;background:var(--panel-2);border:1px solid var(--line-2);border-radius:9px;padding:8px 10px;text-align:center">
+       <div style="font-size:10px;color:var(--text-3);font-weight:700">${label}</div>
+       <div style="font-size:15px;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums">${val}</div></div>`;
+  const metHtml = mt ? `
+    <div class="sec-title">实测指标 <span style="font-weight:600;color:var(--text-3);font-size:11px">ffmpeg 逐帧算的，不是估的</span></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:7px">
+      ${cell('切点', mt.cutCount + ' 刀')}
+      ${cell('平均镜头', mt.avgShotSec + ' 秒')}
+      ${cell('首刀', mt.firstCutAt + ' 秒')}
+      ${cell('每 10 秒', mt.shotsPerTenSec + ' 刀')}
+      ${mt.avgMotion !== null && mt.avgMotion !== undefined ? cell('画面运动量', mt.avgMotion) : ''}
+    </div>
+    ${(mt.cuts && mt.cuts.length) ? `<div style="font-size:10.5px;color:var(--text-3);line-height:1.75;background:var(--panel-2);border-radius:8px;padding:8px 11px">
+      切点位置：${mt.cuts.join('s / ')}s${mt.cutCount > mt.cuts.length ? ' …' : ''}
+    </div>` : ''}
+    ${mt.silences && mt.silences.length ? `<div style="font-size:10.5px;color:var(--text-3);line-height:1.75;margin-top:5px">检测到 ${mt.silences.length} 段静音（超过 1 秒低于 -35dB），最长 ${Math.max.apply(null, mt.silences.map(s=>s.len))} 秒</div>` : ''}
+  ` : '';
+
+  /* 算不出来的，直接说算不出来，不拿推断填空 */
+  const missHtml = (a.missing && a.missing.length) ? `
+    <div class="sec-title">这里没有的 <span style="font-weight:600;color:var(--text-3);font-size:11px">算不出来就说算不出来</span></div>
+    <div style="background:var(--panel-2);border:1px dashed var(--line);border-radius:9px;padding:9px 12px">
+      ${a.missing.map(x=>`<div style="font-size:11px;color:var(--text-3);line-height:1.8">· ${x}</div>`).join('')}
+    </div>
+  ` : '';
+
   const groups = dimGroup(a.factors);
   const dimOrder = ['文案','画面','音乐','运镜','剪辑','节奏','其他'];
   const facHtml = (a.factors && a.factors.length) ? `
@@ -2222,9 +2460,10 @@ function analysisBlocks(r){
             <div style="display:flex;gap:7px;align-items:baseline;margin-bottom:3px">
               <span style="flex-shrink:0;width:5px;height:5px;border-radius:50%;background:${m.c};margin-top:6px"></span>
               <b style="font-size:12px">${h.k}</b>
+              ${h.src === 'measured' ? '<span style="font-size:9.5px;font-weight:700;color:#0aa06e;background:#e6f7f1;border-radius:5px;padding:1px 5px;flex-shrink:0">实测</span>' : ''}
             </div>
             <div style="font-size:11px;color:var(--text-2);line-height:1.75;padding-left:12px">${h.why || ''}</div>
-            ${h.ev ? `<div style="font-size:10.5px;color:var(--text-3);line-height:1.6;padding-left:12px;margin-top:3px">原文证据：${h.ev}</div>` : ''}
+            ${h.ev ? `<div style="font-size:10.5px;color:var(--text-3);line-height:1.6;padding-left:12px;margin-top:3px">${h.src === 'measured' ? '数据' : '原文证据'}：${h.ev}</div>` : ''}
           </div>`).join('')}
       </div>`;
     }).join('')}
@@ -2242,7 +2481,8 @@ function analysisBlocks(r){
       </div>`).join('')}
   ` : '';
 
-  return visHtml + camHtml + shotHtml + audHtml + facHtml + rkHtml;
+  /* 有实测指标时用实测那套，避免和旧的 shots 块重复显示「平均镜头」 */
+  return visHtml + camHtml + (metHtml || shotHtml) + audHtml + facHtml + missHtml + rkHtml;
 }
 
 function mineTagStats(){
@@ -5100,6 +5340,8 @@ function rivalDrawer(id){
       <div style="display:flex;gap:5px;flex-wrap:wrap">${videoMetaRow(r)}</div>
       ${statRow(r)}` : ''}
 
+    ${framesBlock(r)}
+
     ${r.analysis ? `
       <div class="sec-title" style="display:flex;align-items:center;justify-content:space-between">
         <span>文案 <span style="font-weight:600;color:var(--text-3);font-size:11px">${hasText ? an.stat.chars + ' 字' : ((r.analysis.audio && r.analysis.audio.hasVoice === false) ? '无口播' : '未取到')}</span></span>
@@ -5121,7 +5363,8 @@ function rivalDrawer(id){
       ${!r.video ? `<div style="background:var(--panel-2);border:1px dashed var(--line);border-radius:10px;padding:11px 13px;margin-top:6px">
         <div style="font-size:11.5px;color:var(--text-3);line-height:1.8">
           <b style="color:var(--text-2)">还没有解析结果。</b>这条只存了链接，目前能看到的只有从分享文字里提取的标题（如果有）。<br>
-          完整解析要打开视频、读文案、听 BGM、抽帧看画面和运镜，静态页做不到，需要后台跑一次后用「导入解析结果」回填。
+          解析要打开视频、取文案和 BGM、下视频用 ffmpeg 抽帧算切点，浏览器里做不了这三件事（跨域 + 签名 + 要抽帧）。<br>
+          <b style="color:var(--text-2)">启动解析服务</b>后回到这个页面点「采集入库」就会自动解析；也可以继续用「导入解析结果」手工回填。
         </div>
       </div>` : ''}
     `}
@@ -5133,7 +5376,7 @@ function rivalDrawer(id){
       真实播放与完播数据只有原作者能看到，本库不猜、不补。
     </div>
 
-    <div class="sec-title">爆款结构拆解</div>
+    ${hasText ? `<div class="sec-title">爆款结构拆解</div>
     <div class="grid g2" style="gap:9px">
       ${structCard('钩子类型', st.hook)}
       ${structCard('论证方式', st.argument)}
@@ -5152,12 +5395,12 @@ function rivalDrawer(id){
 
     <div class="sec-title">CTA 模型</div>
     <div style="font-size:12px;font-weight:600;color:var(--text-2);background:var(--panel-2);border-radius:9px;padding:10px 12px">${st.cta}</div>
+    ` : ''}
 
-    <div class="sec-title">本库不记录的东西</div>
+    <div class="sec-title">关于数字的边界</div>
     <div style="font-size:11px;color:var(--text-3);line-height:1.8;background:var(--panel-2);border-radius:8px;padding:10px 12px">
-      点赞 / 评论 / 收藏 / 转发 / 播放量 / 完播率 —— 这六项<b style="background:none;color:inherit;padding:0;color:var(--text-2)">本库一律不存</b>。
-      前四项抖音没有对外接口，后两项是作者后台私有数据，任何第三方工具显示的「同行播放量 / 完播率」都是估算。
-      原因分析读的是文案本身，不需要这些数字。
+      <b style="background:none;color:inherit;padding:0;color:var(--text-2)">拿到的</b>：赞 / 评 / 藏 / 转 —— 抖音视频页公开展示的四项，解析时原样取回，不加工。<br>
+      <b style="background:none;color:inherit;padding:0;color:var(--text-2)">拿不到的</b>：播放量、完播率、成交数据。播放量是作者后台私有数据，完播率同样只有作者能看到，任何第三方工具显示的「同行播放量 / 完播率」都是估算。<b style="background:none;color:inherit;padding:0;color:var(--text-2)">本库不显示，也不反推</b>。
     </div>
 
     <div style="display:flex;gap:7px;margin-top:14px;flex-wrap:wrap">
@@ -5167,7 +5410,7 @@ function rivalDrawer(id){
       </button>
       <button class="btn btn-sm" data-goto="generator">用这套结构生成我的脚本</button>
     </div>`;
-  openDrawer(html, r.title, `${r.author} · ${r.date} · ${hasText ? '完整文案 ' + an.stat.chars + ' 字' : '待补文案'}`);
+  openDrawer(html, r.title, `${r.author} · ${r.date} · ${hasText ? '完整文案 ' + an.stat.chars + ' 字' : '待解析'}`);
 }
 
 function mineDrawer(id){
@@ -5694,6 +5937,10 @@ function applyAnalysisList(list){
       width: item.width || null,
       height: item.height || null,
       ratio: item.ratio || '',
+      /* 实际能下到的最优源，和上面的元数据尺寸是两回事 */
+      playWidth: item.playWidth || 0,
+      playHeight: item.playHeight || 0,
+      playGear: item.playGear || '',
       music: item.music || null,
       stats: item.stats || null,
       publishTime: item.publishTime || '',
@@ -5702,15 +5949,33 @@ function applyAnalysisList(list){
       audio: item.audio || null
     };
 
-    /* 语义分析 */
-    r.analysis = {
-      visual: item.visual || null,
-      camera: item.camera || null,
-      shots: item.shots || null,
-      audio: item.audio || null,
-      factors: Array.isArray(item.factors) ? item.factors.filter(x=>x && x.k) : [],
-      risks: Array.isArray(item.risks) ? item.risks.filter(x=>x && x.k) : []
-    };
+    /* 语义分析 + 实测指标。
+       factors 的来源标在 src 上：measured = ffmpeg/接口算出来的，
+       ai = 读帧看画面写的，manual = 人工补的。界面上分开显示，不让推断冒充实测。
+       _quick 这一趟只回填文案和客观数据，还没有因素可写 —— 这时候不能建 analysis，
+       否则卡片会显示「已解析」却一条因素都没有，等于骗人。 */
+    if(!item._quick){
+      r.analysis = {
+        visual: item.visual || null,
+        camera: item.camera || null,
+        shots: item.shots || null,
+        audio: item.audio || null,
+        metrics: item.metrics || null,
+        missing: Array.isArray(item.missing) ? item.missing : [],
+        factors: Array.isArray(item.factors) ? item.factors.filter(x=>x && (x.k || x.claim)).map(x=>({
+          dim: x.dim || '其他',
+          k: x.k || x.claim,
+          why: x.why || '',
+          ev: x.ev || x.evidence || '',
+          src: x.src || 'manual'
+        })) : [],
+        risks: Array.isArray(item.risks) ? item.risks.filter(x=>x && (x.k || x.claim)).map(x=>({
+          k: x.k || x.claim,
+          why: x.why || '',
+          ev: x.ev || x.evidence || ''
+        })) : []
+      };
+    }
 
     if(!r.title){
       r.title = item.title
@@ -5783,9 +6048,79 @@ if(importBtn) importBtn.addEventListener('click', ()=>{
   });
 });
 
-/* 采集同行：只贴链接。文案、BGM、画面、运镜等由后台解析后导入。
-   不解析、不生成任何表现数字。 */
-$('#doCollect').addEventListener('click', ()=>{
+/* 服务在线时自动跑完整个解析：先拿文案/BGM/互动数，再算切点与爆款因素。
+   两段式是有意的 —— 第一段几秒就有内容可看，第二段要跑 ffmpeg 会慢一些。 */
+async function autoParseAdded(added){
+  const btn = $('#doCollect');
+  const oldLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '解析中…';
+  clearParseLog();
+  let okN = 0, failN = 0;
+
+  try{
+    for(let i = 0; i < added.length; i++){
+      const rec = added[i];
+      setApiStatus('busy', '解析中 ' + (i + 1) + '/' + added.length);
+      const shortLink = rec.link.replace(/^https?:\/\//, '').slice(0, 42);
+      parseLogLine('① ' + shortLink);
+
+      try{
+        const j = await RIVAL_API.parse([rec.link]);
+        const r0 = (j && j.results && j.results[0]) || null;
+        if(!r0 || !r0.ok) throw new Error((r0 && r0.error) || '解析失败');
+        const id = r0.awemeId;
+
+        /* 第一趟：文案、BGM、时长、互动数。标 _quick，先不碰 analysis */
+        applyAnalysisList([{
+          _quick: true,
+          awemeId: id, link: rec.link,
+          desc: r0.desc || '',
+          durationSec: r0.durationSec, width: r0.width, height: r0.height, ratio: r0.ratio,
+          playWidth: r0.playWidth, playHeight: r0.playHeight, playGear: r0.playGear,
+          music: r0.music, stats: r0.stats, author: r0.author, publishTime: r0.publishTime
+        }]);
+
+        const descLen = String(r0.desc || '').length;
+        parseLogLine('   ✓ 文案 ' + descLen + ' 字 · ' + r0.durationSec + ' 秒 · ' +
+                     'BGM《' + ((r0.music || {}).title || '无') + '》· ' +
+                     '赞' + ((r0.stats || {}).digg || 0) + ' 藏' + ((r0.stats || {}).collect || 0), 'ok');
+
+        /* 第二趟：抽帧 + 音轨 + 切点，成本高但一次算清 */
+        parseLogLine('   ② 下视频、量音量、逐帧找切点…');
+        const a = await RIVAL_API.analysis(id);
+        if(a && a.ok){
+          const item = analysisToItem(a, rec.link);
+          applyAnalysisList([item]);
+          const m = a.metrics || {};
+          parseLogLine('   ✓ ' + (item.factors || []).length + ' 条爆款因素 · ' +
+                       (m.cutCount !== undefined ? m.cutCount + ' 个切点' : '切点没算出来') + ' · ' +
+                       (m.hasVoice === false ? '无口播' : (m.hasVoice ? '有口播' : '口播未判定')), 'ok');
+        } else {
+          parseLogLine('   ! 指标没算出来：' + String((a && a.error) || '未知原因').slice(0, 80) +
+                       '（文案和 BGM 已入库，不影响）', 'err');
+        }
+        okN++;
+      }catch(e){
+        failN++;
+        parseLogLine('   ✗ ' + String(e.message || e).slice(0, 140), 'err');
+      }
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = oldLabel;
+    setApiStatus('on', '解析服务已连接' + (RIVAL_API.hasFfmpeg ? '' : ' · 缺 ffmpeg'));
+  }
+
+  const msg = '已解析 ' + okN + ' 条' + (failN ? '，' + failN + ' 条失败' : '');
+  parseLogLine('—— ' + msg + ' ——');
+  toast(msg);
+}
+
+/* 采集同行：只贴链接。
+   解析服务在线 → 点一下就直接出全维度结果，不用人工倒手。
+   服务没起 → 照样把链接记下来，状态「待解析」，可以手工导入结果。 */
+$('#doCollect').addEventListener('click', async ()=>{
   const raw = String($('#rivalLink').value || '').trim();
   if(!raw){ toast('请先粘贴抖音视频链接'); return; }
 
@@ -5804,7 +6139,7 @@ $('#doCollect').addEventListener('click', ()=>{
     if(!um){ skipped++; return; }
     const link = um[0];
     /* 只从这一行分享文字里挖作者写的标题当占位。
-       真正的完整文案（口播稿）由后台解析时拿到，回填后标 textSrc='parsed'。
+       真正的完整文案（口播稿）由解析服务拿到，回填后标 textSrc='parsed'。
        提不到标题也没关系，卡片会显示「待解析」。 */
     let body = '';
     let src = '';
@@ -5837,9 +6172,20 @@ $('#doCollect').addEventListener('click', ()=>{
   $('#rivalLink').value = '';
   renderRivalTags(); renderRival();
 
-  let msg = '已入库 ' + added.length + ' 条，状态「待解析」';
-  if(skipped) msg += '；' + skipped + ' 行没识别到链接';
-  toast(msg);
+  /* 服务状态可能是页面打开后才起的，点采集时再探一次 */
+  if(!RIVAL_API.online) await refreshApiStatus();
+
+  if(RIVAL_API.online){
+    await autoParseAdded(added);
+  } else {
+    let msg = '已入库 ' + added.length + ' 条，状态「待解析」';
+    if(skipped) msg += '；' + skipped + ' 行没识别到链接';
+    toast(msg);
+    clearParseLog();
+    parseLogLine('解析服务没连上 —— 链接已存下，但没有自动解析。', 'err');
+    parseLogLine('在项目目录运行  node server/server.js  然后把页面地址换成  http://127.0.0.1:7801/  打开；');
+    parseLogLine('或启动后点右上角的服务状态标记重新检测。也可以继续用「导入解析结果」手工回填。');
+  }
 });
 
 /* 保存我的文案 */
@@ -6251,6 +6597,25 @@ initCharts();
 _lastGmvSum = REAL ? (REAL.cur.gmv||0) : 0;
 renderStats(); renderDiagnosis(); renderTopVideos();
 renderTopActions();
+
+/* 启动时探一次解析服务；点状态标记可以重试 */
+refreshApiStatus().then(ok=>{
+  if(ok){
+    clearParseLog();
+    parseLogLine('解析服务已连接（' + RIVAL_API.base + '）：贴链接后点「采集入库」就会自动解析。', 'ok');
+  } else {
+    clearParseLog();
+    parseLogLine('解析服务未连接 —— 链接能入库，但不会自动解析。');
+    parseLogLine('在项目目录运行  node server/server.js  ，然后用  http://127.0.0.1:7801/  打开本页面；');
+    parseLogLine('服务起来后点右上角的服务状态标记重新检测。');
+  }
+});
+const apiStatusEl = $('#apiStatus');
+if(apiStatusEl) apiStatusEl.addEventListener('click', async ()=>{
+  const ok = await refreshApiStatus();
+  toast(ok ? '解析服务已连接' : '还是没连上，确认 server/server.js 已经在跑');
+});
+
 </script>
 </body>
 </html>
