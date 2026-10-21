@@ -838,7 +838,7 @@ body{
 
       <!-- ---------- 同行爆款库 ---------- -->
       <section class="view" id="view-copyrival">
-        <div class="demo-bar"><b>纯结构库</b><span>这里<b style="background:none;color:inherit;padding:0">只存结构，不存任何表现数字</b>：钩子类型、论证方式、情绪曲线、植入位置、可复用模板。点赞 / 评论 / 播放 / 完播一律不记录——抖音不提供互动数的公开接口，完播率是作者后台私有数据，<b style="background:none;color:inherit;padding:0">与其存一个来源不明的数字，不如不存</b>。结构拆解只读文案本身，不依赖任何数字，这个库照样能用。</span></div>
+        <div class="demo-bar"><b>结构 + 完整文案</b><span>文案原文<b style="background:none;color:inherit;padding:0">完整保留，不截断、不打码，可复制</b>；下面的「为什么能火」只读文案本身，每条都带原文证据。<b style="background:none;color:inherit;padding:0">互动数字一个都不存</b>——赞 / 评 / 藏 / 转没有公开接口，播放量平台不公开，完播率是作者后台私有数据，与其存一个来路不明的数，不如不存。</span></div>
         <div class="card" style="margin-bottom:14px">
           <div class="card-body" style="display:flex;gap:12px;align-items:stretch;flex-wrap:wrap">
             <div style="flex:1;min-width:210px;display:flex;flex-direction:column;justify-content:center">
@@ -1487,7 +1487,9 @@ function firstSentence(text){
 const CTA_STRONG = /(链接|下面|主页|点进|点开|拍下|下单|带走|入手|橱窗|去拍|小黄车|评论区)/;
 
 function numbersIn(text){
-  return (String(text || '').match(/\d+(?:\.\d+)?/g) || []).map(Number);
+  /* 去重：标题里已经出现过的价格，正文常再写一遍，
+     不去重会让「全文 4 处具体数值」和证据列表都虚高 */
+  return [...new Set((String(text || '').match(/\d+(?:\.\d+)?/g) || []).map(Number))];
 }
 function countOcc(text, re){
   const m = String(text || '').match(re);
@@ -1529,7 +1531,9 @@ function inferStruct(text, title){
     : hook === '价格锚点' ? '惊讶' : hook === '结果前置' ? '好奇' : '共鸣';
   const midEmo = argument.indexOf('对比') === 0 ? '怀疑'
     : argument.indexOf('个人经历') === 0 ? '认同' : '信服';
-  const endEmo = CTA_STRONG.test(t) ? '行动' : '信服';
+  /* 中段与末段撞词时（如「信服→信服」）读起来像错字，
+     末段改为「认同」——先被说服、再产生认同，本来就是两件事 */
+  const endEmo = CTA_STRONG.test(t) ? '行动' : (midEmo === '信服' ? '认同' : '信服');
 
   /* ④ 植入位置：品牌机型第一次出现的字数位置，按 5.5 字/秒折算 */
   const brand = (t.match(/(iPhone|华为|Mate\s?[X697]|nova|三星|Z\s?Fold|Z\s?Flip|小米|MIX|OPPO|Find|Pura|Pocket)/i) || [])[0] || '';
