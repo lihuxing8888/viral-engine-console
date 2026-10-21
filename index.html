@@ -6605,9 +6605,17 @@ refreshApiStatus().then(ok=>{
     parseLogLine('解析服务已连接（' + RIVAL_API.base + '）：贴链接后点「采集入库」就会自动解析。', 'ok');
   } else {
     clearParseLog();
-    parseLogLine('解析服务未连接 —— 链接能入库，但不会自动解析。');
-    parseLogLine('在项目目录运行  node server/server.js  ，然后用  http://127.0.0.1:7801/  打开本页面；');
-    parseLogLine('服务起来后点右上角的服务状态标记重新检测。');
+    parseLogLine('解析服务未连接 —— 链接能入库，但不会自动解析。', 'err');
+    if(location.protocol === 'https:'){
+      /* 线上 https 页面请求本机 http 服务会被浏览器挡掉（本地网络访问策略）。
+         这不是代码问题，是浏览器的安全限制，绕不过去，只能换打开方式。 */
+      parseLogLine('当前是线上 https 版本，浏览器会拦住它访问你本机的 http 服务（本地网络访问策略）。');
+      parseLogLine('直接在本机跑 node server/server.js，然后用 http://127.0.0.1:7801/ 打开页面 —— 同源，一定能连上。');
+      parseLogLine('如果服务在另一台机器上，用 ?api=https://<你的地址> 指定一个 https 的地址。');
+    } else {
+      parseLogLine('在项目目录运行  node server/server.js  ，然后刷新本页；');
+      parseLogLine('服务起来后点右上角的服务状态标记重新检测。');
+    }
   }
 });
 const apiStatusEl = $('#apiStatus');
