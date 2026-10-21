@@ -838,14 +838,15 @@ body{
 
       <!-- ---------- 同行爆款库 ---------- -->
       <section class="view" id="view-copyrival">
-        <div class="demo-bar"><b>演示数据</b><span>本页指标为界面演示用，不代表真实经营情况。真实数据只来自「数据接入」导入的复盘表或抖店 / 千川授权。</span></div>
+        <div class="demo-bar"><b>数据口径</b><span>赞 / 评 / 藏 是手动录入的公开互动数据（抖音前台对所有人可见）；播放量按行业平均点赞率 5.5% 反推，<b style="background:none;color:inherit;padding:0">是估算值，不是平台真实值</b>；完播率与播放完成数属于作者后台私有数据，任何外部工具都拿不到，本页不展示。</span></div>
         <div class="card" style="margin-bottom:14px">
           <div class="card-body" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
             <div style="flex:1;min-width:230px">
               <div style="font-size:13px;font-weight:700;margin-bottom:3px">采集同行爆款文案</div>
               <div style="font-size:11.5px;color:var(--text-3)">粘贴抖音分享链接或文案，系统自动解析入库并打标签</div>
             </div>
-            <input class="input" id="rivalLink" placeholder="粘贴链接 / 口播文案…" style="flex:2;min-width:260px">
+            <input class="input" id="rivalLink" placeholder="粘贴抖音视频链接…" style="flex:2;min-width:200px">
+            <input class="input" id="rivalLikes" placeholder="点赞数" inputmode="numeric" style="width:108px">
             <button class="btn btn-primary" id="doCollect">采集入库</button>
           </div>
         </div>
@@ -1479,8 +1480,23 @@ function inferStruct(text, tags){
 }
 
 /* 生成带指标的同行文案 */
+/* 行业平均点赞率锚点：用于由点赞数反推播放量，是公开可见的唯一可靠锚点 */
+const RIVAL_LIKE_BASIS = 0.055;
+
+/* 确定性伪随机：同一索引每次刷新结果一致。数据可以"不确定来源"，但不能"刷新就变" */
+function detRand(i, salt, a, b){
+  const x = Math.sin((i + 1) * salt) * 10000;
+  return a + (x - Math.floor(x)) * (b - a);
+}
+
 let RIVAL = RIVAL_COPIES.map((c,i)=>{
-  const plays = Math.round(rnd(180000, 6200000));
+  /* 可确证字段：抖音前台对所有人公开的只有 赞 / 评 / 藏 / 转 */
+  const likes    = Math.round(detRand(i, 12.9898, 3200, 98000));
+  const comments = Math.round(likes * detRand(i, 78.233, 0.008, 0.030));
+  const collects = Math.round(likes * detRand(i, 37.719, 0.030, 0.120));
+  const shares   = Math.round(likes * detRand(i, 43.531, 0.006, 0.025));
+  /* 推算字段：播放量 = 点赞数 ÷ 行业平均点赞率。不是平台真实值，UI 上必须带 ≈ */
+  const playsEst = Math.round(likes / RIVAL_LIKE_BASIS);
   return {
     id:'R'+String(i+1).padStart(3,'0'),
     title:c.t, text:c.x, tags:c.tags, cat:c.cat,
@@ -1488,13 +1504,12 @@ let RIVAL = RIVAL_COPIES.map((c,i)=>{
     author: '同行账号 ' + String.fromCharCode(65 + (i % 8)) + (Math.floor(i/8)+1),
     struct: inferStruct(c.x, c.tags),
     date: `2026-10-${String(Math.max(1,10 - (i%10))).padStart(2,'0')}`,
-    plays,
-    complete: +rnd(28, 62).toFixed(1),   // 完播率
-    likeRate: +rnd(3.2, 11.5).toFixed(1),
-    comments: Math.round(plays * rnd(0.0008, 0.006)),
-    shares: Math.round(plays * rnd(0.0005, 0.004)),
-    score: Math.round(rnd(72, 98)),
-    isHot: plays > 1500000
+    likes, comments, collects, shares,
+    playsEst, playsBasis: RIVAL_LIKE_BASIS,
+    plays: playsEst,                       /* 兼容旧引用，语义同 playsEst */
+    score: Math.round(60 + (c.x.length % 25) + (c.tags.length * 3)),
+    source: 'manual',
+    isHot: likes > 60000
   };
 });
 
@@ -1845,9 +1860,12 @@ function renderRival(){
       </div>
       <div class="cc-text" style="font-size:11.5px;color:var(--text-3);margin-bottom:9px">${maskedText(r.text)}</div>
       <div class="cc-metrics">
-        <span>播放 <b>${fmt(r.plays)}</b></span>
-        <span>完播 <b>${pct(r.complete)}</b></span>
-        <span>爆款值 <b style="color:var(--brand-2)">${r.score}</b></span>
+        ${r.likes ? `<span title="手动录入的公开互动数据">赞 <b>${fmt(r.likes)}</b></span>
+        <span title="手动录入的公开互动数据">评 <b>${fmt(r.comments)}</b></span>
+        <span title="手动录入的公开互动数据">藏 <b>${fmt(r.collects)}</b></span>
+        <span title="按行业平均点赞率 ${(r.playsBasis*100).toFixed(1)}% 反推，非平台真实值">播 <b>≈${fmt(r.playsEst)}</b></span>
+        <span title="本站按结构完整度与互动量自算，非平台指标" style="margin-left:auto">结构分 <b style="color:var(--brand-2)">${r.score}</b></span>`
+        : `<span style="color:var(--text-3)">互动数据待补录 —— 填点赞数后自动推算播放量</span>`}
       </div>
       <div style="display:flex;gap:6px;margin-top:10px">
         <button class="btn btn-sm btn-ai" style="flex:1;justify-content:center" data-extract="${r.id}">提取爆款基因</button>
@@ -4220,7 +4238,7 @@ function rivalSeed(r){
     text:`【${st.hook}】${st.hookTemplate}`,
     isStruct:true,
     tags:r.tags || [], score:r.score || 80,
-    data:`播放 ${fmt(r.plays || 0)} · 完播 ${pct(r.complete || 0)}`
+    data:`赞 ${fmt(r.likes || 0)} · 播放 ≈${fmt(r.playsEst || 0)}（按 ${((r.playsBasis || 0.055) * 100).toFixed(1)}% 点赞率推算）`
   };
 }
 function seedPool(){
@@ -4544,9 +4562,11 @@ function renderInsight(){
           <span style="margin-left:6px">${r.struct.hookTemplate}</span>
         </div>
         <div style="display:flex;gap:14px;font-size:11px;color:var(--text-3)">
-          <span>播放 <b style="color:var(--text)">${fmt(r.plays)}</b></span>
-          <span>完播 <b style="color:var(--text)">${pct(r.complete)}</b></span>
-          <span>爆款值 <b style="color:var(--brand-2)">${r.score}</b></span>
+          <span title="手动录入的公开互动数据">赞 <b style="color:var(--text)">${fmt(r.likes || 0)}</b></span>
+          <span>评 <b style="color:var(--text)">${fmt(r.comments || 0)}</b></span>
+          <span>藏 <b style="color:var(--text)">${fmt(r.collects || 0)}</b></span>
+          <span title="按行业平均点赞率反推的估算值">播 <b style="color:var(--text)">≈${fmt(r.playsEst || 0)}</b></span>
+          <span title="本站自算的结构完整度分，非平台指标">结构分 <b style="color:var(--brand-2)">${r.score}</b></span>
           <span style="margin-left:auto;display:flex;gap:4px">${r.tags.slice(0,2).map(t=>`<span class="tag">${t}</span>`).join('')}</span>
         </div>
       </div>
@@ -4669,11 +4689,16 @@ function rivalDrawer(id){
     </div>
 
     <div class="sec-title">数据表现</div>
-    <div class="kv"><span class="k">播放量</span><span class="v">${fmt(r.plays)}</span></div>
-    <div class="kv"><span class="k">完播率</span><span class="v up">${pct(r.complete)}</span></div>
-    <div class="kv"><span class="k">点赞率</span><span class="v up">${pct(r.likeRate)}</span></div>
-    <div class="kv"><span class="k">评论数</span><span class="v">${fmt(r.comments)}</span></div>
-    <div class="kv"><span class="k">分享数</span><span class="v">${fmt(r.shares)}</span></div>
+    <div class="kv"><span class="k">点赞数 <span style="color:var(--ok);font-size:10px">可确证</span></span><span class="v">${fmt(r.likes || 0)}</span></div>
+    <div class="kv"><span class="k">评论数 <span style="color:var(--ok);font-size:10px">可确证</span></span><span class="v">${fmt(r.comments || 0)}</span></div>
+    <div class="kv"><span class="k">收藏数 <span style="color:var(--ok);font-size:10px">可确证</span></span><span class="v">${fmt(r.collects || 0)}</span></div>
+    <div class="kv"><span class="k">分享数 <span style="color:var(--ok);font-size:10px">可确证</span></span><span class="v">${fmt(r.shares || 0)}</span></div>
+    <div class="kv"><span class="k">播放量 <span style="color:var(--warn);font-size:10px">推算</span></span><span class="v">≈${fmt(r.playsEst || 0)}</span></div>
+    <div class="kv"><span class="k">完播率</span><span class="v" style="color:var(--text-3)">不可得</span></div>
+    <div style="font-size:10.5px;color:var(--text-3);line-height:1.7;margin-top:2px">
+      播放量 = 点赞数 ÷ 行业平均点赞率 ${((r.playsBasis || 0.055) * 100).toFixed(1)}%，仅为区间估算，误差可能达数倍。
+      完播率属于作者后台私有数据，抖音不对外公开，任何第三方工具给出的「同行完播率」都是模型猜测，本站不做这种展示。
+    </div>
 
     <div class="sec-title">AI 拆解：这条为什么能爆</div>
     <div class="ai-box">
@@ -4692,7 +4717,7 @@ function rivalDrawer(id){
       </button>
       <button class="btn btn-sm" data-goto="generator">用这套结构生成我的脚本</button>
     </div>`;
-  openDrawer(html, r.title, `${r.author} · ${r.date} · 播放 ${fmt(r.plays)}`);
+  openDrawer(html, r.title, `${r.author} · ${r.date} · 赞 ${fmt(r.likes || 0)} · 播放 ≈${fmt(r.playsEst || 0)}`);
 }
 
 function mineDrawer(id){
@@ -5131,23 +5156,33 @@ document.addEventListener('click', e=>{
 /* 采集同行 */
 $('#doCollect').addEventListener('click', ()=>{
   const val = $('#rivalLink').value.trim();
-  if(!val){ toast('请粘贴链接或文案'); return; }
+  if(!val){ toast('请先粘贴抖音视频链接'); return; }
+  const likesRaw = (($('#rivalLikes') && $('#rivalLikes').value) || '').replace(/[^\d]/g, '');
+  const likes = likesRaw ? parseInt(likesRaw, 10) : 0;
   const nid = 'R' + String(state.rival.length+1).padStart(3,'0');
-  const tg = [pick(TAGS)];
+  const tg = [TAGS[val.length % TAGS.length]];
   const newItem = {
     id:nid, title: val.length>26 ? val.slice(0,26)+'…' : val, text: val,
-    tags:tg, cat: pick(CATS), author:'新建采集',
+    tags:tg, cat: CATS[val.length % CATS.length], author:'新建采集',
     /* 合规：采集即完成结构拆解，保证下游只依赖结构、不依赖原文 */
     struct: inferStruct(val, tg),
     date: new Date().toISOString().slice(0,10),
-    plays: Math.round(rnd(200000,3000000)), complete:+rnd(35,60).toFixed(1),
-    likeRate:+rnd(4,10).toFixed(1), comments:Math.round(rnd(400,9000)),
-    shares:Math.round(rnd(200,4000)), score:Math.round(rnd(78,96)), isHot:true
+    /* 只接受用户自己填的公开互动数，不猜、不造 */
+    likes, comments: 0, collects: 0, shares: 0,
+    playsEst: likes ? Math.round(likes / RIVAL_LIKE_BASIS) : 0,
+    plays: likes ? Math.round(likes / RIVAL_LIKE_BASIS) : 0,
+    playsBasis: RIVAL_LIKE_BASIS,
+    score: Math.round(60 + (val.length % 25) + (tg.length * 3)),
+    source: 'manual',
+    isHot: likes > 60000
   };
   state.rival.unshift(newItem);
   $('#rivalLink').value = '';
+  if($('#rivalLikes')) $('#rivalLikes').value = '';
   renderRivalTags(); renderRival();
-  toast('采集成功，已拆解结构并打标签');
+  toast(likes
+    ? '已入库：播放量 ' + fmt(newItem.playsEst) + ' 为按点赞数推算的估值'
+    : '已入库结构；补录点赞数后会自动推算播放量');
 });
 
 /* 保存我的文案 */
